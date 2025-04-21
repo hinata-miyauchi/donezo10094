@@ -37,7 +37,6 @@ export class IssueFormComponent implements OnInit {
       occurrenceDate: [new Date().toISOString().split('T')[0], Validators.required],
       dueDate: [null, Validators.required],
       assignee: ['', Validators.required],
-      handler: [''],
       solution: [''],
       completionCriteria: ['', Validators.required],
       progress: [0, [Validators.required, Validators.min(0), Validators.max(100)]]

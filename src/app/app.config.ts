@@ -1,9 +1,11 @@
 import { ApplicationConfig } from '@angular/core';
 import { provideRouter, withRouterConfig } from '@angular/router';
 import { routes } from './app.routes';
-import { provideFirebaseApp, initializeApp } from '@angular/fire/app';
-import { provideFirestore, getFirestore } from '@angular/fire/firestore';
+import { provideClientHydration } from '@angular/platform-browser';
 import { provideAnimations } from '@angular/platform-browser/animations';
+import { provideFirebaseApp, initializeApp, FirebaseApp } from '@angular/fire/app';
+import { provideFirestore, getFirestore, Firestore, enableIndexedDbPersistence } from '@angular/fire/firestore';
+import { provideAuth, getAuth, Auth } from '@angular/fire/auth';
 
 // TODO: 以下のconfigを実際のFirebaseプロジェクトの設定値に置き換えてください
 const firebaseConfig = {
@@ -23,8 +25,23 @@ export const appConfig: ApplicationConfig = {
       paramsInheritanceStrategy: 'always',
       urlUpdateStrategy: 'eager'
     })),
+    provideClientHydration(),
     provideAnimations(),
-    provideFirebaseApp(() => initializeApp(firebaseConfig)),
-    provideFirestore(() => getFirestore())
+    provideFirebaseApp(() => {
+      const app = initializeApp(firebaseConfig);
+      return app;
+    }),
+    provideFirestore(() => {
+      const firestore = getFirestore();
+      enableIndexedDbPersistence(firestore).catch((err) => {
+        if (err.code == 'failed-precondition') {
+          console.warn('Multiple tabs open, persistence can only be enabled in one tab at a a time.');
+        } else if (err.code == 'unimplemented') {
+          console.warn('The current browser does not support persistence.');
+        }
+      });
+      return firestore;
+    }),
+    provideAuth(() => getAuth())
   ]
 };
