@@ -1,0 +1,116 @@
+<!-- フォームコンテナ -->
+<div class="form-container">
+  <form [formGroup]="issueForm" (ngSubmit)="onSubmit()" class="form-wrapper">
+    <h2 class="text-xl font-bold text-gray-900 border-b pb-4 mb-8">課題登録フォーム</h2>
+
+    <!-- 1. 基本情報 -->
+    <section class="form-section">
+      <h3 class="text-base font-semibold text-gray-700 mb-4">基本情報</h3>
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <!-- タイトル -->
+        <div class="form-group">
+          <label for="title">タイトル</label>
+          <input id="title" type="text" formControlName="title"
+            class="form-input"
+            [class.border-red-500]="issueForm.get('title')?.invalid && issueForm.get('title')?.touched">
+          <p class="error-message" *ngIf="issueForm.get('title')?.invalid && issueForm.get('title')?.touched">
+            {{ getErrorMessage('title') }}
+          </p>
+        </div>
+
+        <!-- 発生日 -->
+        <div class="form-group">
+          <label for="occurrenceDate">発生日</label>
+          <input id="occurrenceDate" type="date" formControlName="occurrenceDate"
+            class="form-input">
+        </div>
+      </div>
+    </section>
+
+    <!-- 2. 課題詳細 -->
+    <section class="form-section">
+      <h3 class="text-base font-semibold text-gray-700 mb-4">課題の詳細</h3>
+      <div class="form-group">
+        <label for="description">説明</label>
+        <textarea id="description" formControlName="description" rows="4"
+          class="form-textarea"></textarea>
+      </div>
+    </section>
+
+    <!-- 3. ステータスと進捗 -->
+    <section class="form-section">
+      <h3 class="text-base font-semibold text-gray-700 mb-4">対応状況</h3>
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <!-- ステータス -->
+        <div class="form-group">
+          <label for="status">ステータス</label>
+          <select id="status" formControlName="status" class="form-select">
+            <option *ngFor="let status of statusOptions" [value]="status">{{ status }}</option>
+          </select>
+        </div>
+
+        <!-- 重要度 -->
+        <div class="form-group">
+          <label for="importance">重要度</label>
+          <select id="importance" formControlName="importance" class="form-select">
+            <option *ngFor="let importance of importanceOptions" [value]="importance">{{ importance }}</option>
+          </select>
+        </div>
+
+        <!-- 進捗 -->
+        <div class="form-group">
+          <label for="progress">進捗（％）</label>
+          <input id="progress" type="number" formControlName="progress" min="0" max="100"
+            class="form-input">
+        </div>
+      </div>
+    </section>
+
+    <!-- 4. 担当者 -->
+    <section class="form-section">
+      <h3 class="text-base font-semibold text-gray-700 mb-4">担当者情報</h3>
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div class="form-group">
+          <label for="assignee">責任者</label>
+          <input id="assignee" type="text" formControlName="assignee" class="form-input">
+        </div>
+        <div class="form-group">
+          <label for="handler">対応者</label>
+          <input id="handler" type="text" formControlName="handler" class="form-input">
+        </div>
+      </div>
+    </section>
+
+    <!-- 5. 期限 -->
+    <section class="form-section">
+      <h3 class="text-base font-semibold text-gray-700 mb-4">期限・完了条件</h3>
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div class="form-group">
+          <label for="dueDate">対応期限</label>
+          <input id="dueDate" type="date" formControlName="dueDate" class="form-input">
+        </div>
+        <div class="form-group">
+          <label for="completionCriteria">完了条件</label>
+          <textarea id="completionCriteria" formControlName="completionCriteria" rows="2" class="form-textarea"></textarea>
+        </div>
+      </div>
+    </section>
+
+    <!-- 6. 解決方法 -->
+    <section class="form-section">
+      <label for="solution">対応・解決方法</label>
+      <textarea id="solution" formControlName="solution" rows="3" class="form-textarea"></textarea>
+    </section>
+
+    <!-- ボタン -->
+    <div class="flex justify-end pt-6 space-x-4 border-t mt-6">
+      <button type="button" (click)="onCancel()">
+        キャンセル
+      </button>
+      <button type="submit"
+        [disabled]="issueForm.invalid || isSubmitting">
+        登録する
+      </button>
+    </div>
+  </form>
+</div>

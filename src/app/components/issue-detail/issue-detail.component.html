@@ -1,0 +1,234 @@
+<div class="min-h-screen bg-gray-100 py-6">
+  <div class="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8">
+    <div class="bg-white shadow overflow-hidden sm:rounded-lg">
+      <!-- ヘッダー -->
+      <div class="px-4 py-5 sm:px-6 flex justify-between items-center">
+        <div>
+          <h3 class="text-lg leading-6 font-medium text-gray-900">課題詳細</h3>
+          <p class="mt-1 max-w-2xl text-sm text-gray-500">課題の詳細情報と編集</p>
+        </div>
+        <div class="flex space-x-3">
+          <button *ngIf="!isEditing" type="button" (click)="startEditing()"
+            class="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
+            <svg class="-ml-1 mr-2 h-5 w-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
+              stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+            </svg>
+            編集
+          </button>
+          <button type="button" (click)="goBack()"
+            class="inline-flex items-center px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
+            <svg class="-ml-1 mr-2 h-5 w-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
+              stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+            </svg>
+            戻る
+          </button>
+        </div>
+      </div>
+
+      <!-- 表示モード -->
+      <div *ngIf="!isEditing && issue" class="border-t border-gray-200">
+        <dl>
+          <!-- 課題番号 -->
+          <div class="bg-gray-50 px-4 py-5 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6">
+            <dt class="text-sm font-medium text-gray-500">課題番号</dt>
+            <dd class="mt-1 text-sm text-gray-900 sm:mt-0 sm:col-span-2">{{ issue.issueNumber }}</dd>
+          </div>
+
+          <!-- タイトル -->
+          <div class="bg-white px-4 py-5 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6">
+            <dt class="text-sm font-medium text-gray-500">タイトル</dt>
+            <dd class="mt-1 text-sm text-gray-900 sm:mt-0 sm:col-span-2">{{ issue.title }}</dd>
+          </div>
+
+          <!-- 説明 -->
+          <div class="bg-gray-50 px-4 py-5 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6">
+            <dt class="text-sm font-medium text-gray-500">説明</dt>
+            <dd class="mt-1 text-sm text-gray-900 sm:mt-0 sm:col-span-2 whitespace-pre-line">{{ issue.description }}</dd>
+          </div>
+
+          <!-- ステータス -->
+          <div class="bg-white px-4 py-5 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6">
+            <dt class="text-sm font-medium text-gray-500">ステータス</dt>
+            <dd class="mt-1 text-sm text-gray-900 sm:mt-0 sm:col-span-2">
+              <span [class]="'px-2 inline-flex text-xs leading-5 font-semibold rounded-full ' + 
+                (issue.status === '完了' ? 'bg-green-100 text-green-800' :
+                issue.status === '対応中' ? 'bg-yellow-100 text-yellow-800' :
+                'bg-gray-100 text-gray-800')">
+                {{ issue.status }}
+              </span>
+            </dd>
+          </div>
+
+          <!-- 重要度 -->
+          <div class="bg-gray-50 px-4 py-5 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6">
+            <dt class="text-sm font-medium text-gray-500">重要度</dt>
+            <dd class="mt-1 text-sm text-gray-900 sm:mt-0 sm:col-span-2">
+              <span [class]="'px-2 inline-flex text-xs leading-5 font-semibold rounded-full ' + 
+                (issue.importance === '高' ? 'bg-red-100 text-red-800' :
+                issue.importance === '中' ? 'bg-yellow-100 text-yellow-800' :
+                'bg-blue-100 text-blue-800')">
+                {{ issue.importance }}
+              </span>
+            </dd>
+          </div>
+
+          <!-- 期限日 -->
+          <div class="bg-white px-4 py-5 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6">
+            <dt class="text-sm font-medium text-gray-500">対応期限</dt>
+            <dd class="mt-1 text-sm text-gray-900 sm:mt-0 sm:col-span-2">{{ issue.dueDate | date:'yyyy/MM/dd' }}</dd>
+          </div>
+
+          <!-- 完了条件 -->
+          <div class="bg-gray-50 px-4 py-5 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6">
+            <dt class="text-sm font-medium text-gray-500">完了条件</dt>
+            <dd class="mt-1 text-sm text-gray-900 sm:mt-0 sm:col-span-2 whitespace-pre-line">{{ issue.completionCriteria }}</dd>
+          </div>
+
+          <!-- 対応・解決方法 -->
+          <div class="bg-white px-4 py-5 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6">
+            <dt class="text-sm font-medium text-gray-500">対応・解決方法</dt>
+            <dd class="mt-1 text-sm text-gray-900 sm:mt-0 sm:col-span-2 whitespace-pre-line">{{ issue.solution }}</dd>
+          </div>
+
+          <!-- 担当者 -->
+          <div class="bg-gray-50 px-4 py-5 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6">
+            <dt class="text-sm font-medium text-gray-500">担当者</dt>
+            <dd class="mt-1 text-sm text-gray-900 sm:mt-0 sm:col-span-2">{{ issue.assignee }}</dd>
+          </div>
+
+          <!-- 進捗 -->
+          <div class="bg-white px-4 py-5 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6">
+            <dt class="text-sm font-medium text-gray-500">進捗</dt>
+            <dd class="mt-1 text-sm text-gray-900 sm:mt-0 sm:col-span-2">
+              <div class="w-full bg-gray-200 rounded-full h-2.5">
+                <div class="bg-blue-600 h-2.5 rounded-full" [style.width]="issue.progress + '%'"></div>
+              </div>
+              <span class="text-sm mt-1">{{ issue.progress }}%</span>
+            </dd>
+          </div>
+
+          <!-- 作成日時 -->
+          <div class="bg-gray-50 px-4 py-5 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6">
+            <dt class="text-sm font-medium text-gray-500">作成日時</dt>
+            <dd class="mt-1 text-sm text-gray-900 sm:mt-0 sm:col-span-2">{{ issue.createdAt | date:'yyyy/MM/dd HH:mm' }}</dd>
+          </div>
+
+          <!-- 更新日時 -->
+          <div class="bg-white px-4 py-5 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6">
+            <dt class="text-sm font-medium text-gray-500">更新日時</dt>
+            <dd class="mt-1 text-sm text-gray-900 sm:mt-0 sm:col-span-2">{{ issue.updatedAt | date:'yyyy/MM/dd HH:mm' }}</dd>
+          </div>
+        </dl>
+      </div>
+
+      <!-- 編集モード -->
+      <div *ngIf="isEditing" class="border-t border-gray-200">
+        <form [formGroup]="editForm" class="space-y-6 p-6">
+          <div class="grid grid-cols-1 gap-y-6 gap-x-4 sm:grid-cols-6">
+            <!-- タイトル -->
+            <div class="sm:col-span-6">
+              <label for="title" class="block text-sm font-medium text-gray-700">タイトル</label>
+              <div class="mt-1">
+                <input type="text" id="title" formControlName="title"
+                  class="shadow-sm focus:ring-indigo-500 focus:border-indigo-500 block w-full sm:text-sm border-gray-300 rounded-md">
+              </div>
+            </div>
+
+            <!-- 説明 -->
+            <div class="sm:col-span-6">
+              <label for="description" class="block text-sm font-medium text-gray-700">説明</label>
+              <div class="mt-1">
+                <textarea id="description" rows="3" formControlName="description"
+                  class="shadow-sm focus:ring-indigo-500 focus:border-indigo-500 block w-full sm:text-sm border-gray-300 rounded-md"></textarea>
+              </div>
+            </div>
+
+            <!-- ステータス -->
+            <div class="sm:col-span-3">
+              <label for="status" class="block text-sm font-medium text-gray-700">ステータス</label>
+              <div class="mt-1">
+                <select id="status" formControlName="status"
+                  class="shadow-sm focus:ring-indigo-500 focus:border-indigo-500 block w-full sm:text-sm border-gray-300 rounded-md">
+                  <option *ngFor="let status of statusOptions" [value]="status">{{ status }}</option>
+                </select>
+              </div>
+            </div>
+
+            <!-- 重要度 -->
+            <div class="sm:col-span-3">
+              <label for="importance" class="block text-sm font-medium text-gray-700">重要度</label>
+              <div class="mt-1">
+                <select id="importance" formControlName="importance"
+                  class="shadow-sm focus:ring-indigo-500 focus:border-indigo-500 block w-full sm:text-sm border-gray-300 rounded-md">
+                  <option *ngFor="let importance of importanceOptions" [value]="importance">{{ importance }}</option>
+                </select>
+              </div>
+            </div>
+
+            <!-- 対応期限 -->
+            <div class="sm:col-span-3">
+              <label for="dueDate" class="block text-sm font-medium text-gray-700">対応期限</label>
+              <div class="mt-1">
+                <input type="date" id="dueDate" formControlName="dueDate"
+                  class="shadow-sm focus:ring-indigo-500 focus:border-indigo-500 block w-full sm:text-sm border-gray-300 rounded-md">
+              </div>
+            </div>
+
+            <!-- 完了条件 -->
+            <div class="sm:col-span-6">
+              <label for="completionCriteria" class="block text-sm font-medium text-gray-700">完了条件</label>
+              <div class="mt-1">
+                <textarea id="completionCriteria" rows="3" formControlName="completionCriteria"
+                  class="shadow-sm focus:ring-indigo-500 focus:border-indigo-500 block w-full sm:text-sm border-gray-300 rounded-md"
+                  placeholder="課題が完了したと判断できる条件を入力してください"></textarea>
+              </div>
+            </div>
+
+            <!-- 対応・解決方法 -->
+            <div class="sm:col-span-6">
+              <label for="solution" class="block text-sm font-medium text-gray-700">対応・解決方法</label>
+              <div class="mt-1">
+                <textarea id="solution" rows="3" formControlName="solution"
+                  class="shadow-sm focus:ring-indigo-500 focus:border-indigo-500 block w-full sm:text-sm border-gray-300 rounded-md"
+                  placeholder="課題の対応・解決方法を入力してください"></textarea>
+              </div>
+            </div>
+
+            <!-- 担当者 -->
+            <div class="sm:col-span-3">
+              <label for="assignee" class="block text-sm font-medium text-gray-700">担当者</label>
+              <div class="mt-1">
+                <input type="text" id="assignee" formControlName="assignee"
+                  class="shadow-sm focus:ring-indigo-500 focus:border-indigo-500 block w-full sm:text-sm border-gray-300 rounded-md">
+              </div>
+            </div>
+
+            <!-- 進捗 -->
+            <div class="sm:col-span-6">
+              <label for="progress" class="block text-sm font-medium text-gray-700">進捗 (%)</label>
+              <div class="mt-1">
+                <input type="number" id="progress" formControlName="progress" min="0" max="100"
+                  class="shadow-sm focus:ring-indigo-500 focus:border-indigo-500 block w-full sm:text-sm border-gray-300 rounded-md">
+              </div>
+            </div>
+          </div>
+
+          <!-- ボタン群 -->
+          <div class="flex justify-end space-x-3">
+            <button type="button" (click)="cancelEditing()"
+              class="inline-flex items-center px-4 py-2 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
+              キャンセル
+            </button>
+            <button type="button" (click)="saveChanges()"
+              class="inline-flex items-center px-4 py-2 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
+              保存
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+</div> 

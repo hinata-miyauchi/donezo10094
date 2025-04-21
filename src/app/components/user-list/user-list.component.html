@@ -1,0 +1,96 @@
+<div class="space-y-6">
+  <!-- 🔍 フィルターセクション -->
+  <section class="bg-white shadow rounded-lg p-6">
+    <h2 class="text-lg font-semibold text-gray-900 mb-4">🔍 ユーザーフィルター</h2>
+    <form [formGroup]="filterForm" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+      <!-- キーワード -->
+      <div>
+        <label for="keyword" class="block text-sm font-medium text-gray-700">キーワード</label>
+        <input type="text" id="keyword" formControlName="keyword"
+          class="form-input mt-1 w-full">
+      </div>
+
+      <!-- 役割 -->
+      <div>
+        <label for="role" class="block text-sm font-medium text-gray-700">役割</label>
+        <select id="role" formControlName="role" multiple class="form-multiselect mt-1 w-full">
+          <option *ngFor="let role of roleOptions" [value]="role">{{ role }}</option>
+        </select>
+      </div>
+
+      <!-- 部署 -->
+      <div>
+        <label for="department" class="block text-sm font-medium text-gray-700">部署</label>
+        <select id="department" formControlName="department" multiple class="form-multiselect mt-1 w-full">
+          <option *ngFor="let dept of departmentOptions" [value]="dept">{{ dept }}</option>
+        </select>
+      </div>
+
+      <!-- ステータス -->
+      <div>
+        <label for="isActive" class="block text-sm font-medium text-gray-700">ステータス</label>
+        <select id="isActive" formControlName="isActive" class="form-select mt-1 w-full">
+          <option [ngValue]="null">すべて</option>
+          <option [ngValue]="true">有効</option>
+          <option [ngValue]="false">無効</option>
+        </select>
+      </div>
+    </form>
+
+    <div class="flex justify-end mt-4">
+      <button type="button" (click)="clearFilters()"
+        class="px-4 py-2 text-sm bg-gray-100 text-gray-800 rounded-md hover:bg-gray-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-400">
+        フィルターをクリア
+      </button>
+    </div>
+  </section>
+
+  <!-- 👥 ユーザー一覧 -->
+  <section class="bg-white shadow rounded-lg overflow-hidden">
+    <div class="flex justify-between items-center px-6 py-4 border-b">
+      <h2 class="text-lg font-semibold text-gray-900">👥 ユーザー一覧</h2>
+      <button (click)="toggleForm()"
+        class="px-4 py-2 text-sm text-white bg-indigo-600 hover:bg-indigo-700 rounded-md focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
+        ユーザーを追加
+      </button>
+    </div>
+
+    <div class="overflow-x-auto">
+      <table class="min-w-full divide-y divide-gray-200 text-sm">
+        <thead class="bg-gray-50">
+          <tr>
+            <th class="px-6 py-3 text-left font-medium text-gray-500">名前</th>
+            <th class="px-6 py-3 text-left font-medium text-gray-500">メール</th>
+            <th class="px-6 py-3 text-left font-medium text-gray-500">役割</th>
+            <th class="px-6 py-3 text-left font-medium text-gray-500">部署</th>
+            <th class="px-6 py-3 text-left font-medium text-gray-500">ステータス</th>
+          </tr>
+        </thead>
+        <tbody class="bg-white divide-y divide-gray-100">
+          <tr *ngFor="let user of filteredUsers$ | async" class="hover:bg-gray-50 transition">
+            <td class="px-6 py-4 whitespace-nowrap font-medium text-gray-900">{{ user.name }}</td>
+            <td class="px-6 py-4 whitespace-nowrap text-gray-700">{{ user.email }}</td>
+            <td class="px-6 py-4 whitespace-nowrap text-gray-700">{{ user.role }}</td>
+            <td class="px-6 py-4 whitespace-nowrap text-gray-700">{{ user.department }}</td>
+            <td class="px-6 py-4 whitespace-nowrap">
+              <span
+                [ngClass]="{
+                  'bg-green-100 text-green-800': user.isActive,
+                  'bg-red-100 text-red-800': !user.isActive
+                }"
+                class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium">
+                <svg *ngIf="user.isActive" class="w-3 h-3 mr-1" fill="currentColor" viewBox="0 0 20 20">
+                  <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 00-1.414 0L8 12.586 4.707 9.293a1 1 0 00-1.414 1.414l4 4a1 1 0 001.414 0l8-8a1 1 0 000-1.414z" clip-rule="evenodd" />
+                </svg>
+                <svg *ngIf="!user.isActive" class="w-3 h-3 mr-1" fill="currentColor" viewBox="0 0 20 20">
+                  <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm-1-4h2v2h-2v-2zm0-8h2v6h-2V6z" clip-rule="evenodd" />
+                </svg>
+                {{ user.isActive ? '有効' : '無効' }}
+              </span>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+</div>

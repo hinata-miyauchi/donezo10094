@@ -3,7 +3,10 @@
 @tailwind utilities;
 
 @layer components {
-  /* フォームのカスタムスタイル */
+  :host {
+    @apply block;
+  }
+
   .form-input {
     @apply w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500;
   }
@@ -16,27 +19,22 @@
     @apply w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500;
   }
 
-  /* エラー状態のスタイル */
-  .form-error {
-    @apply border-red-500 focus:border-red-500 focus:ring-red-500;
+  .form-section {
+    @apply mb-8;
   }
 
-  /* フォームセクションのスタイル */
-  section {
-    @apply space-y-4;
+  .form-group {
+    @apply mb-4;
   }
 
-  /* ラベルのスタイル */
-  label {
-    @apply block text-sm font-medium text-gray-700;
+  .form-label {
+    @apply block text-sm font-medium text-gray-700 mb-1;
   }
 
-  /* エラーメッセージのスタイル */
   .error-message {
     @apply mt-2 text-sm text-red-600;
   }
 
-  /* ボタンのスタイル */
   button {
     @apply inline-flex justify-center rounded-md border px-4 py-2 text-sm font-medium focus:outline-none focus:ring-2 focus:ring-offset-2;
   }
@@ -49,8 +47,7 @@
     @apply border-gray-300 bg-white text-gray-700 hover:bg-gray-50 focus:ring-indigo-500;
   }
 
-  /* 無効化されたボタンのスタイル */
   button:disabled {
     @apply opacity-50 cursor-not-allowed;
   }
-}
+} 

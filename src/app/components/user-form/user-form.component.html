@@ -1,0 +1,92 @@
+<form [formGroup]="userForm" (ngSubmit)="onSubmit()" class="space-y-6">
+  <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+    <!-- 名前 -->
+    <div>
+      <label class="block text-sm font-medium text-gray-700">名前</label>
+      <input type="text" formControlName="name" 
+             class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500">
+      <p *ngIf="userForm.get('name')?.touched && userForm.get('name')?.invalid" 
+         class="mt-1 text-sm text-red-600">
+        {{getErrorMessage('name')}}
+      </p>
+    </div>
+
+    <!-- メールアドレス -->
+    <div>
+      <label class="block text-sm font-medium text-gray-700">メールアドレス</label>
+      <input type="email" formControlName="email" 
+             class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500">
+      <p *ngIf="userForm.get('email')?.touched && userForm.get('email')?.invalid" 
+         class="mt-1 text-sm text-red-600">
+        {{getErrorMessage('email')}}
+      </p>
+    </div>
+
+    <!-- 役割 -->
+    <div>
+      <label class="block text-sm font-medium text-gray-700">役割</label>
+      <select formControlName="role" 
+              class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500">
+        <option *ngFor="let role of roleOptions" [value]="role">
+          {{role === 'admin' ? '管理者' : 'ユーザー'}}
+        </option>
+      </select>
+      <p *ngIf="userForm.get('role')?.touched && userForm.get('role')?.invalid" 
+         class="mt-1 text-sm text-red-600">
+        {{getErrorMessage('role')}}
+      </p>
+    </div>
+
+    <!-- 部署 -->
+    <div>
+      <label class="block text-sm font-medium text-gray-700">部署</label>
+      <select formControlName="department" 
+              class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500">
+        <option value="">選択してください</option>
+        <option *ngFor="let dept of departmentOptions" [value]="dept">{{dept}}</option>
+      </select>
+    </div>
+
+    <!-- 役職 -->
+    <div>
+      <label class="block text-sm font-medium text-gray-700">役職</label>
+      <input type="text" formControlName="position" 
+             class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500">
+    </div>
+
+    <!-- パスワード -->
+    <div>
+      <label class="block text-sm font-medium text-gray-700">パスワード</label>
+      <input type="password" formControlName="password" 
+             class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500">
+      <p *ngIf="userForm.get('password')?.touched && userForm.get('password')?.invalid" 
+         class="mt-1 text-sm text-red-600">
+        {{getErrorMessage('password')}}
+      </p>
+    </div>
+
+    <!-- パスワード（確認） -->
+    <div>
+      <label class="block text-sm font-medium text-gray-700">パスワード（確認）</label>
+      <input type="password" formControlName="confirmPassword" 
+             class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500">
+      <p *ngIf="userForm.get('confirmPassword')?.touched && (userForm.get('confirmPassword')?.invalid || userForm.hasError('mismatch'))" 
+         class="mt-1 text-sm text-red-600">
+        {{getErrorMessage('confirmPassword')}}
+      </p>
+    </div>
+  </div>
+
+  <!-- 送信ボタン -->
+  <div class="flex justify-end space-x-3">
+    <button type="button" (click)="userForm.reset({ role: 'user' })" 
+            class="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50">
+      リセット
+    </button>
+    <button type="submit" 
+            class="inline-flex justify-center py-2 px-4 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+            [disabled]="!userForm.valid">
+      保存
+    </button>
+  </div>
+</form> 

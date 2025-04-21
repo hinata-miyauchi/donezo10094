@@ -1,0 +1,23 @@
+.status {
+    &.未着手 {
+      color: gray;
+    }
+    &.対応中 {
+      color: orange;
+    }
+    &.完了 {
+      color: green;
+    }
+  }
+  
+  .高 {
+    font-weight: bold;
+    color: red;
+  }
+  .中 {
+    color: orange;
+  }
+  .低 {
+    color: green;
+  }
+  

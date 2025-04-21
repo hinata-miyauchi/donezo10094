@@ -1,1 +1,61 @@
 /* You can add global styles to this file, and also import other style files */
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* グローバルスタイル */
+body {
+  @apply bg-gray-50;
+}
+
+/* フォームコンテナのスタイル */
+.form-container {
+  @apply max-w-4xl mx-auto py-8 px-4;
+}
+
+.form-wrapper {
+  @apply bg-white shadow-lg rounded-lg p-8;
+}
+
+.form-section {
+  @apply mb-8;
+}
+
+.form-group {
+  @apply mb-4;
+}
+
+/* フォーム要素のスタイル */
+.form-input,
+.form-select,
+.form-textarea {
+  @apply w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500;
+}
+
+/* エラー状態のスタイル */
+.form-error {
+  @apply border-red-500 focus:border-red-500 focus:ring-red-500;
+}
+
+/* エラーメッセージのスタイル */
+.error-message {
+  @apply mt-2 text-sm text-red-600;
+}
+
+/* ボタンのスタイル */
+button {
+  @apply inline-flex justify-center rounded-md border px-4 py-2 text-sm font-medium focus:outline-none focus:ring-2 focus:ring-offset-2;
+}
+
+button[type="submit"] {
+  @apply border-transparent bg-indigo-600 text-white hover:bg-indigo-700 focus:ring-indigo-500;
+}
+
+button[type="button"] {
+  @apply border-gray-300 bg-white text-gray-700 hover:bg-gray-50 focus:ring-indigo-500;
+}
+
+button:disabled {
+  @apply opacity-50 cursor-not-allowed;
+}
