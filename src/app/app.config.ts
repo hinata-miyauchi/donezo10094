@@ -1,13 +1,14 @@
 import { ApplicationConfig } from '@angular/core';
-import { provideRouter, withRouterConfig } from '@angular/router';
+import { provideRouter } from '@angular/router';
 import { routes } from './app.routes';
 import { provideClientHydration } from '@angular/platform-browser';
-import { provideAnimations } from '@angular/platform-browser/animations';
-import { provideFirebaseApp, initializeApp, FirebaseApp } from '@angular/fire/app';
-import { provideFirestore, getFirestore, Firestore, enableIndexedDbPersistence } from '@angular/fire/firestore';
-import { provideAuth, getAuth, Auth } from '@angular/fire/auth';
+import { initializeApp } from 'firebase/app';
+import { getFirestore } from 'firebase/firestore';
+import { provideFirebaseApp } from '@angular/fire/app';
+import { provideFirestore } from '@angular/fire/firestore';
+import { provideAuth } from '@angular/fire/auth';
+import { getAuth } from 'firebase/auth';
 
-// TODO: 以下のconfigを実際のFirebaseプロジェクトの設定値に置き換えてください
 const firebaseConfig = {
   apiKey: "AIzaSyAFv8BX3yr5-m2qiInTjbq26mqnBFrhw_c",
   authDomain: "donezo10094.firebaseapp.com",
@@ -18,23 +19,16 @@ const firebaseConfig = {
   measurementId: "G-Z37ECZSCKQ"
 };
 
+// Firebase アプリケーションを初期化
+const app = initializeApp(firebaseConfig);
+const firestore = getFirestore(app);
+
 export const appConfig: ApplicationConfig = {
   providers: [
-    provideRouter(routes, withRouterConfig({
-      onSameUrlNavigation: 'reload',
-      paramsInheritanceStrategy: 'always',
-      urlUpdateStrategy: 'eager'
-    })),
+    provideRouter(routes),
     provideClientHydration(),
-    provideAnimations(),
-    provideFirebaseApp(() => {
-      const app = initializeApp(firebaseConfig);
-      return app;
-    }),
-    provideFirestore(() => {
-      const firestore = getFirestore();
-      return firestore;
-    }),
-    provideAuth(() => getAuth())
+    provideFirebaseApp(() => app),
+    provideFirestore(() => firestore),
+    provideAuth(() => getAuth(app))
   ]
 };
