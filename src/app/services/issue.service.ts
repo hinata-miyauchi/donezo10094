@@ -17,9 +17,10 @@ import {
   DocumentData,
   CollectionReference,
   DocumentReference,
-  getDoc
+  getDoc,
+  serverTimestamp
 } from '@angular/fire/firestore';
-import { Timestamp } from '@firebase/firestore';
+import { Timestamp } from 'firebase/firestore';
 import { Issue, IssueSummary } from '../models/issue.model';
 
 interface IssueData extends DocumentData {
@@ -28,14 +29,14 @@ interface IssueData extends DocumentData {
   description: string;
   status: string;
   importance: string;
-  dueDate: Timestamp;
+  dueDate: any;
   completionCriteria: string;
   solution: string;
-  occurrenceDate: Timestamp;
+  occurrenceDate: any;
   assignee: string;
   progress: number;
-  createdAt: Timestamp;
-  updatedAt: Timestamp;
+  createdAt: any;
+  updatedAt: any;
   createdBy: string;
 }
 
@@ -107,14 +108,14 @@ export class IssueService {
       description: issue.description,
       status: issue.status,
       importance: issue.importance,
-      dueDate: Timestamp.fromDate(issue.dueDate),
+      dueDate: new Date(issue.dueDate),
       completionCriteria: issue.completionCriteria,
       solution: issue.solution,
-      occurrenceDate: Timestamp.fromDate(issue.occurrenceDate),
+      occurrenceDate: new Date(issue.occurrenceDate),
       assignee: issue.assignee,
       progress: issue.progress,
-      createdAt: Timestamp.fromDate(new Date()),
-      updatedAt: Timestamp.fromDate(new Date()),
+      createdAt: serverTimestamp(),
+      updatedAt: serverTimestamp(),
       createdBy: issue.createdBy || 'システム'
     };
     await addDoc(this.issuesCollection, newIssue);

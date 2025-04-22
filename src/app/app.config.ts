@@ -33,13 +33,6 @@ export const appConfig: ApplicationConfig = {
     }),
     provideFirestore(() => {
       const firestore = getFirestore();
-      enableIndexedDbPersistence(firestore).catch((err) => {
-        if (err.code == 'failed-precondition') {
-          console.warn('Multiple tabs open, persistence can only be enabled in one tab at a a time.');
-        } else if (err.code == 'unimplemented') {
-          console.warn('The current browser does not support persistence.');
-        }
-      });
       return firestore;
     }),
     provideAuth(() => getAuth())

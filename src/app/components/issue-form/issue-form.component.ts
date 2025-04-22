@@ -4,6 +4,8 @@ import { Router, RouterModule } from '@angular/router';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators, FormsModule } from '@angular/forms';
 import { IssueService } from '../../services/issue.service';
 import { Issue } from '../../models/issue.model';
+import { Firestore } from '@angular/fire/firestore';
+import { Timestamp } from 'firebase/firestore';
 
 @Component({
   selector: 'app-issue-form',
@@ -37,6 +39,7 @@ export class IssueFormComponent implements OnInit {
       occurrenceDate: [new Date().toISOString().split('T')[0], Validators.required],
       dueDate: [null, Validators.required],
       assignee: ['', Validators.required],
+      handler: [''],
       solution: [''],
       completionCriteria: ['', Validators.required],
       progress: [0, [Validators.required, Validators.min(0), Validators.max(100)]]
