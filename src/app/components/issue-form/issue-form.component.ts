@@ -4,6 +4,8 @@ import { Router, RouterModule } from '@angular/router';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators, FormsModule } from '@angular/forms';
 import { IssueService } from '../../services/issue.service';
 import { Issue } from '../../models/issue.model';
+import { Firestore } from '@angular/fire/firestore';
+import { Timestamp } from 'firebase/firestore';
 
 @Component({
   selector: 'app-issue-form',

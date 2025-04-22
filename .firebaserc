@@ -1,5 +1,8 @@
 {
   "projects": {
-    "default": "donezo10094"
-  }
+    "default": "donezo10094",
+    "production": "donezo10094"
+  },
+  "targets": {},
+  "etags": {}
 }

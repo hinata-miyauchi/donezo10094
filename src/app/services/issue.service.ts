@@ -13,53 +13,82 @@ import {
   query,
   where,
   orderBy,
-  QuerySnapshot,
+  limit,
   DocumentData,
-  getDoc
+  CollectionReference,
+  DocumentReference,
+  getDoc,
+  serverTimestamp
 } from '@angular/fire/firestore';
+import { Timestamp } from 'firebase/firestore';
 import { Issue, IssueSummary } from '../models/issue.model';
+
+interface IssueData extends DocumentData {
+  issueNumber: number;
+  title: string;
+  description: string;
+  status: string;
+  importance: string;
+  dueDate: any;
+  completionCriteria: string;
+  solution: string;
+  occurrenceDate: any;
+  assignee: string;
+  progress: number;
+  createdAt: any;
+  updatedAt: any;
+  createdBy: string;
+}
 
 @Injectable({
   providedIn: 'root'
 })
 export class IssueService {
-  private issuesCollection;
+  private issuesCollection: CollectionReference<IssueData>;
   private lastIssueNumber = 0;
 
   constructor(private firestore: Firestore) {
-    this.issuesCollection = collection(this.firestore, 'issues');
+    this.issuesCollection = collection(this.firestore, 'issues') as CollectionReference<IssueData>;
     this.initLastIssueNumber();
   }
 
   private async initLastIssueNumber(): Promise<void> {
-    const snapshot = await getDocs(query(this.issuesCollection, orderBy('issueNumber', 'desc')));
-    if (!snapshot.empty) {
-      this.lastIssueNumber = snapshot.docs[0].data()['issueNumber'];
+    try {
+      const q = query(this.issuesCollection, orderBy('issueNumber', 'desc'), limit(1));
+      const snapshot = await getDocs(q);
+      
+      if (!snapshot.empty) {
+        const data = snapshot.docs[0].data();
+        this.lastIssueNumber = data.issueNumber || 0;
+      }
+    } catch (error) {
+      console.error('最後の課題番号の取得に失敗しました:', error);
+      this.lastIssueNumber = 0;
     }
   }
 
   getIssues(): Observable<Issue[]> {
+    const q = query(this.issuesCollection, orderBy('issueNumber', 'asc'));
     return new Observable<Issue[]>(observer => {
-      const q = query(this.issuesCollection, orderBy('issueNumber', 'asc'));
       const unsubscribe = onSnapshot(q, snapshot => {
         const issues = snapshot.docs.map(doc => {
           const data = doc.data();
           return {
             id: doc.id,
-            issueNumber: data['issueNumber'] || '',
-            title: data['title'] || '',
-            description: data['description'] || '',
-            status: data['status'] || '未着手',
-            importance: data['importance'] || '低',
-            dueDate: data['dueDate']?.toDate() || new Date(),
-            completionCriteria: data['completionCriteria'] || '',
-            solution: data['solution'] || '',
-            occurrenceDate: data['occurrenceDate']?.toDate() || new Date(),
-            assignee: data['assignee'] || '',
-            progress: data['progress'] || 0,
-            createdAt: data['createdAt']?.toDate() || new Date(),
-            updatedAt: data['updatedAt']?.toDate() || new Date(),
-            createdBy: data['createdBy']
+            issueNumber: data.issueNumber.toString(),
+            title: data.title || '',
+            description: data.description || '',
+            status: data.status || '未着手',
+            importance: data.importance || '低',
+            dueDate: data.dueDate.toDate(),
+            completionCriteria: data.completionCriteria || '',
+            solution: data.solution || '',
+            occurrenceDate: data.occurrenceDate.toDate(),
+            assignee: data.assignee || '',
+            progress: data.progress || 0,
+            createdAt: data.createdAt.toDate(),
+            updatedAt: data.updatedAt.toDate(),
+            createdBy: data.createdBy
           } as Issue;
         });
         observer.next(issues);
@@ -73,38 +102,48 @@ export class IssueService {
 
   async addIssue(issue: Omit<Issue, 'id' | 'issueNumber'>): Promise<void> {
     this.lastIssueNumber++;
-    const newIssue = {
-      ...issue,
+    const newIssue: IssueData = {
       issueNumber: this.lastIssueNumber,
-      createdAt: new Date(),
-      updatedAt: new Date()
+      title: issue.title,
+      description: issue.description,
+      status: issue.status,
+      importance: issue.importance,
+      dueDate: new Date(issue.dueDate),
+      completionCriteria: issue.completionCriteria,
+      solution: issue.solution,
+      occurrenceDate: new Date(issue.occurrenceDate),
+      assignee: issue.assignee,
+      progress: issue.progress,
+      createdAt: serverTimestamp(),
+      updatedAt: serverTimestamp(),
+      createdBy: issue.createdBy || 'システム'
     };
     await addDoc(this.issuesCollection, newIssue);
   }
 
   async getIssue(id: string): Promise<Issue | null> {
     try {
-      const docRef = doc(this.firestore, 'issues', id);
+      const docRef = doc(this.firestore, 'issues', id) as DocumentReference<IssueData>;
       const docSnap = await getDoc(docRef);
       
       if (docSnap.exists()) {
         const data = docSnap.data();
         return {
           id: docSnap.id,
-          issueNumber: data['issueNumber'] || '',
-          title: data['title'] || '',
-          description: data['description'] || '',
-          status: data['status'] || '未着手',
-          importance: data['importance'] || '低',
-          dueDate: data['dueDate']?.toDate() || new Date(),
-          completionCriteria: data['completionCriteria'] || '',
-          solution: data['solution'] || '',
-          occurrenceDate: data['occurrenceDate']?.toDate() || new Date(),
-          assignee: data['assignee'] || '',
-          progress: data['progress'] || 0,
-          createdAt: data['createdAt']?.toDate() || new Date(),
-          updatedAt: data['updatedAt']?.toDate() || new Date(),
-          createdBy: data['createdBy']
+          issueNumber: data.issueNumber.toString(),
+          title: data.title || '',
+          description: data.description || '',
+          status: data.status || '未着手',
+          importance: data.importance || '低',
+          dueDate: data.dueDate.toDate(),
+          completionCriteria: data.completionCriteria || '',
+          solution: data.solution || '',
+          occurrenceDate: data.occurrenceDate.toDate(),
+          assignee: data.assignee || '',
+          progress: data.progress || 0,
+          createdAt: data.createdAt.toDate(),
+          updatedAt: data.updatedAt.toDate(),
+          createdBy: data.createdBy
         } as Issue;
       }
       return null;
@@ -116,11 +155,23 @@ export class IssueService {
 
   async updateIssue(id: string, issue: Partial<Issue>): Promise<void> {
     try {
-      const docRef = doc(this.firestore, 'issues', id);
-      const updateData = {
-        ...issue,
-        updatedAt: new Date()
-      };
+      const docRef = doc(this.firestore, 'issues', id) as DocumentReference<IssueData>;
+      const updateData: Partial<IssueData> = {};
+
+      if (issue.title) updateData.title = issue.title;
+      if (issue.description) updateData.description = issue.description;
+      if (issue.status) updateData.status = issue.status;
+      if (issue.importance) updateData.importance = issue.importance;
+      if (issue.dueDate) updateData.dueDate = Timestamp.fromDate(issue.dueDate);
+      if (issue.completionCriteria) updateData.completionCriteria = issue.completionCriteria;
+      if (issue.solution) updateData.solution = issue.solution;
+      if (issue.occurrenceDate) updateData.occurrenceDate = Timestamp.fromDate(issue.occurrenceDate);
+      if (issue.assignee) updateData.assignee = issue.assignee;
+      if (issue.progress !== undefined) updateData.progress = issue.progress;
+      if (issue.issueNumber) updateData.issueNumber = parseInt(issue.issueNumber, 10);
+      
+      updateData.updatedAt = Timestamp.fromDate(new Date());
+      
       await updateDoc(docRef, updateData);
     } catch (error) {
       console.error('課題の更新に失敗しました:', error);
