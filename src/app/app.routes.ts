@@ -5,6 +5,7 @@ import { IssueFormComponent } from './components/issue-form/issue-form.component
 import { IssueDetailComponent } from './components/issue-detail/issue-detail.component';
 import { UserManagementComponent } from './components/user-management/user-management.component';
 import { IssueEditComponent } from './components/issue-edit/issue-edit.component';
+import { IssueCalendarComponent } from './components/issue-calendar/issue-calendar.component';
 
 export const routes: Routes = [
   { path: '', component: HomeComponent },
@@ -12,6 +13,7 @@ export const routes: Routes = [
   { path: 'issues/new', component: IssueFormComponent },
   { path: 'issues/:id', component: IssueDetailComponent },
   { path: 'settings', component: UserManagementComponent },
+  { path: 'calendar', component: IssueCalendarComponent },
   {
     path: 'edit-issue/:id',
     component: IssueEditComponent,

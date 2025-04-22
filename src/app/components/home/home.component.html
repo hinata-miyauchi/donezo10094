@@ -1,0 +1,57 @@
+<div class="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 py-12 px-4 sm:px-6 lg:px-8">
+  <div class="max-w-4xl mx-auto">
+    <div class="text-center mb-12">
+      <a routerLink="/" class="inline-block">
+        <h1 class="text-4xl font-bold text-gray-900 mb-4 hover:text-indigo-600 transition-colors duration-300">課題管理システム</h1>
+      </a>
+      <p class="text-xl text-gray-600">課題管理をシンプルに、効率的に</p>
+    </div>
+
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+      <!-- 課題一覧 -->
+      <div class="bg-white rounded-lg shadow-lg overflow-hidden hover:shadow-xl transition-shadow duration-300">
+        <a routerLink="/issues" class="block p-6">
+          <div class="text-center">
+            <div class="w-16 h-16 mx-auto bg-blue-100 rounded-full flex items-center justify-center mb-4">
+              <svg class="w-8 h-8 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01"></path>
+              </svg>
+            </div>
+            <h2 class="text-xl font-semibold text-gray-900 mb-2">課題一覧</h2>
+            <p class="text-gray-600">登録された課題の確認と管理</p>
+          </div>
+        </a>
+      </div>
+
+      <!-- 課題登録 -->
+      <div class="bg-white rounded-lg shadow-lg overflow-hidden hover:shadow-xl transition-shadow duration-300">
+        <a routerLink="/issues/new" class="block p-6">
+          <div class="text-center">
+            <div class="w-16 h-16 mx-auto bg-green-100 rounded-full flex items-center justify-center mb-4">
+              <svg class="w-8 h-8 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
+              </svg>
+            </div>
+            <h2 class="text-xl font-semibold text-gray-900 mb-2">課題登録</h2>
+            <p class="text-gray-600">新しい課題の作成と登録</p>
+          </div>
+        </a>
+      </div>
+
+      <!-- カレンダー -->
+      <div class="bg-white rounded-lg shadow-lg overflow-hidden hover:shadow-xl transition-shadow duration-300">
+        <a routerLink="/calendar" class="block p-6">
+          <div class="text-center">
+            <div class="w-16 h-16 mx-auto bg-purple-100 rounded-full flex items-center justify-center mb-4">
+              <svg class="w-8 h-8 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
+              </svg>
+            </div>
+            <h2 class="text-xl font-semibold text-gray-900 mb-2">カレンダー</h2>
+            <p class="text-gray-600">課題の期限をカレンダーで管理</p>
+          </div>
+        </a>
+      </div>
+    </div>
+  </div>
+</div> 

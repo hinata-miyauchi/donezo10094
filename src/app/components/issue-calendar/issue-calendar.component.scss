@@ -1,0 +1,74 @@
+:host {
+  display: block;
+  padding: 1rem;
+}
+
+.calendar-container {
+  width: 100%;
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 1rem;
+}
+
+::ng-deep {
+  .fc {
+    width: 100%;
+
+    .fc-toolbar-title {
+      font-size: 1.5rem;
+      font-weight: bold;
+    }
+
+    .fc-button {
+      @apply bg-indigo-600 hover:bg-indigo-700 text-white font-medium py-2 px-4 rounded;
+      border: none;
+
+      &:disabled {
+        @apply bg-gray-400 cursor-not-allowed;
+      }
+    }
+
+    .fc-button-active {
+      @apply bg-indigo-800;
+    }
+
+    .fc-event {
+      cursor: pointer;
+      padding: 2px 4px;
+      margin: 1px 0;
+    }
+
+    .importance-high {
+      @apply bg-red-500 border-red-600;
+    }
+
+    .importance-medium {
+      @apply bg-yellow-500 border-yellow-600;
+    }
+
+    .importance-low {
+      @apply bg-green-500 border-green-600;
+    }
+
+    .status-open {
+      opacity: 1;
+    }
+
+    .status-in-progress {
+      @apply bg-blue-500 border-blue-600;
+    }
+
+    .status-done {
+      opacity: 0.5;
+    }
+
+    .fc-toolbar {
+      flex-wrap: wrap;
+      gap: 0.5rem;
+    }
+    
+    .fc-view-harness {
+      width: 100%;
+    }
+  }
+} 

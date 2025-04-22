@@ -87,7 +87,10 @@
       <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
         <div class="form-group">
           <label for="dueDate">対応期限</label>
-          <input id="dueDate" type="date" formControlName="dueDate" class="form-input">
+          <div class="flex gap-2">
+            <input id="dueDate" type="date" formControlName="dueDate" class="form-input flex-1">
+            <input id="dueTime" type="time" formControlName="dueTime" class="form-input w-32">
+          </div>
         </div>
         <div class="form-group">
           <label for="completionCriteria">完了条件</label>

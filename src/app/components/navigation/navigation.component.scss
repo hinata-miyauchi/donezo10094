@@ -1,0 +1,11 @@
+// ナビゲーションコンポーネントのスタイル
+:host {
+  display: block;
+  width: 100%;
+}
+
+.nav-link {
+  &.active {
+    @apply border-indigo-500 text-gray-900;
+  }
+} 

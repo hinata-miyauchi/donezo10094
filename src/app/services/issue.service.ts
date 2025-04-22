@@ -1,5 +1,5 @@
 // src/app/services/issue.service.ts
-import { Injectable } from '@angular/core';
+import { Injectable, inject } from '@angular/core';
 import { Observable, map } from 'rxjs';
 import {
   Firestore,
@@ -15,27 +15,31 @@ import {
   orderBy,
   limit,
   getDoc,
-  serverTimestamp
-} from 'firebase/firestore';
-import { getFirestore } from 'firebase/firestore';
+  serverTimestamp,
+  CollectionReference,
+  DocumentData
+} from '@angular/fire/firestore';
 import { Issue, IssueSummary } from '../models/issue.model';
 
 @Injectable({
   providedIn: 'root'
 })
 export class IssueService {
-  private firestore: Firestore;
+  private readonly firestore = inject(Firestore);
+  private readonly COLLECTION_NAME = 'issues';
   private lastIssueNumber = 0;
 
   constructor() {
-    this.firestore = getFirestore();
     this.initLastIssueNumber();
+  }
+
+  private get issuesCollection(): CollectionReference<DocumentData> {
+    return collection(this.firestore, this.COLLECTION_NAME);
   }
 
   private async initLastIssueNumber(): Promise<void> {
     try {
-      const issuesCollection = collection(this.firestore, 'issues');
-      const q = query(issuesCollection, orderBy('issueNumber', 'desc'), limit(1));
+      const q = query(this.issuesCollection, orderBy('issueNumber', 'desc'), limit(1));
       const snapshot = await getDocs(q);
       
       if (!snapshot.empty) {
@@ -49,8 +53,7 @@ export class IssueService {
   }
 
   getIssues(): Observable<Issue[]> {
-    const issuesCollection = collection(this.firestore, 'issues');
-    const q = query(issuesCollection, orderBy('issueNumber', 'asc'));
+    const q = query(this.issuesCollection, orderBy('issueNumber', 'asc'));
     
     return new Observable<Issue[]>(observer => {
       const unsubscribe = onSnapshot(q, snapshot => {
@@ -86,7 +89,6 @@ export class IssueService {
 
   async addIssue(issue: Omit<Issue, 'id' | 'issueNumber'>): Promise<void> {
     try {
-      const issuesCollection = collection(this.firestore, 'issues');
       this.lastIssueNumber++;
       
       const newIssue = {
@@ -106,7 +108,7 @@ export class IssueService {
         createdBy: issue.createdBy || 'システム'
       };
 
-      await addDoc(issuesCollection, newIssue);
+      await addDoc(this.issuesCollection, newIssue);
     } catch (error) {
       console.error('Error adding issue:', error);
       throw error;
@@ -115,7 +117,7 @@ export class IssueService {
 
   async getIssue(id: string): Promise<Issue | null> {
     try {
-      const docRef = doc(this.firestore, 'issues', id);
+      const docRef = doc(this.issuesCollection, id);
       const docSnap = await getDoc(docRef);
       
       if (docSnap.exists()) {
@@ -147,7 +149,7 @@ export class IssueService {
 
   async updateIssue(id: string, issue: Partial<Issue>): Promise<void> {
     try {
-      const docRef = doc(this.firestore, 'issues', id);
+      const docRef = doc(this.issuesCollection, id);
       const updateData: any = {
         ...issue,
         updatedAt: serverTimestamp()
@@ -166,18 +168,33 @@ export class IssueService {
 
   async deleteIssue(id: string): Promise<void> {
     try {
-      const docRef = doc(this.firestore, 'issues', id);
+      const docRef = doc(this.issuesCollection, id);
+      const docSnap = await getDoc(docRef);
+
+      if (!docSnap.exists()) {
+        throw new Error('指定された課題が見つかりませんでした。');
+      }
+
       await deleteDoc(docRef);
+
+      // 削除後の確認
+      const confirmSnap = await getDoc(docRef);
+      if (confirmSnap.exists()) {
+        throw new Error('課題の削除が正常に完了しませんでした。');
+      }
     } catch (error) {
-      console.error('課題の削除に失敗しました:', error);
-      throw error;
+      console.error('課題の削除中にエラーが発生しました:', error);
+      if (error instanceof Error) {
+        throw new Error(`課題の削除に失敗しました: ${error.message}`);
+      } else {
+        throw new Error('課題の削除に失敗しました: 予期せぬエラーが発生しました。');
+      }
     }
   }
 
   getIssueSummary(): Observable<IssueSummary> {
     return new Observable<IssueSummary>(observer => {
-      const issuesCollection = collection(this.firestore, 'issues');
-      const q = query(issuesCollection, orderBy('issueNumber', 'asc'));
+      const q = query(this.issuesCollection, orderBy('issueNumber', 'asc'));
 
       const unsubscribe = onSnapshot(q, snapshot => {
         const issues = snapshot.docs.map(doc => doc.data());
@@ -291,5 +308,21 @@ export class IssueService {
         return true;
       }))
     );
+  }
+
+  // 担当者一覧を取得
+  async getAssignees(): Promise<string[]> {
+    const querySnapshot = await getDocs(this.issuesCollection);
+    
+    // 担当者の重複を除去して返す
+    const assignees = new Set<string>();
+    querySnapshot.forEach(doc => {
+      const data = doc.data();
+      if (data['assignee']) {
+        assignees.add(data['assignee']);
+      }
+    });
+    
+    return Array.from(assignees).sort();
   }
 }

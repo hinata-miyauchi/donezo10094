@@ -1,11 +1,11 @@
 import { Component, OnInit, OnDestroy } from '@angular/core';
-import { CommonModule } from '@angular/common';
-import { RouterModule } from '@angular/router';
 import { FormBuilder, FormGroup, ReactiveFormsModule } from '@angular/forms';
 import { IssueService } from '../../services/issue.service';
 import { Issue } from '../../models/issue.model';
-import { Subject, BehaviorSubject, from } from 'rxjs';
-import { debounceTime, distinctUntilChanged, takeUntil, map } from 'rxjs/operators';
+import { Subject, BehaviorSubject } from 'rxjs';
+import { CommonModule, DatePipe, DecimalPipe } from '@angular/common';
+import { RouterModule } from '@angular/router';
+import { FormsModule } from '@angular/forms';
 
 interface IssueSummary {
   total: number;
@@ -19,12 +19,10 @@ interface IssueSummary {
 @Component({
   selector: 'app-issue-list',
   templateUrl: './issue-list.component.html',
+  styleUrls: ['./issue-list.component.scss'],
   standalone: true,
-  imports: [
-    CommonModule,
-    RouterModule,
-    ReactiveFormsModule
-  ]
+  imports: [CommonModule, RouterModule, FormsModule, ReactiveFormsModule],
+  providers: [DatePipe, DecimalPipe]
 })
 export class IssueListComponent implements OnInit, OnDestroy {
   issues: Issue[] = [];
@@ -42,6 +40,15 @@ export class IssueListComponent implements OnInit, OnDestroy {
   });
   overdueIssues$ = new BehaviorSubject<Issue[]>([]);
   dueSoonIssues$ = new BehaviorSubject<Issue[]>([]);
+  assignees: string[] = [];
+  searchTerm: string = '';
+  selectedStatus: string = '';
+  selectedAssignee: string = '';
+  summary = {
+    totalIssues: 0,
+    completedIssues: 0,
+    averageProgress: 0
+  };
 
   readonly statusOptions = ['すべて', '未着手', '対応中', '完了'];
   readonly importanceOptions = ['すべて', '低', '中', '高'];
@@ -64,7 +71,7 @@ export class IssueListComponent implements OnInit, OnDestroy {
       keyword: [''],
       status: ['すべて'],
       importance: ['すべて'],
-      assignee: [''],
+      assignee: ['すべて'],
       startDate: [''],
       endDate: [''],
       sortBy: ['dueDate'],
@@ -74,6 +81,7 @@ export class IssueListComponent implements OnInit, OnDestroy {
 
   ngOnInit(): void {
     this.loadIssues();
+    this.loadAssignees();
   }
 
   ngOnDestroy(): void {
@@ -95,6 +103,16 @@ export class IssueListComponent implements OnInit, OnDestroy {
         this.isLoading = false;
       }
     });
+  }
+
+  private async loadAssignees(): Promise<void> {
+    try {
+      this.assignees = await this.issueService.getAssignees();
+      // 「すべて」オプションを先頭に追加
+      this.assignees.unshift('すべて');
+    } catch (error) {
+      console.error('担当者一覧の取得に失敗しました:', error);
+    }
   }
 
   private updateIssueSummary(): void {
@@ -135,8 +153,7 @@ export class IssueListComponent implements OnInit, OnDestroy {
 
       const matchesStatus = status === 'すべて' || issue.status === status;
       const matchesImportance = importance === 'すべて' || issue.importance === importance;
-      const matchesAssignee = !assignee || 
-        issue.assignee.toLowerCase().includes(assignee.toLowerCase());
+      const matchesAssignee = assignee === 'すべて' || issue.assignee === assignee;
 
       const matchesDate = (!startDate || new Date(startDate) <= issue.dueDate) &&
                          (!endDate || new Date(endDate) >= issue.dueDate);
@@ -195,7 +212,7 @@ export class IssueListComponent implements OnInit, OnDestroy {
       keyword: '',
       status: 'すべて',
       importance: 'すべて',
-      assignee: '',
+      assignee: 'すべて',
       startDate: '',
       endDate: '',
       sortBy: 'dueDate',
@@ -208,18 +225,22 @@ export class IssueListComponent implements OnInit, OnDestroy {
   }
 
   deleteIssue(issue: Issue): void {
-    if (confirm(`課題「${issue.title}」を削除してもよろしいですか？`)) {
-      from(this.issueService.deleteIssue(issue.id)).subscribe({
-        next: () => {
+    if (confirm('この課題を削除してもよろしいですか？')) {
+      this.issueService.deleteIssue(issue.id)
+        .then(() => {
+          // 課題リストから削除
           this.issues = this.issues.filter(i => i.id !== issue.id);
-          this.applyFilters();
+          this.filteredIssues = this.filteredIssues.filter(i => i.id !== issue.id);
+          
+          // サマリーの更新
           this.updateIssueSummary();
-        },
-        error: (error: Error) => {
+          
+          // フィルターの再適用
+          this.applyFilters();
+        })
+        .catch(error => {
           console.error('課題の削除に失敗しました:', error);
-          alert('課題の削除に失敗しました。');
-        }
-      });
+        });
     }
   }
 

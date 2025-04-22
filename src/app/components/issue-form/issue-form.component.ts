@@ -36,6 +36,7 @@ export class IssueFormComponent implements OnInit {
       importance: ['中', Validators.required],
       occurrenceDate: [new Date().toISOString().split('T')[0], Validators.required],
       dueDate: [null, Validators.required],
+      dueTime: ['17:00', Validators.required],
       assignee: ['', Validators.required],
       handler: [''],
       solution: [''],
@@ -58,13 +59,19 @@ export class IssueFormComponent implements OnInit {
       this.isSubmitting = true;
       const formValue = this.issueForm.value;
       
+      const dueDateWithTime = formValue.dueDate && formValue.dueTime
+        ? new Date(`${formValue.dueDate}T${formValue.dueTime}`)
+        : null;
+
       const issueData = {
         ...formValue,
         occurrenceDate: new Date(formValue.occurrenceDate),
-        dueDate: new Date(formValue.dueDate),
+        dueDate: dueDateWithTime,
         createdBy: 'システム',
         progress: Number(formValue.progress)
       };
+
+      delete issueData.dueTime;
 
       await this.issueService.addIssue(issueData);
       console.log('課題が正常に作成されました');

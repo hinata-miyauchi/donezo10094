@@ -1,24 +1,14 @@
 import { Component } from '@angular/core';
-import { CommonModule } from '@angular/common';
-import { RouterModule } from '@angular/router';
-import { ReactiveFormsModule, FormsModule } from '@angular/forms';
+import { RouterOutlet } from '@angular/router';
+import { NavigationComponent } from './components/navigation/navigation.component';
 
 @Component({
   selector: 'app-root',
   templateUrl: './app.component.html',
   styleUrls: ['./app.component.scss'],
-  standalone: true,
-  imports: [
-    CommonModule,
-    RouterModule,
-    ReactiveFormsModule,
-    FormsModule
-  ]
+  imports: [RouterOutlet, NavigationComponent],
+  standalone: true
 })
 export class AppComponent {
-  title = '課題管理システム';
-
-  constructor() {
-    console.log('AppComponent initialized');
-  }
+  title = 'donezo10094';
 }
