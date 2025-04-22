@@ -8,23 +8,47 @@
           <p class="mt-1 max-w-2xl text-sm text-gray-500">課題の詳細情報と編集</p>
         </div>
         <div class="flex space-x-3">
-          <button *ngIf="!isEditing" type="button" (click)="startEditing()"
-            class="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
-            <svg class="-ml-1 mr-2 h-5 w-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
-              stroke="currentColor">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
-            </svg>
-            編集
-          </button>
-          <button type="button" (click)="goBack()"
-            class="inline-flex items-center px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
-            <svg class="-ml-1 mr-2 h-5 w-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
-              stroke="currentColor">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
-            </svg>
-            戻る
-          </button>
+          <!-- 編集モードの場合 -->
+          <div *ngIf="isEditing" class="flex space-x-2">
+            <button type="button" (click)="saveChanges()"
+              class="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500">
+              <svg class="-ml-1 mr-2 h-5 w-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
+                stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                  d="M5 13l4 4L19 7" />
+              </svg>
+              保存
+            </button>
+            <button type="button" (click)="cancelEditing()"
+              class="inline-flex items-center px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
+              <svg class="-ml-1 mr-2 h-5 w-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
+                stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                  d="M6 18L18 6M6 6l12 12" />
+              </svg>
+              キャンセル
+            </button>
+          </div>
+          <!-- 表示モードの場合 -->
+          <div *ngIf="!isEditing" class="flex space-x-2">
+            <button type="button" (click)="startEditing()"
+              class="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
+              <svg class="-ml-1 mr-2 h-5 w-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
+                stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                  d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+              </svg>
+              編集
+            </button>
+            <button type="button" (click)="goBack()"
+              class="inline-flex items-center px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
+              <svg class="-ml-1 mr-2 h-5 w-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
+                stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+              </svg>
+              戻る
+            </button>
+          </div>
         </div>
       </div>
 
@@ -78,7 +102,7 @@
           <!-- 期限日 -->
           <div class="bg-white px-4 py-5 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6">
             <dt class="text-sm font-medium text-gray-500">対応期限</dt>
-            <dd class="mt-1 text-sm text-gray-900 sm:mt-0 sm:col-span-2">{{ issue.dueDate | date:'yyyy/MM/dd' }}</dd>
+            <dd class="mt-1 text-sm text-gray-900 sm:mt-0 sm:col-span-2">{{ issue.dueDate | date:'yyyy/MM/dd HH:mm' }}</dd>
           </div>
 
           <!-- 完了条件 -->
@@ -127,27 +151,27 @@
       <!-- 編集モード -->
       <div *ngIf="isEditing" class="border-t border-gray-200">
         <form [formGroup]="editForm" class="space-y-6 p-6">
-          <div class="grid grid-cols-1 gap-y-6 gap-x-4 sm:grid-cols-6">
-            <!-- タイトル -->
-            <div class="sm:col-span-6">
-              <label for="title" class="block text-sm font-medium text-gray-700">タイトル</label>
-              <div class="mt-1">
-                <input type="text" id="title" formControlName="title"
-                  class="shadow-sm focus:ring-indigo-500 focus:border-indigo-500 block w-full sm:text-sm border-gray-300 rounded-md">
-              </div>
+          <!-- タイトル -->
+          <div class="sm:col-span-6">
+            <label for="title" class="block text-sm font-medium text-gray-700">タイトル</label>
+            <div class="mt-1">
+              <input type="text" id="title" formControlName="title"
+                class="shadow-sm focus:ring-indigo-500 focus:border-indigo-500 block w-full sm:text-sm border-gray-300 rounded-md">
             </div>
+          </div>
 
-            <!-- 説明 -->
-            <div class="sm:col-span-6">
-              <label for="description" class="block text-sm font-medium text-gray-700">説明</label>
-              <div class="mt-1">
-                <textarea id="description" rows="3" formControlName="description"
-                  class="shadow-sm focus:ring-indigo-500 focus:border-indigo-500 block w-full sm:text-sm border-gray-300 rounded-md"></textarea>
-              </div>
+          <!-- 説明 -->
+          <div class="sm:col-span-6">
+            <label for="description" class="block text-sm font-medium text-gray-700">説明</label>
+            <div class="mt-1">
+              <textarea id="description" rows="3" formControlName="description"
+                class="shadow-sm focus:ring-indigo-500 focus:border-indigo-500 block w-full sm:text-sm border-gray-300 rounded-md"></textarea>
             </div>
+          </div>
 
+          <div class="grid grid-cols-1 gap-y-6 gap-x-4 sm:grid-cols-2">
             <!-- ステータス -->
-            <div class="sm:col-span-3">
+            <div>
               <label for="status" class="block text-sm font-medium text-gray-700">ステータス</label>
               <div class="mt-1">
                 <select id="status" formControlName="status"
@@ -158,7 +182,7 @@
             </div>
 
             <!-- 重要度 -->
-            <div class="sm:col-span-3">
+            <div>
               <label for="importance" class="block text-sm font-medium text-gray-700">重要度</label>
               <div class="mt-1">
                 <select id="importance" formControlName="importance"
@@ -169,65 +193,56 @@
             </div>
 
             <!-- 対応期限 -->
-            <div class="sm:col-span-3">
+            <div>
               <label for="dueDate" class="block text-sm font-medium text-gray-700">対応期限</label>
               <div class="mt-1">
-                <input type="date" id="dueDate" formControlName="dueDate"
+                <input type="datetime-local" id="dueDate" formControlName="dueDate"
                   class="shadow-sm focus:ring-indigo-500 focus:border-indigo-500 block w-full sm:text-sm border-gray-300 rounded-md">
               </div>
             </div>
 
-            <!-- 完了条件 -->
-            <div class="sm:col-span-6">
-              <label for="completionCriteria" class="block text-sm font-medium text-gray-700">完了条件</label>
-              <div class="mt-1">
-                <textarea id="completionCriteria" rows="3" formControlName="completionCriteria"
-                  class="shadow-sm focus:ring-indigo-500 focus:border-indigo-500 block w-full sm:text-sm border-gray-300 rounded-md"
-                  placeholder="課題が完了したと判断できる条件を入力してください"></textarea>
-              </div>
-            </div>
-
-            <!-- 対応・解決方法 -->
-            <div class="sm:col-span-6">
-              <label for="solution" class="block text-sm font-medium text-gray-700">対応・解決方法</label>
-              <div class="mt-1">
-                <textarea id="solution" rows="3" formControlName="solution"
-                  class="shadow-sm focus:ring-indigo-500 focus:border-indigo-500 block w-full sm:text-sm border-gray-300 rounded-md"
-                  placeholder="課題の対応・解決方法を入力してください"></textarea>
-              </div>
-            </div>
-
             <!-- 担当者 -->
-            <div class="sm:col-span-3">
+            <div>
               <label for="assignee" class="block text-sm font-medium text-gray-700">担当者</label>
               <div class="mt-1">
                 <input type="text" id="assignee" formControlName="assignee"
                   class="shadow-sm focus:ring-indigo-500 focus:border-indigo-500 block w-full sm:text-sm border-gray-300 rounded-md">
               </div>
             </div>
+          </div>
 
-            <!-- 進捗 -->
-            <div class="sm:col-span-6">
-              <label for="progress" class="block text-sm font-medium text-gray-700">進捗 (%)</label>
-              <div class="mt-1">
-                <input type="number" id="progress" formControlName="progress" min="0" max="100"
-                  class="shadow-sm focus:ring-indigo-500 focus:border-indigo-500 block w-full sm:text-sm border-gray-300 rounded-md">
-              </div>
+          <!-- 進捗 -->
+          <div>
+            <label for="progress" class="block text-sm font-medium text-gray-700">進捗 ({{ editForm.get('progress')?.value || 0 }}%)</label>
+            <div class="mt-1">
+              <input type="range" id="progress" formControlName="progress" min="0" max="100" step="5"
+                class="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer">
             </div>
           </div>
 
-          <!-- ボタン群 -->
-          <div class="flex justify-end space-x-3">
-            <button type="button" (click)="cancelEditing()"
-              class="inline-flex items-center px-4 py-2 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
-              キャンセル
-            </button>
-            <button type="button" (click)="saveChanges()"
-              class="inline-flex items-center px-4 py-2 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
-              保存
-            </button>
+          <!-- 完了条件 -->
+          <div class="sm:col-span-6">
+            <label for="completionCriteria" class="block text-sm font-medium text-gray-700">完了条件</label>
+            <div class="mt-1">
+              <textarea id="completionCriteria" rows="3" formControlName="completionCriteria"
+                class="shadow-sm focus:ring-indigo-500 focus:border-indigo-500 block w-full sm:text-sm border-gray-300 rounded-md"></textarea>
+            </div>
+          </div>
+
+          <!-- 対応・解決方法 -->
+          <div class="sm:col-span-6">
+            <label for="solution" class="block text-sm font-medium text-gray-700">対応・解決方法</label>
+            <div class="mt-1">
+              <textarea id="solution" rows="3" formControlName="solution"
+                class="shadow-sm focus:ring-indigo-500 focus:border-indigo-500 block w-full sm:text-sm border-gray-300 rounded-md"></textarea>
+            </div>
           </div>
         </form>
+      </div>
+
+      <!-- チャット -->
+      <div class="border-t border-gray-200 mt-6" *ngIf="issue?.id">
+        <app-issue-chat [issueId]="issue!.id"></app-issue-chat>
       </div>
     </div>
   </div>

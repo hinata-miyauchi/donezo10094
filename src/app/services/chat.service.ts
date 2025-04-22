@@ -1,17 +1,7 @@
-import { Injectable } from '@angular/core';
-import { Firestore } from '@angular/fire/firestore';
-import {
-  collection,
-  addDoc,
-  query,
-  where,
-  orderBy,
-  serverTimestamp,
-  Timestamp,
-  getDocs,
-  onSnapshot
-} from 'firebase/firestore';
-import { Observable, from, map, catchError } from 'rxjs';
+import { Injectable, inject } from '@angular/core';
+import { Firestore, collection, addDoc, query, where, orderBy, serverTimestamp, onSnapshot } from '@angular/fire/firestore';
+import { Timestamp } from 'firebase/firestore';
+import { Observable } from 'rxjs';
 import { ChatMessage } from '../models/chat-message.model';
 
 @Injectable({
@@ -19,15 +9,14 @@ import { ChatMessage } from '../models/chat-message.model';
 })
 export class ChatService {
   private readonly COLLECTION_NAME = 'chat-messages';
-
-  constructor(private firestore: Firestore) {}
+  private firestore: Firestore = inject(Firestore);
 
   // 特定の課題に関するメッセージを取得
   getMessages(issueId: string): Observable<ChatMessage[]> {
     console.log('Getting messages for issueId:', issueId);
-    const messagesCollection = collection(this.firestore, this.COLLECTION_NAME);
+    const messagesRef = collection(this.firestore, this.COLLECTION_NAME);
     const q = query(
-      messagesCollection,
+      messagesRef,
       where('issueId', '==', issueId),
       orderBy('timestamp', 'asc')
     );
@@ -60,14 +49,14 @@ export class ChatService {
   // 新しいメッセージを送信
   async sendMessage(message: Omit<ChatMessage, 'id' | 'timestamp'>): Promise<void> {
     console.log('Sending message:', message);
-    const messagesCollection = collection(this.firestore, this.COLLECTION_NAME);
     try {
+      const messagesRef = collection(this.firestore, this.COLLECTION_NAME);
       const messageData = {
         ...message,
         timestamp: serverTimestamp()
       };
       
-      const docRef = await addDoc(messagesCollection, messageData);
+      const docRef = await addDoc(messagesRef, messageData);
       console.log('Message sent successfully with ID:', docRef.id);
     } catch (error) {
       console.error('Error sending message:', error);

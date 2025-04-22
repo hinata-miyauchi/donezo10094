@@ -66,14 +66,14 @@ export class IssueService {
             description: data['description'] || '',
             status: data['status'] || '未着手',
             importance: data['importance'] || '低',
-            dueDate: data['dueDate'].toDate(),
+            dueDate: this.convertToDate(data['dueDate']),
             completionCriteria: data['completionCriteria'] || '',
             solution: data['solution'] || '',
-            occurrenceDate: data['occurrenceDate'].toDate(),
+            occurrenceDate: this.convertToDate(data['occurrenceDate']),
             assignee: data['assignee'] || '',
             progress: data['progress'] || 0,
-            createdAt: data['createdAt']?.toDate() || new Date(),
-            updatedAt: data['updatedAt']?.toDate() || new Date(),
+            createdAt: this.convertToDate(data['createdAt']),
+            updatedAt: this.convertToDate(data['updatedAt']),
             createdBy: data['createdBy'] || 'システム'
           } as Issue;
         });
@@ -129,14 +129,14 @@ export class IssueService {
           description: data['description'] || '',
           status: data['status'] || '未着手',
           importance: data['importance'] || '低',
-          dueDate: data['dueDate'].toDate(),
+          dueDate: this.convertToDate(data['dueDate']),
           completionCriteria: data['completionCriteria'] || '',
           solution: data['solution'] || '',
-          occurrenceDate: data['occurrenceDate'].toDate(),
+          occurrenceDate: this.convertToDate(data['occurrenceDate']),
           assignee: data['assignee'] || '',
           progress: data['progress'] || 0,
-          createdAt: data['createdAt']?.toDate() || new Date(),
-          updatedAt: data['updatedAt']?.toDate() || new Date(),
+          createdAt: this.convertToDate(data['createdAt']) || new Date(),
+          updatedAt: this.convertToDate(data['updatedAt']) || new Date(),
           createdBy: data['createdBy'] || 'システム'
         } as Issue;
       }
@@ -145,6 +145,14 @@ export class IssueService {
       console.error('課題の取得に失敗しました:', error);
       throw error;
     }
+  }
+
+  private convertToDate(value: any): Date {
+    if (!value) return new Date();
+    if (value instanceof Date) return value;
+    if (value.toDate && typeof value.toDate === 'function') return value.toDate();
+    if (typeof value === 'string') return new Date(value);
+    return new Date();
   }
 
   async updateIssue(id: string, issue: Partial<Issue>): Promise<void> {
@@ -203,7 +211,8 @@ export class IssueService {
         const inProgress = issues.filter(i => i['status'] === '対応中').length;
         const notStarted = issues.filter(i => i['status'] === '未着手').length;
         const overdue = issues.filter(i => {
-          return i['dueDate'].toDate() < new Date() && i['status'] !== '完了';
+          const dueDate = this.convertToDate(i['dueDate']);
+          return dueDate < new Date() && i['status'] !== '完了';
         }).length;
         const averageProgress = total > 0 
           ? issues.reduce((acc, curr) => acc + (curr['progress'] || 0), 0) / total 
