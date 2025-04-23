@@ -10,6 +10,53 @@
   padding: 1rem;
 }
 
+.legend-container {
+  background-color: white;
+  padding: 1rem;
+  border-radius: 0.5rem;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.legend-box {
+  display: inline-block;
+  width: 40px;
+  height: 24px;
+  border-radius: 4px;
+}
+
+// 重要度のサンプル
+.legend-box.importance-高 {
+  background-color: rgba(239, 68, 68, 0.4);
+  border: 2px solid rgb(239, 68, 68);
+}
+
+.legend-box.importance-中 {
+  background-color: rgba(245, 158, 11, 0.4);
+  border: 2px solid rgb(245, 158, 11);
+}
+
+.legend-box.importance-低 {
+  background-color: rgba(59, 130, 246, 0.4);
+  border: 2px solid rgb(59, 130, 246);
+}
+
+// ステータスのサンプル
+.legend-box.status-未着手-sample {
+  background-color: rgba(59, 130, 246, 0.4);
+  border: 3px dotted rgb(59, 130, 246);
+}
+
+.legend-box.status-対応中-sample {
+  background-color: rgba(59, 130, 246, 0.4);
+  border: 3px solid rgb(59, 130, 246);
+}
+
+.legend-box.status-完了-sample {
+  background-color: rgba(156, 163, 175, 0.4);
+  border: 2px solid rgb(107, 114, 128);
+  filter: grayscale(70%);
+}
+
 ::ng-deep {
   .fc {
     width: 100%;
@@ -38,16 +85,40 @@
       margin: 1px 0;
     }
 
-    .importance-high {
-      @apply bg-red-500 border-red-600;
+    .importance-高 {
+      background-color: rgba(239, 68, 68, 0.4) !important;
+      border-color: rgb(239, 68, 68) !important;
+      color: rgb(127, 29, 29) !important;
+
+      &.status-完了 {
+        background-color: rgba(156, 163, 175, 0.4) !important;
+        border-color: rgb(107, 114, 128) !important;
+        color: rgb(75, 85, 99) !important;
+      }
     }
 
-    .importance-medium {
-      @apply bg-yellow-500 border-yellow-600;
+    .importance-中 {
+      background-color: rgba(245, 158, 11, 0.4) !important;
+      border-color: rgb(245, 158, 11) !important;
+      color: rgb(120, 53, 15) !important;
+
+      &.status-完了 {
+        background-color: rgba(156, 163, 175, 0.4) !important;
+        border-color: rgb(107, 114, 128) !important;
+        color: rgb(75, 85, 99) !important;
+      }
     }
 
-    .importance-low {
-      @apply bg-green-500 border-green-600;
+    .importance-低 {
+      background-color: rgba(59, 130, 246, 0.4) !important;
+      border-color: rgb(59, 130, 246) !important;
+      color: rgb(30, 58, 138) !important;
+
+      &.status-完了 {
+        background-color: rgba(156, 163, 175, 0.4) !important;
+        border-color: rgb(107, 114, 128) !important;
+        color: rgb(75, 85, 99) !important;
+      }
     }
 
     .status-open {
@@ -62,6 +133,26 @@
       opacity: 0.5;
     }
 
+    .status-完了 {
+      border-style: solid !important;
+      opacity: 0.7;
+      filter: grayscale(70%);
+      
+      .fc-event-title, .fc-event-time {
+        text-decoration: line-through;
+      }
+    }
+
+    .status-対応中 {
+      border-width: 3px !important;
+      border-style: solid !important;
+    }
+
+    .status-未着手 {
+      border-width: 3px !important;
+      border-style: dotted !important;
+    }
+
     .fc-toolbar {
       flex-wrap: wrap;
       gap: 0.5rem;
@@ -69,6 +160,78 @@
     
     .fc-view-harness {
       width: 100%;
+    }
+
+    .fc-event {
+      cursor: pointer;
+      transition: transform 0.2s, box-shadow 0.2s;
+
+      &:hover {
+        transform: scale(1.02);
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        z-index: 5;
+      }
+    }
+
+    .fc-timegrid-event {
+      min-height: 1.5em;
+      height: auto !important;
+      max-height: none !important;
+      border-radius: 4px;
+      margin: 1px;
+      padding: 2px 4px;
+
+      .fc-event-main {
+        padding: 2px;
+        height: 100%;
+      }
+
+      .fc-event-title {
+        font-weight: 500;
+        white-space: normal;
+        overflow: hidden;
+        display: -webkit-box;
+        -webkit-line-clamp: none;
+        -webkit-box-orient: vertical;
+        height: auto;
+        line-height: 1.4;
+      }
+
+      .fc-event-time {
+        font-size: 0.85em;
+        opacity: 0.8;
+      }
+    }
+
+    .fc-timegrid-now-indicator-line {
+      border-color: #dc2626;
+    }
+
+    .fc-timegrid-now-indicator-arrow {
+      border-color: #dc2626;
+      border-width: 5px;
+    }
+
+    // スロットの高さを調整
+    .fc-timegrid-slot {
+      height: 3em !important;
+    }
+
+    // イベントのリサイズハンドルを表示
+    .fc-timegrid-event-harness {
+      .fc-timegrid-event {
+        cursor: move;
+        
+        &::after {
+          content: '';
+          position: absolute;
+          bottom: 0;
+          left: 0;
+          right: 0;
+          height: 6px;
+          cursor: ns-resize;
+        }
+      }
     }
   }
 } 
