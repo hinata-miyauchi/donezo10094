@@ -1,23 +1,48 @@
 import { Routes } from '@angular/router';
+import { AuthGuard } from './guards/auth.guard';
 import { HomeComponent } from './components/home/home.component';
+import { LoginComponent } from './components/auth/login/login.component';
+import { RegisterComponent } from './components/auth/register/register.component';
 import { IssueListComponent } from './components/issue-list/issue-list.component';
 import { IssueFormComponent } from './components/issue-form/issue-form.component';
-import { IssueDetailComponent } from './components/issue-detail/issue-detail.component';
-import { UserManagementComponent } from './components/user-management/user-management.component';
-import { IssueEditComponent } from './components/issue-edit/issue-edit.component';
 import { IssueCalendarComponent } from './components/issue-calendar/issue-calendar.component';
+import { TeamManagementComponent } from './components/team/team-management/team-management.component';
+import { UserProfileComponent } from './components/user/user-profile/user-profile.component';
+import { IssueDetailComponent } from './components/issue-detail/issue-detail.component';
 
 export const routes: Routes = [
   { path: '', component: HomeComponent },
-  { path: 'issues', component: IssueListComponent },
-  { path: 'issues/new', component: IssueFormComponent },
-  { path: 'issues/:id', component: IssueDetailComponent },
-  { path: 'settings', component: UserManagementComponent },
-  { path: 'calendar', component: IssueCalendarComponent },
-  {
-    path: 'edit-issue/:id',
-    component: IssueEditComponent,
-    title: '課題編集'
+  { path: 'login', component: LoginComponent },
+  { path: 'register', component: RegisterComponent },
+  { 
+    path: 'issues', 
+    component: IssueListComponent,
+    canActivate: [AuthGuard]
+  },
+  { 
+    path: 'issues/new', 
+    component: IssueFormComponent,
+    canActivate: [AuthGuard]
+  },
+  { 
+    path: 'issues/:id', 
+    component: IssueDetailComponent,
+    canActivate: [AuthGuard]
+  },
+  { 
+    path: 'calendar', 
+    component: IssueCalendarComponent,
+    canActivate: [AuthGuard]
+  },
+  { 
+    path: 'teams', 
+    component: TeamManagementComponent,
+    canActivate: [AuthGuard]
+  },
+  { 
+    path: 'settings', 
+    component: UserProfileComponent,
+    canActivate: [AuthGuard]
   },
   { path: '**', redirectTo: '' }
 ];

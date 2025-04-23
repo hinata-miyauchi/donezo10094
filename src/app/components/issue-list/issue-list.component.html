@@ -4,82 +4,125 @@
     <div class="mb-8" *ngIf="issueSummary$ | async as summary">
       <div class="bg-white overflow-hidden shadow rounded-lg">
         <div class="px-4 py-5 sm:p-6">
-          <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
-            <div class="bg-gray-50 rounded-lg p-4">
-              <h3 class="text-sm font-medium text-gray-500">全課題数</h3>
-              <p class="mt-1 text-2xl font-semibold text-gray-900">{{ summary.total }}</p>
-            </div>
-            <div class="bg-gray-50 rounded-lg p-4">
-              <h3 class="text-sm font-medium text-gray-500">完了</h3>
-              <p class="mt-1 text-2xl font-semibold text-green-600">{{ summary.completed }}</p>
-            </div>
-            <div class="bg-gray-50 rounded-lg p-4">
-              <h3 class="text-sm font-medium text-gray-500">対応中</h3>
-              <p class="mt-1 text-2xl font-semibold text-blue-600">{{ summary.inProgress }}</p>
-            </div>
-            <div class="bg-gray-50 rounded-lg p-4">
-              <h3 class="text-sm font-medium text-gray-500">未着手</h3>
-              <p class="mt-1 text-2xl font-semibold text-gray-600">{{ summary.notStarted }}</p>
-            </div>
-            <div class="bg-gray-50 rounded-lg p-4">
-              <h3 class="text-sm font-medium text-gray-500">期限超過</h3>
-              <p class="mt-1 text-2xl font-semibold text-red-600">{{ summary.overdue }}</p>
-            </div>
-          </div>
-          <div class="mt-4">
-            <h3 class="text-sm font-medium text-gray-500">全体進捗</h3>
-            <div class="mt-2 relative">
-              <div class="overflow-hidden h-2 text-xs flex rounded bg-gray-200">
-                <div [style.width.%]="summary.averageProgress"
-                     class="shadow-none flex flex-col text-center whitespace-nowrap text-white justify-center bg-blue-500">
+          <div class="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-4">
+            <!-- 全体の課題数 -->
+            <div class="bg-white overflow-hidden shadow rounded-lg">
+              <div class="p-5">
+                <div class="flex items-center">
+                  <div class="flex-shrink-0">
+                    <svg class="h-6 w-6 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+                    </svg>
+                  </div>
+                  <div class="ml-5 w-0 flex-1">
+                    <dl>
+                      <dt class="text-sm font-medium text-gray-500 truncate">全体の課題数</dt>
+                      <dd class="flex items-baseline">
+                        <div class="text-2xl font-semibold text-gray-900">{{ (issueSummary$ | async)?.totalIssues }}</div>
+                      </dd>
+                    </dl>
+                  </div>
                 </div>
               </div>
-              <span class="absolute right-0 -top-6 text-sm text-gray-600">{{ summary.averageProgress | number:'1.0-0' }}%</span>
+            </div>
+
+            <!-- 完了した課題 -->
+            <div class="bg-white overflow-hidden shadow rounded-lg">
+              <div class="p-5">
+                <div class="flex items-center">
+                  <div class="flex-shrink-0">
+                    <svg class="h-6 w-6 text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                    </svg>
+                  </div>
+                  <div class="ml-5 w-0 flex-1">
+                    <dl>
+                      <dt class="text-sm font-medium text-gray-500 truncate">完了した課題</dt>
+                      <dd class="flex items-baseline">
+                        <div class="text-2xl font-semibold text-gray-900">{{ (issueSummary$ | async)?.completedIssues }}</div>
+                      </dd>
+                    </dl>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- 進行中の課題 -->
+            <div class="bg-white overflow-hidden shadow rounded-lg">
+              <div class="p-5">
+                <div class="flex items-center">
+                  <div class="flex-shrink-0">
+                    <svg class="h-6 w-6 text-yellow-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                  </div>
+                  <div class="ml-5 w-0 flex-1">
+                    <dl>
+                      <dt class="text-sm font-medium text-gray-500 truncate">進行中の課題</dt>
+                      <dd class="flex items-baseline">
+                        <div class="text-2xl font-semibold text-gray-900">{{ (issueSummary$ | async)?.inProgressIssues }}</div>
+                      </dd>
+                    </dl>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- 未着手の課題 -->
+            <div class="bg-white overflow-hidden shadow rounded-lg">
+              <div class="p-5">
+                <div class="flex items-center">
+                  <div class="flex-shrink-0">
+                    <svg class="h-6 w-6 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                  </div>
+                  <div class="ml-5 w-0 flex-1">
+                    <dl>
+                      <dt class="text-sm font-medium text-gray-500 truncate">未着手の課題</dt>
+                      <dd class="flex items-baseline">
+                        <div class="text-2xl font-semibold text-gray-900">{{ (issueSummary$ | async)?.notStartedIssues }}</div>
+                      </dd>
+                    </dl>
+                  </div>
+                </div>
+              </div>
             </div>
           </div>
-        </div>
-      </div>
-    </div>
 
-    <!-- アラート -->
-    <div class="mb-8">
-      <!-- 期限超過の課題 -->
-      <div *ngIf="(overdueIssues$ | async)?.length" class="rounded-md bg-red-50 p-4 mb-4">
-        <div class="flex">
-          <div class="flex-shrink-0">
-            <svg class="h-5 w-5 text-red-400" viewBox="0 0 20 20" fill="currentColor">
-              <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd" />
-            </svg>
-          </div>
-          <div class="ml-3">
-            <h3 class="text-sm font-medium text-red-800">期限を超過している課題があります</h3>
-            <div class="mt-2 text-sm text-red-700">
-              <ul class="list-disc pl-5 space-y-1">
-                <li *ngFor="let issue of overdueIssues$ | async">
-                  {{ issue.title }} ({{ issue.dueDate | date:'yyyy/MM/dd HH:mm' }})
-                </li>
-              </ul>
+          <!-- 期限切れの課題 -->
+          <div class="mt-5">
+            <h3 class="text-lg leading-6 font-medium text-gray-900">期限切れの課題</h3>
+            <div class="mt-2">
+              <div *ngFor="let issue of overdueIssues$ | async" class="bg-red-50 p-4 rounded-md mt-2">
+                <div class="flex">
+                  <div class="flex-1">
+                    <h4 class="text-sm font-medium text-red-800">{{ issue.title }}</h4>
+                    <p class="text-sm text-red-700">期限: {{ issue.dueDate | date:'yyyy/MM/dd' }}</p>
+                  </div>
+                </div>
+              </div>
+              <div *ngIf="(overdueIssues$ | async)?.length === 0" class="text-sm text-gray-500">
+                期限切れの課題はありません
+              </div>
             </div>
           </div>
-        </div>
-      </div>
 
-      <!-- 期限が近い課題 -->
-      <div *ngIf="(dueSoonIssues$ | async)?.length" class="rounded-md bg-yellow-50 p-4">
-        <div class="flex">
-          <div class="flex-shrink-0">
-            <svg class="h-5 w-5 text-yellow-400" viewBox="0 0 20 20" fill="currentColor">
-              <path fill-rule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clip-rule="evenodd" />
-            </svg>
-          </div>
-          <div class="ml-3">
-            <h3 class="text-sm font-medium text-yellow-800">期限が近づいている課題があります</h3>
-            <div class="mt-2 text-sm text-yellow-700">
-              <ul class="list-disc pl-5 space-y-1">
-                <li *ngFor="let issue of dueSoonIssues$ | async">
-                  {{ issue.title }} (残り{{ getRemainingDays(issue.dueDate) }}日)
-                </li>
-              </ul>
+          <!-- 期限が近い課題 -->
+          <div class="mt-5">
+            <h3 class="text-lg leading-6 font-medium text-gray-900">期限が近い課題</h3>
+            <div class="mt-2">
+              <div *ngFor="let issue of (issueSummary$ | async)?.upcomingDeadlines" class="bg-yellow-50 p-4 rounded-md mt-2">
+                <div class="flex">
+                  <div class="flex-1">
+                    <h4 class="text-sm font-medium text-yellow-800">{{ issue.title }}</h4>
+                    <p class="text-sm text-yellow-700">期限: {{ issue.dueDate | date:'yyyy/MM/dd' }}</p>
+                  </div>
+                </div>
+              </div>
+              <div *ngIf="(issueSummary$ | async)?.upcomingDeadlines?.length === 0" class="text-sm text-gray-500">
+                期限が近い課題はありません
+              </div>
             </div>
           </div>
         </div>
@@ -112,13 +155,13 @@
             </div>
           </div>
 
-          <!-- 重要度 -->
+          <!-- 優先度 -->
           <div class="sm:col-span-3">
-            <label for="importance" class="block text-sm font-medium text-gray-700">重要度</label>
+            <label for="priority" class="block text-sm font-medium text-gray-700">優先度</label>
             <div class="mt-1">
-              <select id="importance" formControlName="importance"
+              <select id="priority" formControlName="priority"
                 class="shadow-sm focus:ring-indigo-500 focus:border-indigo-500 block w-full sm:text-sm border-gray-300 rounded-md">
-                <option *ngFor="let importance of importanceOptions" [value]="importance">{{ importance }}</option>
+                <option *ngFor="let priority of priorityOptions" [value]="priority">{{ priority }}</option>
               </select>
             </div>
           </div>
@@ -205,67 +248,57 @@
         </button>
       </div>
 
-      <!-- 課題リスト -->
-      <div class="bg-white shadow overflow-hidden sm:rounded-md">
-        <ul class="divide-y divide-gray-200">
-          <li *ngFor="let issue of filteredIssues">
-            <div class="flex justify-between items-center px-4 py-4 sm:px-6 hover:bg-gray-50">
-              <a [routerLink]="['/issues', issue.id]" class="flex-1">
-                <div class="flex items-center justify-between">
-                  <div class="flex items-center">
-                    <p class="text-sm font-medium text-indigo-600 truncate">{{ issue.title }}</p>
-                    <div class="ml-2 flex-shrink-0">
+      <!-- 課題一覧テーブル -->
+      <div class="mt-8 flex flex-col">
+        <div class="-my-2 -mx-4 overflow-x-auto sm:-mx-6 lg:-mx-8">
+          <div class="inline-block min-w-full py-2 align-middle md:px-6 lg:px-8">
+            <div class="overflow-hidden shadow ring-1 ring-black ring-opacity-5 md:rounded-lg">
+              <table class="min-w-full divide-y divide-gray-300">
+                <thead class="bg-gray-50">
+                  <tr>
+                    <th scope="col" class="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">課題番号</th>
+                    <th scope="col" class="py-3.5 pl-4 pr-3 text-left text-sm font-semibold text-gray-900">タイトル</th>
+                    <th scope="col" class="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">ステータス</th>
+                    <th scope="col" class="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">重要度</th>
+                    <th scope="col" class="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">担当者</th>
+                    <th scope="col" class="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">期限</th>
+                    <th scope="col" class="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">進捗</th>
+                  </tr>
+                </thead>
+                <tbody class="divide-y divide-gray-200 bg-white">
+                  <tr *ngFor="let issue of filteredIssues$ | async" (click)="navigateToIssueDetail(issue.id)" class="cursor-pointer hover:bg-gray-50">
+                    <td class="whitespace-nowrap px-3 py-4 text-sm text-gray-500">{{ issue.issueNumber }}</td>
+                    <td class="whitespace-nowrap py-4 pl-4 pr-3 text-sm font-medium text-gray-900">{{ issue.title }}</td>
+                    <td class="whitespace-nowrap px-3 py-4">
                       <span [class]="'px-2 inline-flex text-xs leading-5 font-semibold rounded-full ' + 
                         (issue.status === '完了' ? 'bg-green-100 text-green-800' :
-                        issue.status === '対応中' ? 'bg-yellow-100 text-yellow-800' :
+                        issue.status === '進行中' ? 'bg-yellow-100 text-yellow-800' :
                         'bg-gray-100 text-gray-800')">
                         {{ issue.status }}
                       </span>
-                    </div>
-                    <div class="ml-2 flex-shrink-0">
+                    </td>
+                    <td class="whitespace-nowrap px-3 py-4">
                       <span [class]="'px-2 inline-flex text-xs leading-5 font-semibold rounded-full ' + 
-                        (issue.importance === '高' ? 'bg-red-100 text-red-800' :
-                        issue.importance === '中' ? 'bg-yellow-100 text-yellow-800' :
+                        (issue.priority === '高' ? 'bg-red-100 text-red-800' :
+                        issue.priority === '中' ? 'bg-yellow-100 text-yellow-800' :
                         'bg-blue-100 text-blue-800')">
-                        重要度: {{ issue.importance }}
+                        {{ issue.priority }}
                       </span>
-                    </div>
-                  </div>
-                  <div class="flex items-center text-sm text-gray-500">
-                    <svg class="flex-shrink-0 mr-1.5 h-5 w-5 text-gray-400" xmlns="http://www.w3.org/2000/svg"
-                      viewBox="0 0 20 20" fill="currentColor">
-                      <path fill-rule="evenodd"
-                        d="M6 2a1 1 0 00-1 1v1H4a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V6a2 2 0 00-2-2h-1V3a1 1 0 10-2 0v1H7V3a1 1 0 00-1-1zm0 5a1 1 0 000 2h8a1 1 0 100-2H6z"
-                        clip-rule="evenodd" />
-                    </svg>
-                    <p>期限: {{ issue.dueDate | date:'yyyy/MM/dd HH:mm' }}</p>
-                    <svg class="flex-shrink-0 mx-2 h-5 w-5 text-gray-400" xmlns="http://www.w3.org/2000/svg"
-                      viewBox="0 0 20 20" fill="currentColor">
-                      <path fill-rule="evenodd"
-                        d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z"
-                        clip-rule="evenodd" />
-                    </svg>
-                    <p>担当: {{ issue.assignee }}</p>
-                    <div class="ml-4 flex items-center">
-                      <svg class="flex-shrink-0 mr-1.5 h-5 w-5 text-gray-400" xmlns="http://www.w3.org/2000/svg"
-                        viewBox="0 0 20 20" fill="currentColor">
-                        <path fill-rule="evenodd"
-                          d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-12a1 1 0 10-2 0v4a1 1 0 00.293.707l2.828 2.829a1 1 0 101.415-1.415L11 9.586V6z"
-                          clip-rule="evenodd" />
-                      </svg>
-                      <p>進捗: {{ issue.progress }}%</p>
-                    </div>
-                  </div>
-                </div>
-              </a>
-              <button (click)="deleteIssue(issue)" class="ml-4 text-red-600 hover:text-red-900 focus:outline-none">
-                <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                </svg>
-              </button>
+                    </td>
+                    <td class="whitespace-nowrap px-3 py-4 text-sm text-gray-500">{{ issue.assignee?.displayName }}</td>
+                    <td class="whitespace-nowrap px-3 py-4 text-sm text-gray-500">{{ issue.dueDate | date:'yyyy/MM/dd' }}</td>
+                    <td class="whitespace-nowrap px-3 py-4 text-sm text-gray-500">
+                      <div class="w-full bg-gray-200 rounded-full h-2.5 w-24">
+                        <div class="bg-blue-600 h-2.5 rounded-full" [style.width]="issue.progress + '%'"></div>
+                      </div>
+                      <span class="text-xs mt-1">{{ issue.progress }}%</span>
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
             </div>
-          </li>
-        </ul>
+          </div>
+        </div>
       </div>
     </div>
   </div>

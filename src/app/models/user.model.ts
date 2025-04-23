@@ -1,14 +1,31 @@
+import { TeamMembership } from './team.model';
+
 export interface User {
-  id: string;
-  name: string;
+  uid: string;
   email: string;
-  role: 'admin' | 'user';
-  department?: string;
-  position?: string;
+  displayName: string;
+  photoURL?: string;
   createdAt: Date;
   updatedAt: Date;
-  lastLoginAt?: Date;
-  isActive: boolean;
+  isEmailVerified: boolean;
+}
+
+export interface UserProfile {
+  uid: string;
+  email: string;
+  displayName: string;
+  photoURL?: string;
+  bio: string;
+  emailNotifications: boolean;
+  taskReminders: boolean;
+  teams: TeamMembership[];
+  isEmailVerified: boolean;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+export interface User extends UserProfile {
+  id: string;
 }
 
 export interface UserFilter {

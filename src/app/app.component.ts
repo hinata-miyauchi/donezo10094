@@ -1,14 +1,20 @@
 import { Component } from '@angular/core';
+import { CommonModule } from '@angular/common';
 import { RouterOutlet } from '@angular/router';
-import { NavigationComponent } from './components/navigation/navigation.component';
+import { HeaderComponent } from './components/header/header.component';
 
 @Component({
   selector: 'app-root',
-  templateUrl: './app.component.html',
-  styleUrls: ['./app.component.scss'],
-  imports: [RouterOutlet, NavigationComponent],
-  standalone: true
+  standalone: true,
+  imports: [CommonModule, RouterOutlet, HeaderComponent],
+  template: `
+    <app-header></app-header>
+    <main class="container mx-auto px-4 py-8">
+      <router-outlet></router-outlet>
+    </main>
+  `,
+  styles: []
 })
 export class AppComponent {
-  title = 'donezo10094';
+  title = 'donezo';
 }

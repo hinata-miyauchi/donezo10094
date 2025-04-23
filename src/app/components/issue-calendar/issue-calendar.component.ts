@@ -114,31 +114,43 @@ export class IssueCalendarComponent implements OnInit {
     this.loadIssues();
   }
 
-  private loadIssues() {
-    this.issueService.getIssues().subscribe(issues => {
-      const events = issues.map(issue => {
-        const dueDate = issue.dueDate;
-        // タイムゾーンを考慮した日付文字列を生成
-        const dueDateStr = dueDate.toLocaleString('sv', { timeZone: 'Asia/Tokyo' }).replace(' ', 'T');
-        
-        return {
-          id: issue.id,
-          title: `${issue.title} (${issue.status})`,
-          start: dueDateStr,
-          duration: '01:00:00',
-          allDay: false,
-          classNames: [
-            `importance-${issue.importance.toLowerCase()}`,
-            `status-${issue.status.toLowerCase().replace(/\s+/g, '-')}`
-          ],
-          extendedProps: {
-            ...issue,
-            description: `担当: ${issue.assignee}\n進捗: ${issue.progress}%`
-          }
-        };
-      });
-      this.calendarOptions.events = events;
-    });
+  async loadIssues(): Promise<void> {
+    try {
+      const issues = await this.issueService.getIssues();
+      this.updateCalendarEvents(issues);
+    } catch (error) {
+      console.error('課題の読み込みに失敗しました:', error);
+    }
+  }
+
+  private updateCalendarEvents(issues: Issue[]): void {
+    this.calendarOptions.events = issues.map(issue => ({
+      id: issue.id,
+      title: issue.title,
+      start: new Date(issue.dueDate),
+      end: new Date(issue.dueDate),
+      backgroundColor: this.getStatusColor(issue.status),
+      borderColor: this.getStatusColor(issue.status),
+      textColor: '#ffffff',
+      extendedProps: {
+        status: issue.status,
+        priority: issue.priority,
+        description: issue.description
+      }
+    }));
+  }
+
+  private getStatusColor(status: string): string {
+    switch (status) {
+      case '完了':
+        return '#10B981'; // green-500
+      case '進行中':
+        return '#F59E0B'; // yellow-500
+      case '未着手':
+        return '#6B7280'; // gray-500
+      default:
+        return '#6B7280'; // gray-500
+    }
   }
 
   private handleEventClick(clickInfo: EventClickArg) {

@@ -1,6 +1,6 @@
 // src/app/services/issue.service.ts
 import { Injectable, inject } from '@angular/core';
-import { Observable, map } from 'rxjs';
+import { Observable, map, switchMap, combineLatest, firstValueFrom } from 'rxjs';
 import {
   Firestore,
   collection,
@@ -17,19 +17,28 @@ import {
   getDoc,
   serverTimestamp,
   CollectionReference,
-  DocumentData
+  DocumentData,
+  QueryConstraint,
+  Query,
+  DocumentSnapshot,
+  QuerySnapshot
 } from '@angular/fire/firestore';
 import { Issue, IssueSummary } from '../models/issue.model';
+import { AuthService } from './auth.service';
+import { TeamService } from './team.service';
 
 @Injectable({
   providedIn: 'root'
 })
 export class IssueService {
-  private readonly firestore = inject(Firestore);
+  private readonly firestore: Firestore = inject(Firestore);
   private readonly COLLECTION_NAME = 'issues';
   private lastIssueNumber = 0;
 
-  constructor() {
+  constructor(
+    private authService: AuthService,
+    private teamService: TeamService
+  ) {
     this.initLastIssueNumber();
   }
 
@@ -44,7 +53,7 @@ export class IssueService {
       
       if (!snapshot.empty) {
         const data = snapshot.docs[0].data();
-        this.lastIssueNumber = data['issueNumber'] || 0;
+        this.lastIssueNumber = parseInt(data['issueNumber'].replace('ISSUE-', '')) || 0;
       }
     } catch (error) {
       console.error('最後の課題番号の取得に失敗しました:', error);
@@ -52,93 +61,81 @@ export class IssueService {
     }
   }
 
-  getIssues(): Observable<Issue[]> {
-    const q = query(this.issuesCollection, orderBy('issueNumber', 'asc'));
-    
-    return new Observable<Issue[]>(observer => {
-      const unsubscribe = onSnapshot(q, snapshot => {
-        const issues = snapshot.docs.map(doc => {
-          const data = doc.data();
-          return {
-            id: doc.id,
-            issueNumber: data['issueNumber'].toString(),
-            title: data['title'] || '',
-            description: data['description'] || '',
-            status: data['status'] || '未着手',
-            importance: data['importance'] || '低',
-            dueDate: this.convertToDate(data['dueDate']),
-            completionCriteria: data['completionCriteria'] || '',
-            solution: data['solution'] || '',
-            occurrenceDate: this.convertToDate(data['occurrenceDate']),
-            assignee: data['assignee'] || '',
-            progress: data['progress'] || 0,
-            createdAt: this.convertToDate(data['createdAt']),
-            updatedAt: this.convertToDate(data['updatedAt']),
-            createdBy: data['createdBy'] || 'システム'
-          } as Issue;
-        });
-        observer.next(issues);
-      }, error => {
-        console.error('Error fetching issues:', error);
-        observer.error(error);
-      });
-
-      return () => unsubscribe();
-    });
+  private getNextIssueNumber(): string {
+    this.lastIssueNumber++;
+    return `ISSUE-${String(this.lastIssueNumber).padStart(5, '0')}`;
   }
 
-  async addIssue(issue: Omit<Issue, 'id' | 'issueNumber'>): Promise<void> {
-    try {
-      this.lastIssueNumber++;
-      
-      const newIssue = {
-        issueNumber: this.lastIssueNumber,
-        title: issue.title,
-        description: issue.description,
-        status: issue.status,
-        importance: issue.importance,
-        dueDate: issue.dueDate,
-        completionCriteria: issue.completionCriteria,
-        solution: issue.solution,
-        occurrenceDate: issue.occurrenceDate,
-        assignee: issue.assignee,
-        progress: issue.progress,
-        createdAt: serverTimestamp(),
-        updatedAt: serverTimestamp(),
-        createdBy: issue.createdBy || 'システム'
-      };
+  private convertToIssue(doc: DocumentSnapshot<DocumentData>): Issue {
+    const data = doc.data();
+    if (!data) {
+      throw new Error('ドキュメントデータが存在しません');
+    }
+    return {
+      ...data,
+      id: doc.id,
+      dueDate: data['dueDate']?.toDate() || new Date(),
+      occurrenceDate: data['occurrenceDate']?.toDate(),
+      createdAt: data['createdAt']?.toDate() || new Date(),
+      updatedAt: data['updatedAt']?.toDate() || new Date()
+    } as Issue;
+  }
 
-      await addDoc(this.issuesCollection, newIssue);
+  private async getIssuesQuery(teamId?: string): Promise<Query<DocumentData>> {
+    const currentUser = await firstValueFrom(this.authService.currentUser$);
+    if (!currentUser) {
+      throw new Error('認証が必要です');
+    }
+
+    const issuesCollection = collection(this.firestore, 'issues');
+    if (teamId) {
+      return query(issuesCollection, where('teamId', '==', teamId));
+    } else {
+      return query(issuesCollection, where('userId', '==', currentUser.uid));
+    }
+  }
+
+  async getIssues(teamId?: string): Promise<Issue[]> {
+    try {
+      const querySnapshot = await getDocs(await this.getIssuesQuery(teamId));
+      return querySnapshot.docs.map(doc => this.convertToIssue(doc));
     } catch (error) {
-      console.error('Error adding issue:', error);
+      console.error('課題の取得に失敗しました:', error);
       throw error;
     }
   }
 
+  async addIssue(issue: Partial<Issue>): Promise<string> {
+    const currentUser = await firstValueFrom(this.authService.currentUser$);
+    if (!currentUser) throw new Error('認証が必要です');
+
+    if (issue.teamId) {
+      const team = await this.teamService.getTeam(issue.teamId);
+      const hasPermission = this.teamService.checkTeamPermission(team, currentUser.uid, 'editor');
+      if (!hasPermission) {
+        throw new Error('権限がありません');
+      }
+    }
+
+    const newIssue = {
+      ...issue,
+      issueNumber: this.getNextIssueNumber(),
+      userId: currentUser.uid,
+      createdAt: new Date(),
+      updatedAt: new Date()
+    };
+
+    const docRef = await addDoc(this.issuesCollection, newIssue);
+    return docRef.id;
+  }
+
   async getIssue(id: string): Promise<Issue | null> {
     try {
-      const docRef = doc(this.issuesCollection, id);
+      const docRef = doc(this.firestore, 'issues', id);
       const docSnap = await getDoc(docRef);
       
       if (docSnap.exists()) {
-        const data = docSnap.data();
-        return {
-          id: docSnap.id,
-          issueNumber: data['issueNumber'].toString(),
-          title: data['title'] || '',
-          description: data['description'] || '',
-          status: data['status'] || '未着手',
-          importance: data['importance'] || '低',
-          dueDate: this.convertToDate(data['dueDate']),
-          completionCriteria: data['completionCriteria'] || '',
-          solution: data['solution'] || '',
-          occurrenceDate: this.convertToDate(data['occurrenceDate']),
-          assignee: data['assignee'] || '',
-          progress: data['progress'] || 0,
-          createdAt: this.convertToDate(data['createdAt']) || new Date(),
-          updatedAt: this.convertToDate(data['updatedAt']) || new Date(),
-          createdBy: data['createdBy'] || 'システム'
-        } as Issue;
+        return this.convertToIssue(docSnap);
       }
       return null;
     } catch (error) {
@@ -147,57 +144,49 @@ export class IssueService {
     }
   }
 
-  private convertToDate(value: any): Date {
-    if (!value) return new Date();
-    if (value instanceof Date) return value;
-    if (value.toDate && typeof value.toDate === 'function') return value.toDate();
-    if (typeof value === 'string') return new Date(value);
-    return new Date();
+  async updateIssue(issueId: string, updates: Partial<Issue>): Promise<void> {
+    const currentUser = await firstValueFrom(this.authService.currentUser$);
+    if (!currentUser) throw new Error('認証が必要です');
+
+    const issue = await this.getIssue(issueId);
+    if (!issue) throw new Error('課題が見つかりません');
+
+    if (issue.teamId) {
+      const team = await this.teamService.getTeam(issue.teamId);
+      const hasPermission = this.teamService.checkTeamPermission(team, currentUser.uid, 'editor');
+      if (!hasPermission) {
+        throw new Error('権限がありません');
+      }
+    } else if (issue.userId !== currentUser.uid) {
+      throw new Error('権限がありません');
+    }
+
+    const docRef = doc(this.issuesCollection, issueId);
+    await updateDoc(docRef, {
+      ...updates,
+      updatedAt: new Date()
+    });
   }
 
-  async updateIssue(id: string, issue: Partial<Issue>): Promise<void> {
-    try {
-      const docRef = doc(this.issuesCollection, id);
-      const updateData: any = {
-        ...issue,
-        updatedAt: serverTimestamp()
-      };
+  async deleteIssue(issueId: string): Promise<void> {
+    const currentUser = await firstValueFrom(this.authService.currentUser$);
+    if (!currentUser) throw new Error('認証が必要です');
 
-      if (issue.issueNumber) {
-        updateData.issueNumber = parseInt(issue.issueNumber, 10);
+    const issue = await this.getIssue(issueId);
+    if (!issue) throw new Error('課題が見つかりません');
+
+    if (issue.teamId) {
+      const team = await this.teamService.getTeam(issue.teamId);
+      const hasPermission = this.teamService.checkTeamPermission(team, currentUser.uid, 'admin');
+      if (!hasPermission) {
+        throw new Error('権限がありません');
       }
-
-      await updateDoc(docRef, updateData);
-    } catch (error) {
-      console.error('課題の更新に失敗しました:', error);
-      throw error;
+    } else if (issue.userId !== currentUser.uid) {
+      throw new Error('権限がありません');
     }
-  }
 
-  async deleteIssue(id: string): Promise<void> {
-    try {
-      const docRef = doc(this.issuesCollection, id);
-      const docSnap = await getDoc(docRef);
-
-      if (!docSnap.exists()) {
-        throw new Error('指定された課題が見つかりませんでした。');
-      }
-
-      await deleteDoc(docRef);
-
-      // 削除後の確認
-      const confirmSnap = await getDoc(docRef);
-      if (confirmSnap.exists()) {
-        throw new Error('課題の削除が正常に完了しませんでした。');
-      }
-    } catch (error) {
-      console.error('課題の削除中にエラーが発生しました:', error);
-      if (error instanceof Error) {
-        throw new Error(`課題の削除に失敗しました: ${error.message}`);
-      } else {
-        throw new Error('課題の削除に失敗しました: 予期せぬエラーが発生しました。');
-      }
-    }
+    const docRef = doc(this.issuesCollection, issueId);
+    await deleteDoc(docRef);
   }
 
   getIssueSummary(): Observable<IssueSummary> {
@@ -210,22 +199,15 @@ export class IssueService {
         const completed = issues.filter(i => i['status'] === '完了').length;
         const inProgress = issues.filter(i => i['status'] === '対応中').length;
         const notStarted = issues.filter(i => i['status'] === '未着手').length;
-        const overdue = issues.filter(i => {
-          const dueDate = this.convertToDate(i['dueDate']);
-          return dueDate < new Date() && i['status'] !== '完了';
-        }).length;
-        const averageProgress = total > 0 
-          ? issues.reduce((acc, curr) => acc + (curr['progress'] || 0), 0) / total 
-          : 0;
+        const dueSoonIssues = issues.filter(i => !i['dueDate'] || this.isWithinDays(i['dueDate'] as Date, 7));
 
         observer.next({
-          total,
-          completed,
-          inProgress,
-          notStarted,
-          overdue,
-          averageProgress
-        });
+          totalIssues: total,
+          completedIssues: completed,
+          inProgressIssues: inProgress,
+          notStartedIssues: notStarted,
+          upcomingDeadlines: dueSoonIssues as Issue[]
+        } as IssueSummary);
       }, error => {
         console.error('Error fetching issue summary:', error);
         observer.error(error);
@@ -235,88 +217,93 @@ export class IssueService {
     });
   }
 
-  getOverdueIssues(): Observable<Issue[]> {
-    return this.getIssues().pipe(
-      map((issues: Issue[]) => issues.filter(issue => 
-        issue.dueDate < new Date() && issue.status !== '完了'
-      ))
+  async getOverdueIssues(): Promise<Issue[]> {
+    const issues = await this.getIssues();
+    return issues.filter(issue => 
+      issue.dueDate < new Date() && issue.status !== '完了'
     );
   }
 
-  getDueSoonIssues(daysThreshold: number = 7): Observable<Issue[]> {
-    return this.getIssues().pipe(
-      map((issues: Issue[]) => {
-        const now = new Date();
-        const threshold = new Date();
-        threshold.setDate(threshold.getDate() + daysThreshold);
+  async getDueSoonIssues(daysThreshold: number = 7): Promise<Issue[]> {
+    const issues = await this.getIssues();
+    const now = new Date();
+    const threshold = new Date();
+    threshold.setDate(threshold.getDate() + daysThreshold);
 
-        return issues.filter((issue: Issue) => {
-          return issue.dueDate > now && issue.dueDate <= threshold && issue.status !== '完了';
-        });
-      })
+    return issues.filter(issue => 
+      issue.dueDate > now && issue.dueDate <= threshold && issue.status !== '完了'
     );
   }
 
-  searchIssues(params: {
-    query?: string;
+  async searchIssues(params: {
+    searchText?: string;
     status?: string;
-    importance?: string;
+    priority?: '高' | '中' | '低';
     startDate?: Date;
     endDate?: Date;
     assignee?: string;
-  }): Observable<Issue[]> {
-    return this.getIssues().pipe(
-      map((issues: Issue[]) => issues.filter((issue: Issue) => {
-        // キーワード検索
-        if (params.query) {
-          const searchStr = params.query.toLowerCase();
-          const searchTargets = [
-            issue.title || '',
-            issue.description || '',
-            issue.completionCriteria || '',
-            issue.solution || ''
-          ].map(str => str.toLowerCase());
+    teamId?: string;
+  }): Promise<Issue[]> {
+    const currentUser = await firstValueFrom(this.authService.currentUser$);
+    if (!currentUser) return [];
+
+    let issues: Issue[] = [];
+    const { searchText, status, priority, startDate, endDate, assignee, teamId } = params;
+
+    try {
+      const conditions: QueryConstraint[] = [];
+
+      if (teamId) {
+        conditions.push(where('teamId', '==', teamId));
+      } else {
+        conditions.push(where('userId', '==', currentUser.uid));
+      }
+
+      if (status && status !== 'すべて') {
+        conditions.push(where('status', '==', status));
+      }
+
+      if (priority) {
+        conditions.push(where('priority', '==', priority));
+      }
+
+      if (assignee && assignee !== 'すべて') {
+        conditions.push(where('assignee', '==', assignee));
+      }
+
+      if (startDate) {
+        conditions.push(where('dueDate', '>=', startDate));
+      }
+
+      if (endDate) {
+        conditions.push(where('dueDate', '<=', endDate));
+      }
+
+      const q = query(this.issuesCollection, ...conditions, orderBy('dueDate', 'asc'));
+      const snapshot = await getDocs(q);
+      
+      issues = snapshot.docs
+        .map(doc => ({
+          id: doc.id,
+          ...doc.data()
+        } as Issue))
+        .filter(issue => {
+          if (!searchText) return true;
           
-          if (!searchTargets.some(target => target.includes(searchStr))) {
-            return false;
-          }
-        }
+          const searchQuery = searchText.toLowerCase();
+          return (
+            issue.title?.toLowerCase().includes(searchQuery) ||
+            issue.description?.toLowerCase().includes(searchQuery) ||
+            issue.completionCriteria?.toLowerCase().includes(searchQuery) ||
+            issue.solution?.toLowerCase().includes(searchQuery)
+          );
+        });
 
-        // ステータスフィルター
-        if (params.status && issue.status !== params.status) {
-          return false;
-        }
-
-        // 重要度フィルター
-        if (params.importance && issue.importance !== params.importance) {
-          return false;
-        }
-
-        // 担当者フィルター
-        if (params.assignee && issue.assignee !== params.assignee) {
-          return false;
-        }
-
-        // 期間フィルター
-        if (params.startDate) {
-          const startOfDay = new Date(params.startDate);
-          startOfDay.setHours(0, 0, 0, 0);
-          if (issue.dueDate < startOfDay) {
-            return false;
-          }
-        }
-
-        if (params.endDate) {
-          const endOfDay = new Date(params.endDate);
-          endOfDay.setHours(23, 59, 59, 999);
-          if (issue.dueDate > endOfDay) {
-            return false;
-          }
-        }
-
-        return true;
-      }))
-    );
+      return issues;
+    } catch (error) {
+      console.error('課題の検索に失敗しました:', error);
+      return [];
+    }
   }
 
   // 担当者一覧を取得
@@ -333,5 +320,12 @@ export class IssueService {
     });
     
     return Array.from(assignees).sort();
+  }
+
+  private isWithinDays(date: Date, days: number): boolean {
+    const now = new Date();
+    const threshold = new Date();
+    threshold.setDate(now.getDate() + days);
+    return date <= threshold && date >= now;
   }
 }

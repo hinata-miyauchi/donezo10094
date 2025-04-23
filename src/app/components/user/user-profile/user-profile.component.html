@@ -1,0 +1,114 @@
+<div class="min-h-screen bg-gray-50 py-8">
+  <div class="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8">
+    <h1 class="text-2xl font-semibold text-gray-900 mb-6">ユーザー設定</h1>
+
+    <!-- プロフィール設定 -->
+    <div class="bg-white shadow rounded-lg mb-6">
+      <div class="p-6">
+        <h2 class="text-lg font-medium text-gray-900 mb-4">プロフィール設定</h2>
+        <form [formGroup]="profileForm" (ngSubmit)="onProfileSubmit()" class="space-y-4">
+          <!-- プロフィール画像 -->
+          <div class="flex items-center space-x-4">
+            <div class="relative">
+              <img [src]="profileImageUrl || '/assets/default-avatar.png'" 
+                   alt="プロフィール画像" 
+                   class="w-20 h-20 rounded-full object-cover">
+              <button type="button" 
+                      (click)="fileInput.click()" 
+                      class="absolute bottom-0 right-0 bg-blue-500 text-white rounded-full p-1 shadow-lg hover:bg-blue-600">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"></path>
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                </svg>
+              </button>
+              <input #fileInput type="file" (change)="onFileSelected($event)" class="hidden" accept="image/*">
+            </div>
+            <div>
+              <label class="block text-sm font-medium text-gray-700">表示名</label>
+              <input type="text" 
+                     formControlName="displayName"
+                     class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
+            </div>
+          </div>
+
+          <!-- メールアドレス（表示のみ） -->
+          <div>
+            <label class="block text-sm font-medium text-gray-700">メールアドレス</label>
+            <input type="email" 
+                   [value]="userEmail" 
+                   disabled
+                   class="mt-1 block w-full rounded-md border-gray-300 bg-gray-50 shadow-sm">
+          </div>
+
+          <button type="submit" 
+                  class="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+            プロフィールを更新
+          </button>
+        </form>
+      </div>
+    </div>
+
+    <!-- 通知設定 -->
+    <div class="bg-white shadow rounded-lg mb-6">
+      <div class="p-6">
+        <h2 class="text-lg font-medium text-gray-900 mb-4">通知設定</h2>
+        <form [formGroup]="notificationForm" (ngSubmit)="onNotificationSubmit()" class="space-y-4">
+          <div class="flex items-center justify-between">
+            <div class="flex items-center">
+              <input type="checkbox" 
+                     formControlName="emailNotifications"
+                     class="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded">
+              <label class="ml-2 block text-sm text-gray-900">メール通知を受け取る</label>
+            </div>
+          </div>
+
+          <div class="flex items-center justify-between">
+            <div class="flex items-center">
+              <input type="checkbox" 
+                     formControlName="taskReminders"
+                     class="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded">
+              <label class="ml-2 block text-sm text-gray-900">課題のリマインダーを受け取る</label>
+            </div>
+          </div>
+
+          <button type="submit" 
+                  class="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+            通知設定を更新
+          </button>
+        </form>
+      </div>
+    </div>
+
+    <!-- アプリケーション設定 -->
+    <div class="bg-white shadow rounded-lg">
+      <div class="p-6">
+        <h2 class="text-lg font-medium text-gray-900 mb-4">アプリケーション設定</h2>
+        <form [formGroup]="appSettingsForm" (ngSubmit)="onAppSettingsSubmit()" class="space-y-4">
+          <div>
+            <label class="block text-sm font-medium text-gray-700">デフォルトの課題表示</label>
+            <select formControlName="defaultView"
+                    class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
+              <option value="list">リスト表示</option>
+              <option value="calendar">カレンダー表示</option>
+            </select>
+          </div>
+
+          <div>
+            <label class="block text-sm font-medium text-gray-700">カレンダーの表示形式</label>
+            <select formControlName="calendarView"
+                    class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
+              <option value="month">月表示</option>
+              <option value="week">週表示</option>
+              <option value="day">日表示</option>
+            </select>
+          </div>
+
+          <button type="submit" 
+                  class="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+            設定を更新
+          </button>
+        </form>
+      </div>
+    </div>
+  </div>
+</div> 

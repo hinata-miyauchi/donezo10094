@@ -37,8 +37,7 @@ export class IssueFormComponent implements OnInit {
       occurrenceDate: [new Date().toISOString().split('T')[0], Validators.required],
       dueDate: [null, Validators.required],
       dueTime: ['17:00', Validators.required],
-      assignee: ['', Validators.required],
-      handler: [''],
+      assignee: [''],
       solution: [''],
       completionCriteria: ['', Validators.required],
       progress: [0, [Validators.required, Validators.min(0), Validators.max(100)]]
@@ -61,17 +60,28 @@ export class IssueFormComponent implements OnInit {
       
       const dueDateWithTime = formValue.dueDate && formValue.dueTime
         ? new Date(`${formValue.dueDate}T${formValue.dueTime}`)
-        : null;
+        : new Date();
 
-      const issueData = {
-        ...formValue,
+      const issueData: Partial<Issue> = {
+        title: formValue.title,
+        description: formValue.description,
+        status: formValue.status as '未着手' | '進行中' | '完了',
+        priority: formValue.importance as '高' | '中' | '低',
         occurrenceDate: new Date(formValue.occurrenceDate),
         dueDate: dueDateWithTime,
+        assignee: formValue.assignee ? {
+          uid: '',
+          displayName: formValue.assignee
+        } : {
+          uid: '',
+          displayName: ''
+        },
+        solution: formValue.solution || '',
+        completionCriteria: formValue.completionCriteria,
+        progress: Number(formValue.progress),
         createdBy: 'システム',
-        progress: Number(formValue.progress)
+        isPrivate: true
       };
-
-      delete issueData.dueTime;
 
       await this.issueService.addIssue(issueData);
       console.log('課題が正常に作成されました');

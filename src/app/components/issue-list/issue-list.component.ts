@@ -2,18 +2,20 @@ import { Component, OnInit, OnDestroy } from '@angular/core';
 import { FormBuilder, FormGroup, ReactiveFormsModule } from '@angular/forms';
 import { IssueService } from '../../services/issue.service';
 import { Issue } from '../../models/issue.model';
-import { Subject, BehaviorSubject } from 'rxjs';
+import { Subject, BehaviorSubject, takeUntil } from 'rxjs';
 import { CommonModule, DatePipe, DecimalPipe } from '@angular/common';
-import { RouterModule } from '@angular/router';
+import { RouterModule, Router } from '@angular/router';
 import { FormsModule } from '@angular/forms';
+import { TeamService } from '../../services/team.service';
+import { AuthService } from '../../services/auth.service';
+import { Team } from '../../models/team.model';
 
 interface IssueSummary {
-  total: number;
-  completed: number;
-  inProgress: number;
-  notStarted: number;
-  overdue: number;
-  averageProgress: number;
+  totalIssues: number;
+  completedIssues: number;
+  inProgressIssues: number;
+  notStartedIssues: number;
+  upcomingDeadlines: Issue[];
 }
 
 @Component({
@@ -26,20 +28,25 @@ interface IssueSummary {
 })
 export class IssueListComponent implements OnInit, OnDestroy {
   issues: Issue[] = [];
-  filteredIssues: Issue[] = [];
   isLoading = true;
   searchForm: FormGroup;
   private destroy$ = new Subject<void>();
-  issueSummary$ = new BehaviorSubject<IssueSummary>({
-    total: 0,
-    completed: 0,
-    inProgress: 0,
-    notStarted: 0,
-    overdue: 0,
-    averageProgress: 0
+  private issueSummarySubject = new BehaviorSubject<IssueSummary>({
+    totalIssues: 0,
+    completedIssues: 0,
+    inProgressIssues: 0,
+    notStartedIssues: 0,
+    upcomingDeadlines: []
   });
-  overdueIssues$ = new BehaviorSubject<Issue[]>([]);
-  dueSoonIssues$ = new BehaviorSubject<Issue[]>([]);
+  private overdueIssuesSubject = new BehaviorSubject<Issue[]>([]);
+  private dueSoonIssuesSubject = new BehaviorSubject<Issue[]>([]);
+  private filteredIssuesSubject = new BehaviorSubject<Issue[]>([]);
+
+  issueSummary$ = this.issueSummarySubject.asObservable();
+  overdueIssues$ = this.overdueIssuesSubject.asObservable();
+  dueSoonIssues$ = this.dueSoonIssuesSubject.asObservable();
+  filteredIssues$ = this.filteredIssuesSubject.asObservable();
+
   assignees: string[] = [];
   searchTerm: string = '';
   selectedStatus: string = '';
@@ -50,12 +57,12 @@ export class IssueListComponent implements OnInit, OnDestroy {
     averageProgress: 0
   };
 
-  readonly statusOptions = ['すべて', '未着手', '対応中', '完了'];
-  readonly importanceOptions = ['すべて', '低', '中', '高'];
+  readonly statusOptions = ['すべて', '未着手', '進行中', '完了'];
+  readonly priorityOptions = ['すべて', '低', '中', '高'];
   readonly sortOptions = [
-    { value: 'default', label: 'デフォルト（ステータス→重要度→期限）' },
+    { value: 'default', label: 'デフォルト（ステータス→優先度→期限）' },
     { value: 'dueDate', label: '期限日' },
-    { value: 'importance', label: '重要度' },
+    { value: 'priority', label: '優先度' },
     { value: 'status', label: 'ステータス' },
     { value: 'progress', label: '進捗' },
     { value: 'title', label: 'タイトル' },
@@ -63,14 +70,26 @@ export class IssueListComponent implements OnInit, OnDestroy {
   ];
   private readonly DUE_SOON_DAYS = 7; // 期限が7日以内の課題を「期限が近い」と定義
 
+  teams: Team[] = [];
+  selectedTeamId: string = '';
+  filters = {
+    status: '',
+    priority: '',
+    assignee: ''
+  };
+  canCreateIssue: boolean = false;
+
   constructor(
     private issueService: IssueService,
-    private fb: FormBuilder
+    private fb: FormBuilder,
+    private teamService: TeamService,
+    private authService: AuthService,
+    private router: Router
   ) {
     this.searchForm = this.fb.group({
       keyword: [''],
       status: ['すべて'],
-      importance: ['すべて'],
+      priority: ['すべて'],
       assignee: ['すべて'],
       startDate: [''],
       endDate: [''],
@@ -80,39 +99,36 @@ export class IssueListComponent implements OnInit, OnDestroy {
   }
 
   ngOnInit(): void {
+    this.loadTeams();
     this.loadIssues();
-    this.loadAssignees();
   }
 
   ngOnDestroy(): void {
     this.destroy$.next();
     this.destroy$.complete();
+    this.issueSummarySubject.complete();
+    this.overdueIssuesSubject.complete();
+    this.dueSoonIssuesSubject.complete();
+    this.filteredIssuesSubject.complete();
   }
 
-  private loadIssues(): void {
-    this.issueService.getIssues().subscribe({
-      next: (issues) => {
-        this.issues = issues;
-        this.filteredIssues = issues;
-        this.isLoading = false;
-        this.updateIssueSummary();
-        this.applyFilters();
-      },
-      error: (error) => {
-        console.error('課題の取得に失敗しました:', error);
-        this.isLoading = false;
-      }
+  private loadTeams(): void {
+    this.teamService.getUserTeams().then(teams => {
+      this.teams = teams;
+      this.updateCanCreateIssue();
     });
   }
 
-  private async loadAssignees(): Promise<void> {
-    try {
-      this.assignees = await this.issueService.getAssignees();
-      // 「すべて」オプションを先頭に追加
-      this.assignees.unshift('すべて');
-    } catch (error) {
-      console.error('担当者一覧の取得に失敗しました:', error);
-    }
+  private loadIssues(): void {
+    this.issueService.getIssues(this.selectedTeamId).then(issues => {
+      this.issues = issues;
+      this.filteredIssuesSubject.next(issues);
+      this.isLoading = false;
+      this.updateIssueSummary();
+      this.updateAssigneesList();
+      this.applyFilters();
+      this.updateCanCreateIssue();
+    });
   }
 
   private updateIssueSummary(): void {
@@ -120,90 +136,96 @@ export class IssueListComponent implements OnInit, OnDestroy {
     const sevenDaysFromNow = new Date(now.getTime() + (this.DUE_SOON_DAYS * 24 * 60 * 60 * 1000));
 
     const overdueIssues = this.issues.filter(i => {
-      return i.status !== '完了' && i.dueDate < now;
+      const dueDate = new Date(i.dueDate);
+      return i.status !== '完了' && dueDate < now;
     });
 
     const dueSoonIssues = this.issues.filter(i => {
+      const dueDate = new Date(i.dueDate);
       return i.status !== '完了' && 
-             i.dueDate >= now && 
-             i.dueDate <= sevenDaysFromNow;
+             dueDate >= now && 
+             dueDate <= sevenDaysFromNow;
     });
 
     const summary: IssueSummary = {
-      total: this.issues.length,
-      completed: this.issues.filter(i => i.status === '完了').length,
-      inProgress: this.issues.filter(i => i.status === '対応中').length,
-      notStarted: this.issues.filter(i => i.status === '未着手').length,
-      overdue: overdueIssues.length,
-      averageProgress: this.issues.reduce((acc, curr) => acc + curr.progress, 0) / this.issues.length || 0
+      totalIssues: this.issues.length,
+      completedIssues: this.issues.filter(i => i.status === '完了').length,
+      inProgressIssues: this.issues.filter(i => i.status === '進行中').length,
+      notStartedIssues: this.issues.filter(i => i.status === '未着手').length,
+      upcomingDeadlines: dueSoonIssues
     };
     
-    this.issueSummary$.next(summary);
-    this.overdueIssues$.next(overdueIssues);
-    this.dueSoonIssues$.next(dueSoonIssues);
+    this.issueSummarySubject.next(summary);
+    this.overdueIssuesSubject.next(overdueIssues);
+    this.dueSoonIssuesSubject.next(dueSoonIssues);
+  }
+
+  private updateAssigneesList(): void {
+    // 重複を除いた担当者一覧を取得
+    const assigneeSet = new Set<string>();
+    assigneeSet.add('すべて');
+    
+    this.issues.forEach(issue => {
+      if (issue.assignee?.displayName) {
+        assigneeSet.add(issue.assignee.displayName);
+      }
+    });
+
+    // Set を配列に変換して assignees に設定
+    this.assignees = Array.from(assigneeSet);
   }
 
   private applyFilters(): void {
-    const { keyword, status, importance, assignee, startDate, endDate, sortBy, sortOrder } = this.searchForm.value;
+    const { keyword, status, priority, assignee, startDate, endDate, sortBy, sortOrder } = this.searchForm.value;
     
-    this.filteredIssues = this.issues.filter(issue => {
+    let filtered = this.issues.filter(issue => {
       const matchesKeyword = !keyword || 
         issue.title.toLowerCase().includes(keyword.toLowerCase()) ||
         (issue.description?.toLowerCase().includes(keyword.toLowerCase()));
 
       const matchesStatus = status === 'すべて' || issue.status === status;
-      const matchesImportance = importance === 'すべて' || issue.importance === importance;
-      const matchesAssignee = assignee === 'すべて' || issue.assignee === assignee;
+      const matchesPriority = priority === 'すべて' || issue.priority === priority;
+      const matchesAssignee = assignee === 'すべて' || issue.assignee.displayName === assignee;
 
-      const matchesDate = (!startDate || new Date(startDate) <= issue.dueDate) &&
-                         (!endDate || new Date(endDate) >= issue.dueDate);
+      const issueDueDate = new Date(issue.dueDate);
+      const matchesDate = (!startDate || new Date(startDate) <= issueDueDate) &&
+                         (!endDate || new Date(endDate) >= issueDueDate);
 
-      return matchesKeyword && matchesStatus && matchesImportance && matchesAssignee && matchesDate;
+      return matchesKeyword && matchesStatus && matchesPriority && matchesAssignee && matchesDate;
     });
 
-    this.filteredIssues.sort((a, b) => {
+    // デフォルトのソート順
+    filtered.sort((a, b) => {
       // 1. まずステータスでソート
-      const statusOrder = { '未着手': 0, '対応中': 1, '完了': 2 };
+      const statusOrder: { [key: string]: number } = { '未着手': 0, '進行中': 1, '完了': 2 };
       const statusCompare = statusOrder[a.status] - statusOrder[b.status];
       if (statusCompare !== 0) return statusCompare;
 
-      // 2. 次に重要度でソート
-      const importanceOrder = { '高': 0, '中': 1, '低': 2 };
-      const importanceCompare = importanceOrder[a.importance] - importanceOrder[b.importance];
-      if (importanceCompare !== 0) return importanceCompare;
+      // 2. 次に優先度でソート
+      const priorityOrder: { [key: string]: number } = { '高': 0, '中': 1, '低': 2 };
+      const priorityCompare = priorityOrder[a.priority] - priorityOrder[b.priority];
+      if (priorityCompare !== 0) return priorityCompare;
 
       // 3. 最後に期限日でソート
-      return a.dueDate.getTime() - b.dueDate.getTime();
+      const dueDateA = new Date(a.dueDate).getTime();
+      const dueDateB = new Date(b.dueDate).getTime();
+      return dueDateA - dueDateB;
     });
 
     // ユーザーが選択したソート順で最終的なソートを適用
     if (sortBy !== 'default') {
-      this.filteredIssues.sort((a, b) => {
-        if (sortBy === 'dueDate') {
-          return (a.dueDate.getTime() - b.dueDate.getTime()) * (sortOrder === 'asc' ? 1 : -1);
-        } else if (sortBy === 'importance') {
-          const importanceOrder = { '高': 2, '中': 1, '低': 0 };
-          return (importanceOrder[a.importance] - importanceOrder[b.importance]) * (sortOrder === 'asc' ? 1 : -1);
-        } else if (sortBy === 'status') {
-          const statusOrder = { '未着手': 0, '対応中': 1, '完了': 2 };
-          return (statusOrder[a.status] - statusOrder[b.status]) * (sortOrder === 'asc' ? 1 : -1);
-        } else if (sortBy === 'progress') {
-          return (a.progress - b.progress) * (sortOrder === 'asc' ? 1 : -1);
-        } else if (sortBy === 'title') {
-          return a.title.localeCompare(b.title) * (sortOrder === 'asc' ? 1 : -1);
-        } else if (sortBy === 'assignee') {
-          return a.assignee.localeCompare(b.assignee) * (sortOrder === 'asc' ? 1 : -1);
-        }
-        return 0;
-      });
+      filtered = this.sortIssues(filtered, sortBy, sortOrder as 'asc' | 'desc');
     }
+
+    this.filteredIssuesSubject.next(filtered);
   }
 
-  getRemainingDays(dueDate: Date): number {
+  getRemainingDays(dueDate: Date | string): number {
     const now = new Date();
     now.setHours(0, 0, 0, 0);
-    dueDate.setHours(0, 0, 0, 0);
-    const diffTime = dueDate.getTime() - now.getTime();
+    const dueDateObj = new Date(dueDate);
+    dueDateObj.setHours(0, 0, 0, 0);
+    const diffTime = dueDateObj.getTime() - now.getTime();
     return Math.ceil(diffTime / (1000 * 60 * 60 * 24));
   }
 
@@ -211,13 +233,14 @@ export class IssueListComponent implements OnInit, OnDestroy {
     this.searchForm.patchValue({
       keyword: '',
       status: 'すべて',
-      importance: 'すべて',
+      priority: 'すべて',
       assignee: 'すべて',
       startDate: '',
       endDate: '',
       sortBy: 'dueDate',
       sortOrder: 'asc'
     });
+    this.applyFilters();
   }
 
   search(): void {
@@ -230,7 +253,7 @@ export class IssueListComponent implements OnInit, OnDestroy {
         .then(() => {
           // 課題リストから削除
           this.issues = this.issues.filter(i => i.id !== issue.id);
-          this.filteredIssues = this.filteredIssues.filter(i => i.id !== issue.id);
+          this.filteredIssuesSubject.next(this.issues.filter(i => i.id !== issue.id));
           
           // サマリーの更新
           this.updateIssueSummary();
@@ -246,5 +269,46 @@ export class IssueListComponent implements OnInit, OnDestroy {
 
   scrollToTop(): void {
     window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
+
+  updateCanCreateIssue(): void {
+    if (!this.selectedTeamId) {
+      this.canCreateIssue = true;
+      return;
+    }
+
+    const team = this.teams.find(t => t.id === this.selectedTeamId);
+    if (!team) {
+      this.canCreateIssue = false;
+      return;
+    }
+
+    const currentUser = this.authService.currentUser;
+    const membership = team.members.find(m => m.uid === currentUser?.uid);
+    this.canCreateIssue = membership?.role === 'admin' || membership?.role === 'editor';
+  }
+
+  sortIssues(issues: Issue[], sortBy: string, sortOrder: 'asc' | 'desc'): Issue[] {
+    return [...issues].sort((a, b) => {
+      const priorityOrder: { [key: string]: number } = { '高': 2, '中': 1, '低': 0 };
+      const statusOrder: { [key: string]: number } = { '未着手': 0, '進行中': 1, '完了': 2 };
+
+      switch (sortBy) {
+        case 'priority':
+          return (priorityOrder[a.priority] - priorityOrder[b.priority]) * (sortOrder === 'asc' ? 1 : -1);
+        case 'status':
+          return (statusOrder[a.status] - statusOrder[b.status]) * (sortOrder === 'asc' ? 1 : -1);
+        case 'dueDate':
+          return (new Date(a.dueDate).getTime() - new Date(b.dueDate).getTime()) * (sortOrder === 'asc' ? 1 : -1);
+        case 'assignee':
+          return (a.assignee?.displayName || '').localeCompare(b.assignee?.displayName || '') * (sortOrder === 'asc' ? 1 : -1);
+        default:
+          return 0;
+      }
+    });
+  }
+
+  navigateToIssueDetail(issueId: string) {
+    this.router.navigate(['/issues', issueId]);
   }
 }
