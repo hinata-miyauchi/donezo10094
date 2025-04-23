@@ -10,7 +10,7 @@
           <!-- プロフィール画像 -->
           <div class="flex items-center space-x-4">
             <div class="relative">
-              <img [src]="profileImageUrl || '/assets/default-avatar.png'" 
+              <img [src]="profileImageUrl || '/assets/default-avatar.svg'" 
                    alt="プロフィール画像" 
                    class="w-20 h-20 rounded-full object-cover">
               <button type="button" 
@@ -43,37 +43,6 @@
           <button type="submit" 
                   class="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
             プロフィールを更新
-          </button>
-        </form>
-      </div>
-    </div>
-
-    <!-- 通知設定 -->
-    <div class="bg-white shadow rounded-lg mb-6">
-      <div class="p-6">
-        <h2 class="text-lg font-medium text-gray-900 mb-4">通知設定</h2>
-        <form [formGroup]="notificationForm" (ngSubmit)="onNotificationSubmit()" class="space-y-4">
-          <div class="flex items-center justify-between">
-            <div class="flex items-center">
-              <input type="checkbox" 
-                     formControlName="emailNotifications"
-                     class="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded">
-              <label class="ml-2 block text-sm text-gray-900">メール通知を受け取る</label>
-            </div>
-          </div>
-
-          <div class="flex items-center justify-between">
-            <div class="flex items-center">
-              <input type="checkbox" 
-                     formControlName="taskReminders"
-                     class="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded">
-              <label class="ml-2 block text-sm text-gray-900">課題のリマインダーを受け取る</label>
-            </div>
-          </div>
-
-          <button type="submit" 
-                  class="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
-            通知設定を更新
           </button>
         </form>
       </div>

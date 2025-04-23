@@ -40,6 +40,7 @@ export class IssueDetailComponent implements OnInit {
   }
 
   ngOnInit(): void {
+    window.scrollTo(0, 0);
     const issueId = this.route.snapshot.paramMap.get('id');
     if (issueId) {
       this.loadIssue(issueId);

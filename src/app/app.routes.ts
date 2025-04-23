@@ -27,7 +27,8 @@ export const routes: Routes = [
   { 
     path: 'issues/:id', 
     component: IssueDetailComponent,
-    canActivate: [AuthGuard]
+    canActivate: [AuthGuard],
+    data: { scrollPositionRestoration: 'top' }
   },
   { 
     path: 'calendar', 
