@@ -37,16 +37,16 @@ export class IssueFormComponent implements OnInit, OnDestroy {
   ) {
     this.issueForm = this.fb.group({
       title: ['', [Validators.required, Validators.minLength(3)]],
-      description: [''],
-      status: ['未着手'],
-      importance: ['中'],
-      progress: [0],
-      occurrenceDate: [''],
-      dueDate: [''],
-      dueTime: [''],
-      assignee: [''],
-      completionCriteria: [''],
-      solution: [''],
+      description: ['', [Validators.required]],
+      status: ['未着手', [Validators.required]],
+      importance: ['中', [Validators.required]],
+      progress: [0, [Validators.required]],
+      occurrenceDate: ['', [Validators.required]],
+      dueDate: ['', [Validators.required]],
+      dueTime: ['', [Validators.required]],
+      assignee: ['', [Validators.required]],
+      completionCriteria: ['', [Validators.required]],
+      solution: ['検討中', [Validators.required]],
       teamId: [''],
       isPrivate: [false]
     });
@@ -102,5 +102,19 @@ export class IssueFormComponent implements OnInit, OnDestroy {
 
   onCancel(): void {
     this.router.navigate(['/issues']);
+  }
+
+  onSolutionFocus(): void {
+    const solutionControl = this.issueForm.get('solution');
+    if (solutionControl && solutionControl.value === '検討中') {
+      solutionControl.setValue('');
+    }
+  }
+
+  onSolutionBlur(): void {
+    const solutionControl = this.issueForm.get('solution');
+    if (solutionControl && (!solutionControl.value || solutionControl.value.trim() === '')) {
+      solutionControl.setValue('検討中');
+    }
   }
 } 

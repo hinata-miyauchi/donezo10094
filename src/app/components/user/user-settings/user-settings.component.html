@@ -47,24 +47,24 @@
     </div>
   </section>
 
-  <!-- チーム管理セクション -->
+  <!-- プロジェクト管理セクション -->
   <section class="bg-white rounded-lg shadow-md p-6 mb-8">
     <div class="flex justify-between items-center mb-6">
-      <h2 class="text-xl font-semibold">チーム管理</h2>
+      <h2 class="text-xl font-semibold">プロジェクト管理</h2>
       <button
         (click)="toggleTeamForm()"
         class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded"
       >
-        {{ showTeamForm ? 'キャンセル' : '新しいチームを作成' }}
+        {{ showTeamForm ? 'キャンセル' : '新しいプロジェクトを作成' }}
       </button>
     </div>
 
-    <!-- チーム作成フォーム -->
+    <!-- プロジェクト作成フォーム -->
     <div *ngIf="showTeamForm" class="mb-6 bg-gray-50 p-4 rounded-lg">
       <form [formGroup]="teamForm" (ngSubmit)="onSubmitTeam()">
         <div class="mb-4">
           <label for="name" class="block text-gray-700 text-sm font-bold mb-2">
-            チーム名
+            プロジェクト名
           </label>
           <input
             id="name"
@@ -100,19 +100,19 @@
             [disabled]="teamForm.invalid || isSubmitting"
             class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline disabled:opacity-50"
           >
-            {{ isSubmitting ? '作成中...' : 'チームを作成' }}
+            {{ isSubmitting ? '作成中...' : 'プロジェクトを作成' }}
           </button>
         </div>
       </form>
     </div>
 
-    <!-- チームリスト -->
+    <!-- プロジェクトリスト -->
     <div *ngIf="isLoading" class="text-center py-4">
       <p>読み込み中...</p>
     </div>
 
     <div *ngIf="!isLoading && userTeams.length === 0" class="text-center py-4 text-gray-600">
-      <p>所属しているチームはありません</p>
+      <p>所属しているプロジェクトはありません</p>
     </div>
 
     <div *ngIf="!isLoading && userTeams.length > 0" class="space-y-4">

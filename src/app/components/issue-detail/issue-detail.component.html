@@ -67,13 +67,11 @@
             <dd class="mt-1 text-sm text-gray-900 sm:mt-0 sm:col-span-2">{{ issue.title }}</dd>
           </div>
 
-          <!-- チーム -->
+          <!-- プロジェクト -->
           <div class="bg-gray-50 px-4 py-5 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6">
-            <dt class="text-sm font-medium text-gray-500">チーム</dt>
+            <dt class="text-sm font-medium text-gray-500">プロジェクト</dt>
             <dd class="mt-1 text-sm text-gray-900 sm:mt-0 sm:col-span-2">
-              <span *ngIf="team" class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-indigo-100 text-indigo-800">
-                {{ team.name }}
-              </span>
+              <span *ngIf="team">{{ team.name }}</span>
               <span *ngIf="!team && !issue.teamId" class="text-gray-500">個人の課題</span>
               <span *ngIf="!team && issue.teamId" class="text-gray-500">読み込み中...</span>
             </dd>
@@ -132,7 +130,7 @@
           <!-- 担当者 -->
           <div class="bg-gray-50 px-4 py-5 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6">
             <dt class="text-sm font-medium text-gray-500">担当者</dt>
-            <dd class="mt-1 text-sm text-gray-900 sm:mt-0 sm:col-span-2">{{ issue?.assignee?.displayName || '未割り当て' }}</dd>
+            <dd class="mt-1 text-sm text-gray-900 sm:mt-0 sm:col-span-2">{{ issue.assignee?.displayName || '未割り当て' }}</dd>
           </div>
 
           <!-- 進捗 -->
@@ -172,13 +170,11 @@
             </div>
           </div>
 
-          <!-- チーム情報 -->
+          <!-- プロジェクト情報 -->
           <div class="sm:col-span-6">
-            <label class="block text-sm font-medium text-gray-700">チーム</label>
-            <div class="mt-1">
-              <span *ngIf="team" class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-indigo-100 text-indigo-800">
-                {{ team.name }}
-              </span>
+            <label class="block text-sm font-medium text-gray-700">プロジェクト</label>
+            <div class="mt-1 text-sm text-gray-900">
+              <span *ngIf="team">{{ team.name }}</span>
               <span *ngIf="!team && !issue?.teamId" class="text-gray-500">個人の課題</span>
               <span *ngIf="!team && issue?.teamId" class="text-gray-500">読み込み中...</span>
             </div>
