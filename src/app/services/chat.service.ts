@@ -30,6 +30,7 @@ export class ChatService {
             issueId: data['issueId'],
             senderId: data['senderId'],
             senderName: data['senderName'],
+            senderPhotoURL: data['senderPhotoURL'],
             content: data['content'],
             timestamp: this.convertTimestamp(data['timestamp'])
           } as ChatMessage;

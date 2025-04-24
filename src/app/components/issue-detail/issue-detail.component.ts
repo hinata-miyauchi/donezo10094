@@ -3,7 +3,9 @@ import { CommonModule } from '@angular/common';
 import { ActivatedRoute, Router, RouterModule } from '@angular/router';
 import { FormBuilder, FormGroup, ReactiveFormsModule, FormControl } from '@angular/forms';
 import { IssueService } from '../../services/issue.service';
+import { TeamService } from '../../services/team.service';
 import { Issue } from '../../models/issue.model';
+import { Team } from '../../models/team.model';
 import { IssueChatComponent } from '../issue-chat/issue-chat.component';
 import { Subscription } from 'rxjs';
 
@@ -16,6 +18,7 @@ import { Subscription } from 'rxjs';
 })
 export class IssueDetailComponent implements OnInit, OnDestroy {
   issue: Issue | null = null;
+  team: Team | null = null;
   isEditing = false;
   editForm: FormGroup;
   readonly statusOptions = ['未着手', '進行中', '完了'];
@@ -26,6 +29,7 @@ export class IssueDetailComponent implements OnInit, OnDestroy {
     private route: ActivatedRoute,
     private router: Router,
     private issueService: IssueService,
+    private teamService: TeamService,
     private fb: FormBuilder
   ) {
     this.editForm = this.fb.group({
@@ -58,6 +62,9 @@ export class IssueDetailComponent implements OnInit, OnDestroy {
       const issue = await this.issueService.getIssue(id);
       if (issue) {
         this.issue = issue;
+        if (issue.teamId) {
+          this.loadTeam(issue.teamId);
+        }
         const dueDate = issue.dueDate instanceof Date ? issue.dueDate : new Date(issue.dueDate);
         
         this.editForm.patchValue({
@@ -74,6 +81,17 @@ export class IssueDetailComponent implements OnInit, OnDestroy {
       }
     } catch (error) {
       console.error('課題の取得に失敗しました:', error);
+    }
+  }
+
+  private async loadTeam(teamId: string): Promise<void> {
+    try {
+      const team = await this.teamService.getTeam(teamId);
+      if (team) {
+        this.team = team;
+      }
+    } catch (error) {
+      console.error('チーム情報の取得に失敗しました:', error);
     }
   }
 

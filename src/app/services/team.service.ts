@@ -11,7 +11,8 @@ import {
   getDocs,
   getDoc,
   DocumentSnapshot,
-  orderBy
+  orderBy,
+  setDoc
 } from '@angular/fire/firestore';
 import { Team, TeamMember, TeamRole } from '../models/team.model';
 import { AuthService } from './auth.service';
@@ -62,39 +63,30 @@ export class TeamService {
     return { id: docSnap.id, ...docSnap.data() } as Team;
   }
 
-  async createTeam(teamData: { name: string; description?: string }): Promise<string> {
+  async createTeam(name: string, description: string): Promise<void> {
     const user = this.authService.currentUser;
     if (!user) throw new Error('認証が必要です');
 
-    try {
-      const now = new Date();
-      const member = {
+    const teamRef = doc(collection(this.firestore, 'teams'));
+    const now = new Date();
+
+    const team: Team = {
+      id: teamRef.id,
+      name,
+      description,
+      adminId: user.uid, // 作成者のID
+      createdBy: user.uid, // チーム作成者のUID
+      members: [{
         uid: user.uid,
-        displayName: user.displayName || '',
-        email: user.email || undefined,
-        role: 'admin' as TeamRole,
+        displayName: user.displayName || 'Unknown User',
+        role: 'admin', // 作成者は自動的に管理者権限を持つ
         joinedAt: now
-      };
+      }],
+      createdAt: now,
+      updatedAt: now
+    };
 
-      const newTeam = {
-        name: teamData.name,
-        description: teamData.description || '',
-        adminId: user.uid,
-        createdBy: user.uid,
-        members: [member],
-        createdAt: now,
-        updatedAt: now
-      };
-
-      console.log('Creating team with data:', newTeam); // デバッグ用
-
-      const docRef = await addDoc(collection(this.firestore, 'teams'), newTeam);
-      console.log('Team created with ID:', docRef.id); // デバッグ用
-      return docRef.id;
-    } catch (error) {
-      console.error('Error creating team:', error);
-      throw new Error('チームの作成に失敗しました');
-    }
+    await setDoc(teamRef, team);
   }
 
   async updateTeam(teamId: string, teamData: Partial<Team>): Promise<void> {
@@ -430,5 +422,39 @@ export class TeamService {
     
     // チームの管理者（adminId）であるかチェック
     return team.adminId === currentUser.uid;
+  }
+
+  async toggleAdminRole(teamId: string, userId: string, isAdmin: boolean): Promise<void> {
+    const user = this.authService.currentUser;
+    if (!user) throw new Error('認証が必要です');
+
+    const team = await this.getTeam(teamId);
+    if (!team) throw new Error('チームが見つかりません');
+
+    // チームの作成者（adminId）のみが管理者権限を変更可能
+    if (team.adminId !== user.uid) {
+      throw new Error('管理者権限の変更は作成者のみが実行できます');
+    }
+
+    // 作成者の権限は変更できない
+    if (userId === team.adminId) {
+      throw new Error('作成者の権限は変更できません');
+    }
+
+    // メンバーの権限を更新
+    const memberIndex = team.members.findIndex(member => member.uid === userId);
+    if (memberIndex === -1) throw new Error('指定されたユーザーはチームのメンバーではありません');
+
+    const updatedMembers = [...team.members];
+    updatedMembers[memberIndex] = {
+      ...updatedMembers[memberIndex],
+      role: isAdmin ? 'admin' : 'member'
+    };
+
+    // チームのデータを更新
+    await updateDoc(doc(this.firestore, 'teams', teamId), {
+      members: updatedMembers,
+      updatedAt: new Date()
+    });
   }
 } 

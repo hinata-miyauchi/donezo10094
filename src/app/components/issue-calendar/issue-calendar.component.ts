@@ -142,33 +142,68 @@ export class IssueCalendarComponent implements OnInit {
   }
 
   private updateCalendarEvents(issues: Issue[]): void {
-    this.calendarOptions.events = issues.map(issue => ({
-      id: issue.id,
-      title: `${issue.title}${issue.teamId ? ' (チーム)' : ''}`,
-      start: new Date(issue.dueDate),
-      end: new Date(issue.dueDate),
-      backgroundColor: this.getStatusColor(issue.status),
-      borderColor: this.getStatusColor(issue.status),
-      textColor: '#ffffff',
-      extendedProps: {
-        status: issue.status,
-        priority: issue.priority,
-        description: issue.description,
-        isTeamIssue: !!issue.teamId
-      }
-    }));
+    this.calendarOptions.events = issues.map(issue => {
+      const team = issue.teamId ? this.teams.find(t => t.id === issue.teamId) : null;
+      const teamName = team ? team.name : '';
+      
+      return {
+        id: issue.id,
+        title: `${issue.title}${team ? ` (${teamName})` : ''}`,
+        start: new Date(issue.dueDate),
+        end: new Date(issue.dueDate),
+        backgroundColor: this.getImportanceColor(issue.priority),
+        borderColor: this.getStatusBorderColor(issue.status),
+        textColor: issue.status === '完了' ? 'rgb(75, 85, 99)' : this.getTextColor(issue.priority),
+        borderWidth: issue.status !== '完了' ? '3px' : '2px',
+        borderStyle: issue.status === '未着手' ? 'dotted' : 'solid',
+        className: `importance-${issue.priority} status-${issue.status}`,
+        extendedProps: {
+          status: issue.status,
+          priority: issue.priority,
+          description: issue.description,
+          isTeamIssue: !!issue.teamId,
+          teamName: teamName
+        }
+      };
+    });
   }
 
-  private getStatusColor(status: string): string {
+  private getImportanceColor(priority: string): string {
+    switch (priority) {
+      case '高':
+        return 'rgba(239, 68, 68, 0.4)'; // red-500 with opacity
+      case '中':
+        return 'rgba(245, 158, 11, 0.4)'; // yellow-500 with opacity
+      case '低':
+        return 'rgba(59, 130, 246, 0.4)'; // blue-500 with opacity
+      default:
+        return 'rgba(107, 114, 128, 0.4)'; // gray-500 with opacity
+    }
+  }
+
+  private getStatusBorderColor(status: string): string {
     switch (status) {
       case '完了':
-        return '#10B981'; // green-500
-      case '進行中':
-        return '#F59E0B'; // yellow-500
+        return 'rgb(107, 114, 128)'; // gray-600
+      case '対応中':
+        return 'rgb(59, 130, 246)'; // blue-500
       case '未着手':
-        return '#6B7280'; // gray-500
+        return 'rgb(59, 130, 246)'; // blue-500
       default:
-        return '#6B7280'; // gray-500
+        return 'rgb(107, 114, 128)'; // gray-500
+    }
+  }
+
+  private getTextColor(priority: string): string {
+    switch (priority) {
+      case '高':
+        return 'rgb(127, 29, 29)'; // red-900
+      case '中':
+        return 'rgb(120, 53, 15)'; // yellow-900
+      case '低':
+        return 'rgb(30, 58, 138)'; // blue-900
+      default:
+        return 'rgb(75, 85, 99)'; // gray-600
     }
   }
 

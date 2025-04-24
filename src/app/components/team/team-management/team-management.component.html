@@ -59,7 +59,7 @@
         <!-- チーム作成フォーム -->
         <div class="bg-white shadow rounded-lg p-6 mt-6">
           <h2 class="text-xl font-semibold mb-4">新しいチーム作成</h2>
-          <form [formGroup]="teamForm" (ngSubmit)="createTeam()" class="space-y-4">
+          <form [formGroup]="teamForm" (ngSubmit)="onSubmitTeam()" class="space-y-4">
             <div>
               <label for="name" class="block text-sm font-medium text-gray-700">チーム名</label>
               <input

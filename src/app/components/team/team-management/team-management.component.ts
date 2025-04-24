@@ -22,6 +22,8 @@ export class TeamManagementComponent implements OnInit, OnDestroy {
   pendingInvitations: any[] = [];
   receivedInvitations: any[] = [];
   private subscriptions = new Subscription();
+  isSubmitting = false;
+  showTeamForm = true;
 
   constructor(
     private teamService: TeamService,
@@ -59,18 +61,24 @@ export class TeamManagementComponent implements OnInit, OnDestroy {
     }
   }
 
-  async createTeam(): Promise<void> {
-    if (this.teamForm.invalid) return;
+  async onSubmitTeam(): Promise<void> {
+    if (this.teamForm.invalid || this.isSubmitting) return;
 
+    this.isSubmitting = true;
     try {
-      this.isLoading = true;
-      await this.teamService.createTeam(this.teamForm.value);
-      this.teamForm.reset();
+      const formValue = this.teamForm.value;
+      await this.teamService.createTeam(
+        formValue.name,
+        formValue.description || ''
+      );
       await this.loadTeams();
+      this.teamForm.reset();
+      this.showTeamForm = false;
     } catch (error) {
       console.error('チームの作成に失敗しました:', error);
+      alert('チームの作成に失敗しました');
     } finally {
-      this.isLoading = false;
+      this.isSubmitting = false;
     }
   }
 

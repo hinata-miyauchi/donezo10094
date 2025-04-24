@@ -52,6 +52,10 @@ export const routes: Routes = [
     canActivate: [AuthGuard]
   },
   {
+    path: 'teams/:id/settings',
+    loadComponent: () => import('./components/team/team-settings/team-settings.component').then(m => m.TeamSettingsComponent),
+  },
+  {
     path: 'tasks',
     loadComponent: () => import('./components/task/task-list/task-list.component').then(m => m.TaskListComponent),
     canActivate: [AuthGuard]

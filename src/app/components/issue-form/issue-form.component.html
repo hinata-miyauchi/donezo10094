@@ -3,6 +3,28 @@
   <form [formGroup]="issueForm" (ngSubmit)="onSubmit()" class="form-wrapper">
     <h2 class="text-xl font-bold text-gray-900 border-b pb-4 mb-8">課題登録フォーム</h2>
 
+    <!-- プロジェクト -->
+    <section class="form-section">
+      <h3 class="text-base font-semibold text-gray-700 mb-4">プロジェクト情報</h3>
+      <div class="grid grid-cols-1 gap-6">
+        <div class="form-group">
+          <label for="teamId">プロジェクト</label>
+          <div class="relative">
+            <select id="teamId" formControlName="teamId" class="form-select appearance-none">
+              <option value="">個人の課題</option>
+              <option *ngFor="let team of teams" [value]="team.id">{{ team.name }}</option>
+            </select>
+            <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-3">
+              <svg class="h-5 w-5 text-gray-400" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+                <path fill-rule="evenodd" d="M5.23 7.21a.75.75 0 011.06.02L10 11.168l3.71-3.938a.75.75 0 111.08 1.04l-4.25 4.5a.75.75 0 01-1.08 0l-4.25-4.5a.75.75 0 01.02-1.06z" clip-rule="evenodd" />
+              </svg>
+            </div>
+          </div>
+          <p class="text-sm text-gray-500 mt-1">課題の所属プロジェクトを選択してください。個人の課題の場合は「個人の課題」を選択してください。</p>
+        </div>
+      </div>
+    </section>
+
     <!-- 1. 基本情報 -->
     <section class="form-section">
       <h3 class="text-base font-semibold text-gray-700 mb-4">基本情報</h3>
@@ -99,28 +121,6 @@
     <section class="form-section">
       <label for="solution">対応・解決方法</label>
       <textarea id="solution" formControlName="solution" rows="3" class="form-textarea"></textarea>
-    </section>
-
-    <!-- 7. チーム -->
-    <section class="form-section">
-      <h3 class="text-base font-semibold text-gray-700 mb-4">チーム情報</h3>
-      <div class="grid grid-cols-1 gap-6">
-        <div class="form-group">
-          <label for="teamId">チーム</label>
-          <div class="relative">
-            <select id="teamId" formControlName="teamId" class="form-select appearance-none">
-              <option value="">個人の課題</option>
-              <option *ngFor="let team of teams" [value]="team.id">{{ team.name }}</option>
-            </select>
-            <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-3">
-              <svg class="h-5 w-5 text-gray-400" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
-                <path fill-rule="evenodd" d="M5.23 7.21a.75.75 0 011.06.02L10 11.168l3.71-3.938a.75.75 0 111.08 1.04l-4.25 4.5a.75.75 0 01-1.08 0l-4.25-4.5a.75.75 0 01.02-1.06z" clip-rule="evenodd" />
-              </svg>
-            </div>
-          </div>
-          <p class="text-sm text-gray-500 mt-1">課題の所属チームを選択してください。個人の課題の場合は「個人の課題」を選択してください。</p>
-        </div>
-      </div>
     </section>
 
     <!-- ボタン -->

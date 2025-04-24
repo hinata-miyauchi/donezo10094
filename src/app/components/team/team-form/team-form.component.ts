@@ -3,6 +3,8 @@ import { CommonModule } from '@angular/common';
 import { Router } from '@angular/router';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { TeamService } from '../../../services/team.service';
+import { AuthService } from '../../../services/auth.service';
+import { Team } from '../../../models/team.model';
 
 @Component({
   selector: 'app-team-form',
@@ -18,7 +20,8 @@ export class TeamFormComponent implements OnInit {
   constructor(
     private fb: FormBuilder,
     private teamService: TeamService,
-    private router: Router
+    private router: Router,
+    private authService: AuthService
   ) {
     this.teamForm = this.fb.group({
       name: ['', [Validators.required, Validators.minLength(2)]],
@@ -38,11 +41,17 @@ export class TeamFormComponent implements OnInit {
     try {
       this.isSubmitting = true;
       const formValue = this.teamForm.value;
+      const user = this.authService.currentUser;
+      if (!user) throw new Error('認証が必要です');
       
-      await this.teamService.createTeam({
+      const teamData: Partial<Team> = {
         name: formValue.name,
-        description: formValue.description
-      });
+        description: formValue.description,
+        adminId: user.uid,
+        members: []
+      };
+
+      await this.teamService.createTeam(user.uid, JSON.stringify(teamData));
 
       console.log('チームが正常に作成されました');
       this.router.navigate(['/teams']);

@@ -2,6 +2,7 @@ import { Component, Input, OnInit, OnDestroy, ViewChild, ElementRef, AfterViewCh
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ChatService } from '../../services/chat.service';
+import { AuthService } from '../../services/auth.service';
 import { ChatMessage } from '../../models/chat-message.model';
 import { Observable, Subscription, tap } from 'rxjs';
 
@@ -12,7 +13,7 @@ import { Observable, Subscription, tap } from 'rxjs';
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <div class="bg-white rounded-lg shadow p-4 mt-4">
-      <h3 class="text-lg font-semibold mb-4">チャット</h3>
+      <h3 class="text-lg font-semibold mb-4">コメント</h3>
       
       <!-- メッセージ一覧 -->
       <div #messageContainer class="space-y-4 h-96 overflow-y-auto mb-4 p-4 bg-gray-50 rounded">
@@ -22,9 +23,14 @@ import { Observable, Subscription, tap } from 'rxjs';
                [class.items-end]="message.senderId === currentUserId">
             <div class="flex items-center space-x-2"
                  [class.flex-row-reverse]="message.senderId === currentUserId">
-              <div class="text-sm text-gray-600">{{ message.senderName }}</div>
+              <div class="flex items-center space-x-2">
+                <img [src]="getUserPhotoURL(message)"
+                     [alt]="message.senderName"
+                     class="w-6 h-6 rounded-full">
+                <div class="text-sm font-medium text-gray-700">{{ message.senderName }}</div>
+              </div>
               <div class="text-xs text-gray-400">
-                {{ message.timestamp | date:'MM/dd HH:mm' }}
+                {{ message.timestamp | date:'yyyy/MM/dd HH:mm' }}
               </div>
             </div>
             <div [class.bg-blue-100]="message.senderId === currentUserId"
@@ -41,7 +47,7 @@ import { Observable, Subscription, tap } from 'rxjs';
         <input type="text" 
                [(ngModel)]="newMessage" 
                (keyup.enter)="sendMessage()"
-               placeholder="メッセージを入力..."
+               placeholder="コメントを入力..."
                class="flex-1 rounded border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500">
         <button (click)="sendMessage()"
                 [disabled]="!newMessage.trim()"
@@ -59,15 +65,26 @@ export class IssueChatComponent implements OnInit, OnDestroy, AfterViewChecked {
   messages$!: Observable<ChatMessage[]>;
   newMessage = '';
   private subscription?: Subscription;
-  
-  // TODO: 認証機能実装後に実際のユーザーIDを使用
-  currentUserId = 'system';
-  currentUserName = 'システム';
+  currentUserId: string = '';
+  currentUserName: string = '';
+  currentUserPhotoURL: string = '';
 
   constructor(
     private chatService: ChatService,
+    private authService: AuthService,
     private cdr: ChangeDetectorRef
-  ) {}
+  ) {
+    const user = this.authService.currentUser;
+    if (user) {
+      this.currentUserId = user.uid;
+      this.currentUserName = user.displayName || 'Unknown User';
+      this.currentUserPhotoURL = user.photoURL || '/assets/default-avatar.svg';
+    }
+  }
+
+  getUserPhotoURL(message: ChatMessage): string {
+    return message.senderPhotoURL || '/assets/default-avatar.svg';
+  }
 
   ngOnInit() {
     console.log('IssueChatComponent initialized with issueId:', this.issueId);
@@ -112,13 +129,14 @@ export class IssueChatComponent implements OnInit, OnDestroy, AfterViewChecked {
   }
 
   async sendMessage() {
-    if (!this.newMessage.trim() || !this.issueId) return;
+    if (!this.newMessage.trim() || !this.issueId || !this.currentUserId) return;
 
     try {
       await this.chatService.sendMessage({
         issueId: this.issueId,
         senderId: this.currentUserId,
         senderName: this.currentUserName,
+        senderPhotoURL: this.currentUserPhotoURL,
         content: this.newMessage.trim()
       });
 

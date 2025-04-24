@@ -82,15 +82,13 @@ export class UserSettingsComponent implements OnInit, OnDestroy {
 
     try {
       const formValue = this.teamForm.value;
-      const teamId = await this.teamService.createTeam({
-        name: formValue.name,
-        description: formValue.description
-      });
-
-      console.log('チームが作成されました:', teamId);
+      await this.teamService.createTeam(
+        formValue.name,
+        formValue.description || ''
+      );
 
       // 新しいチームを追加した後、リストを更新
-      this.userTeams = await this.teamService.getUserTeams();
+      await this.loadTeams();
       this.toggleTeamForm();
       
       // 成功メッセージを表示
@@ -141,7 +139,15 @@ export class UserSettingsComponent implements OnInit, OnDestroy {
   }
 
   isTeamAdmin(team: Team): boolean {
-    return this.teamService.isTeamAdmin(team);
+    const currentUser = this.authService.currentUser;
+    if (!currentUser) return false;
+    
+    // 作成者は自動的に管理者権限を持つ
+    if (team.adminId === currentUser.uid) return true;
+    
+    // それ以外のメンバーは role プロパティで判定
+    const member = team.members.find(m => m.uid === currentUser.uid);
+    return member?.role === 'admin';
   }
 
   isTeamCreator(team: Team): boolean {
