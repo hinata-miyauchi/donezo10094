@@ -299,56 +299,102 @@
         </div>
       </div>
 
-      <!-- 課題一覧テーブル -->
-      <div class="mt-8 flex flex-col">
-        <div class="-my-2 -mx-4 overflow-x-auto sm:-mx-6 lg:-mx-8">
-          <div class="inline-block min-w-full py-2 align-middle md:px-6 lg:px-8">
-            <div class="overflow-hidden shadow ring-1 ring-black ring-opacity-5 md:rounded-lg">
-              <table class="min-w-full divide-y divide-gray-300">
-                <thead class="bg-gray-50">
-                  <tr>
-                    <th scope="col" class="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">課題番号</th>
-                    <th scope="col" class="py-3.5 pl-4 pr-3 text-left text-sm font-semibold text-gray-900">タイトル</th>
-                    <th scope="col" class="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">ステータス</th>
-                    <th scope="col" class="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">重要度</th>
-                    <th scope="col" class="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">担当者</th>
-                    <th scope="col" class="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">期限</th>
-                    <th scope="col" class="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">進捗</th>
-                  </tr>
-                </thead>
-                <tbody class="divide-y divide-gray-200 bg-white">
-                  <tr *ngFor="let issue of filteredIssues$ | async" (click)="navigateToIssueDetail(issue.id)" class="cursor-pointer hover:bg-gray-50">
-                    <td class="whitespace-nowrap px-3 py-4 text-sm text-gray-500">{{ issue.issueNumber }}</td>
-                    <td class="whitespace-nowrap py-4 pl-4 pr-3 text-sm font-medium text-gray-900">{{ issue.title }}</td>
-                    <td class="whitespace-nowrap px-3 py-4">
-                      <span [class]="'px-2 inline-flex text-xs leading-5 font-semibold rounded-full ' + 
-                        (issue.status === '完了' ? 'bg-green-100 text-green-800' :
-                        issue.status === '進行中' ? 'bg-yellow-100 text-yellow-800' :
-                        'bg-gray-100 text-gray-800')">
-                        {{ issue.status }}
-                      </span>
-                    </td>
-                    <td class="whitespace-nowrap px-3 py-4">
-                      <span [class]="'px-2 inline-flex text-xs leading-5 font-semibold rounded-full ' + 
-                        (issue.priority === '高' ? 'bg-red-100 text-red-800' :
-                        issue.priority === '中' ? 'bg-yellow-100 text-yellow-800' :
-                        'bg-blue-100 text-blue-800')">
-                        {{ issue.priority }}
-                      </span>
-                    </td>
-                    <td class="whitespace-nowrap px-3 py-4 text-sm text-gray-500">{{ issue.assignee?.displayName }}</td>
-                    <td class="whitespace-nowrap px-3 py-4 text-sm text-gray-500">{{ issue.dueDate | date:'yyyy/MM/dd' }}</td>
-                    <td class="whitespace-nowrap px-3 py-4 text-sm text-gray-500">
-                      <div class="w-full bg-gray-200 rounded-full h-2.5 w-24">
-                        <div class="bg-blue-600 h-2.5 rounded-full" [style.width]="issue.progress + '%'"></div>
-                      </div>
-                      <span class="text-xs mt-1">{{ issue.progress }}%</span>
-                    </td>
-                  </tr>
-                </tbody>
-              </table>
-            </div>
+      <!-- 未完了の課題 -->
+      <div class="bg-white shadow overflow-hidden sm:rounded-lg mb-8">
+        <div class="px-4 py-5 sm:px-6">
+          <h3 class="text-lg leading-6 font-medium text-gray-900">未完了の課題</h3>
+          <p class="mt-1 max-w-2xl text-sm text-gray-500">ステータスが「完了」以外の課題一覧</p>
+        </div>
+        <div class="border-t border-gray-200">
+          <div *ngIf="isLoading" class="text-center py-4">
+            <p>読み込み中...</p>
           </div>
+          <div *ngIf="!isLoading && incompleteIssues.length === 0" class="text-center py-4">
+            <p>未完了の課題はありません</p>
+          </div>
+          <ul *ngIf="!isLoading && incompleteIssues.length > 0" class="divide-y divide-gray-200">
+            <li *ngFor="let issue of incompleteIssues" class="hover:bg-gray-50 cursor-pointer" (click)="navigateToIssueDetail(issue.id)">
+              <div class="px-4 py-4 sm:px-6">
+                <div class="flex items-center justify-between">
+                  <div class="flex-1 min-w-0">
+                    <p class="text-sm font-medium text-indigo-600 truncate">{{ issue.title }}</p>
+                    <p class="mt-1 text-sm text-gray-500">担当: {{ issue.assignee?.displayName || '未割り当て' }}</p>
+                  </div>
+                  <div class="flex items-center space-x-4">
+                    <span [class]="'px-2 inline-flex text-xs leading-5 font-semibold rounded-full ' + 
+                      (issue.status === '完了' ? 'bg-green-100 text-green-800' :
+                      issue.status === '進行中' ? 'bg-yellow-100 text-yellow-800' :
+                      'bg-gray-100 text-gray-800')">
+                      {{ issue.status }}
+                    </span>
+                    <span [class]="'px-2 inline-flex text-xs leading-5 font-semibold rounded-full ' + 
+                      (issue.priority === '高' ? 'bg-red-100 text-red-800' :
+                      issue.priority === '中' ? 'bg-yellow-100 text-yellow-800' :
+                      'bg-blue-100 text-blue-800')">
+                      {{ issue.priority }}
+                    </span>
+                    <p class="text-sm text-gray-500">期限: {{ issue.dueDate | date:'yyyy/MM/dd' }}</p>
+                  </div>
+                </div>
+                <div class="mt-2">
+                  <div class="flex items-center">
+                    <div class="w-full bg-gray-200 rounded-full h-2.5">
+                      <div class="bg-blue-600 h-2.5 rounded-full" [style.width]="issue.progress + '%'"></div>
+                    </div>
+                    <span class="ml-2 text-sm text-gray-500">{{ issue.progress }}%</span>
+                  </div>
+                </div>
+              </div>
+            </li>
+          </ul>
+        </div>
+      </div>
+
+      <!-- 完了済みの課題 -->
+      <div class="bg-white shadow overflow-hidden sm:rounded-lg">
+        <div class="px-4 py-5 sm:px-6">
+          <h3 class="text-lg leading-6 font-medium text-gray-900">完了済みの課題</h3>
+          <p class="mt-1 max-w-2xl text-sm text-gray-500">ステータスが「完了」の課題一覧</p>
+        </div>
+        <div class="border-t border-gray-200">
+          <div *ngIf="isLoading" class="text-center py-4">
+            <p>読み込み中...</p>
+          </div>
+          <div *ngIf="!isLoading && completedIssues.length === 0" class="text-center py-4">
+            <p>完了済みの課題はありません</p>
+          </div>
+          <ul *ngIf="!isLoading && completedIssues.length > 0" class="divide-y divide-gray-200">
+            <li *ngFor="let issue of completedIssues" class="hover:bg-gray-50 cursor-pointer" (click)="navigateToIssueDetail(issue.id)">
+              <div class="px-4 py-4 sm:px-6">
+                <div class="flex items-center justify-between">
+                  <div class="flex-1 min-w-0">
+                    <p class="text-sm font-medium text-indigo-600 truncate">{{ issue.title }}</p>
+                    <p class="mt-1 text-sm text-gray-500">担当: {{ issue.assignee?.displayName || '未割り当て' }}</p>
+                  </div>
+                  <div class="flex items-center space-x-4">
+                    <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">
+                      完了
+                    </span>
+                    <span [class]="'px-2 inline-flex text-xs leading-5 font-semibold rounded-full ' + 
+                      (issue.priority === '高' ? 'bg-red-100 text-red-800' :
+                      issue.priority === '中' ? 'bg-yellow-100 text-yellow-800' :
+                      'bg-blue-100 text-blue-800')">
+                      {{ issue.priority }}
+                    </span>
+                    <p class="text-sm text-gray-500">完了日: {{ issue.updatedAt | date:'yyyy/MM/dd' }}</p>
+                  </div>
+                </div>
+                <div class="mt-2">
+                  <div class="flex items-center">
+                    <div class="w-full bg-gray-200 rounded-full h-2.5">
+                      <div class="bg-green-600 h-2.5 rounded-full" style="width: 100%"></div>
+                    </div>
+                    <span class="ml-2 text-sm text-gray-500">100%</span>
+                  </div>
+                </div>
+              </div>
+            </li>
+          </ul>
         </div>
       </div>
     </div>

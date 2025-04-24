@@ -1,7 +1,7 @@
 import { Component, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ActivatedRoute, Router, RouterModule } from '@angular/router';
-import { FormBuilder, FormGroup, ReactiveFormsModule, FormControl } from '@angular/forms';
+import { FormBuilder, FormGroup, ReactiveFormsModule, FormControl, Validators } from '@angular/forms';
 import { IssueService } from '../../services/issue.service';
 import { TeamService } from '../../services/team.service';
 import { Issue } from '../../models/issue.model';
@@ -21,7 +21,6 @@ export class IssueDetailComponent implements OnInit, OnDestroy {
   team: Team | null = null;
   isEditing = false;
   editForm: FormGroup;
-  readonly statusOptions = ['未着手', '進行中', '完了'];
   readonly importanceOptions = ['低', '中', '高'];
   private subscriptions = new Subscription();
 
@@ -35,13 +34,18 @@ export class IssueDetailComponent implements OnInit, OnDestroy {
     this.editForm = this.fb.group({
       title: [''],
       description: [''],
-      status: [''],
       priority: [''],
       dueDate: [''],
       completionCriteria: [''],
       solution: [''],
       assignee: new FormControl(''),
-      progress: [0]
+      progress: [0, [Validators.required, Validators.min(0), Validators.max(100)]]
+    });
+
+    // 進捗率の変更を監視
+    this.editForm.get('progress')?.valueChanges.subscribe(progress => {
+      const status = this.getStatusFromProgress(progress);
+      console.log(`進捗率が${progress}%に変更されたため、ステータスを「${status}」に自動更新しました`);
     });
   }
 
@@ -70,7 +74,6 @@ export class IssueDetailComponent implements OnInit, OnDestroy {
         this.editForm.patchValue({
           title: issue.title || '',
           description: issue.description || '',
-          status: issue.status || '未着手',
           priority: issue.priority || '中',
           dueDate: this.formatDateForInput(dueDate),
           completionCriteria: issue.completionCriteria || '',
@@ -113,7 +116,6 @@ export class IssueDetailComponent implements OnInit, OnDestroy {
         const updatedIssue: Partial<Issue> = {
           title: formValues.title,
           description: formValues.description,
-          status: formValues.status as '未着手' | '進行中' | '完了',
           priority: formValues.priority as '高' | '中' | '低',
           dueDate: formValues.dueDate ? new Date(formValues.dueDate) : new Date(),
           completionCriteria: formValues.completionCriteria,
@@ -123,15 +125,13 @@ export class IssueDetailComponent implements OnInit, OnDestroy {
             displayName: formValues.assignee || ''
           },
           progress: Number(formValues.progress),
+          status: this.getStatusFromProgress(Number(formValues.progress)),
           updatedAt: new Date()
         };
         
         await this.issueService.updateIssue(this.issue.id, updatedIssue);
         this.isEditing = false;
         await this.loadIssue(this.issue.id);
-        setTimeout(() => {
-          this.router.navigate(['/issues']);
-        }, 500);
       } catch (error) {
         console.error('課題の更新に失敗しました:', error);
       }
@@ -150,5 +150,12 @@ export class IssueDetailComponent implements OnInit, OnDestroy {
     const hours = String(date.getHours()).padStart(2, '0');
     const minutes = String(date.getMinutes()).padStart(2, '0');
     return `${year}-${month}-${day}T${hours}:${minutes}`;
+  }
+
+  // 進捗率からステータスを決定するメソッド
+  private getStatusFromProgress(progress: number): '未着手' | '進行中' | '完了' {
+    if (progress === 0) return '未着手';
+    if (progress === 100) return '完了';
+    return '進行中';
   }
 } 

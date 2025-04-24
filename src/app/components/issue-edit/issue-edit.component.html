@@ -39,15 +39,7 @@
     <!-- 3. ステータスと進捗 -->
     <section>
       <h3 class="text-base font-semibold text-gray-700 mb-4">対応状況</h3>
-      <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <!-- ステータス -->
-        <div>
-          <label for="status" class="block text-sm text-gray-600 mb-1">ステータス</label>
-          <select id="status" formControlName="status" class="form-select">
-            <option *ngFor="let status of statusOptions" [value]="status">{{ status }}</option>
-          </select>
-        </div>
-
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
         <!-- 重要度 -->
         <div>
           <label for="importance" class="block text-sm text-gray-600 mb-1">重要度</label>
@@ -61,6 +53,9 @@
           <label for="progress" class="block text-sm text-gray-600 mb-1">進捗（％）</label>
           <input id="progress" type="number" formControlName="progress" min="0" max="100"
             class="form-input">
+          <p class="text-sm text-gray-500 mt-1">
+            進捗0%：未着手、1-99%：進行中、100%：完了として自動的に設定されます
+          </p>
         </div>
       </div>
     </section>

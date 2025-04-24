@@ -16,7 +16,6 @@ export class IssueEditComponent implements OnInit {
   isSubmitting = false;
   issueId = '';
 
-  readonly statusOptions = ['未着手', '対応中', '完了'];
   readonly importanceOptions = ['低', '中', '高'];
 
   constructor(
@@ -28,7 +27,6 @@ export class IssueEditComponent implements OnInit {
     this.issueForm = this.fb.group({
       title: ['', [Validators.required, Validators.minLength(5)]],
       description: ['', Validators.required],
-      status: ['未着手', Validators.required],
       importance: ['中', Validators.required],
       occurrenceDate: [new Date(), Validators.required],
       dueDate: [null, Validators.required],
@@ -38,6 +36,20 @@ export class IssueEditComponent implements OnInit {
       completionCriteria: ['', Validators.required],
       progress: [0, [Validators.required, Validators.min(0), Validators.max(100)]]
     });
+
+    // 進捗率の変更を監視
+    this.issueForm.get('progress')?.valueChanges.subscribe(progress => {
+      const status = this.getStatusFromProgress(progress);
+      // ステータスが変更された場合はコンソールに記録
+      console.log(`進捗率が${progress}%に変更されたため、ステータスを「${status}」に自動更新しました`);
+    });
+  }
+
+  // 進捗率からステータスを決定するメソッド
+  private getStatusFromProgress(progress: number): string {
+    if (progress === 0) return '未着手';
+    if (progress === 100) return '完了';
+    return '進行中';
   }
 
   ngOnInit(): void {
@@ -85,7 +97,8 @@ export class IssueEditComponent implements OnInit {
         ...formValue,
         occurrenceDate: new Date(formValue.occurrenceDate),
         dueDate: new Date(formValue.dueDate),
-        progress: Number(formValue.progress)
+        progress: Number(formValue.progress),
+        status: this.getStatusFromProgress(Number(formValue.progress)) // 進捗率に基づいてステータスを設定
       };
 
       await this.issueService.updateIssue(this.issueId, issueData);

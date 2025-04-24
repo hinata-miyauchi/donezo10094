@@ -190,53 +190,36 @@
           </div>
 
           <div class="grid grid-cols-1 gap-y-6 gap-x-4 sm:grid-cols-2">
-            <!-- ステータス -->
-            <div>
-              <label for="status" class="block text-sm font-medium text-gray-700">ステータス</label>
-              <div class="mt-1">
-                <select id="status" formControlName="status"
-                  class="shadow-sm focus:ring-indigo-500 focus:border-indigo-500 block w-full sm:text-sm border-gray-300 rounded-md">
-                  <option *ngFor="let status of statusOptions" [value]="status">{{ status }}</option>
-                </select>
-              </div>
-            </div>
-
             <!-- 重要度 -->
             <div>
               <label for="priority" class="block text-sm font-medium text-gray-700">重要度</label>
               <div class="mt-1">
                 <select id="priority" formControlName="priority"
                   class="shadow-sm focus:ring-indigo-500 focus:border-indigo-500 block w-full sm:text-sm border-gray-300 rounded-md">
-                  <option *ngFor="let priority of importanceOptions" [value]="priority">{{ priority }}</option>
+                  <option *ngFor="let importance of importanceOptions" [value]="importance">{{ importance }}</option>
                 </select>
               </div>
             </div>
 
-            <!-- 対応期限 -->
+            <!-- 進捗 -->
             <div>
-              <label for="dueDate" class="block text-sm font-medium text-gray-700">対応期限</label>
+              <label for="progress" class="block text-sm font-medium text-gray-700">進捗（％）</label>
               <div class="mt-1">
-                <input type="datetime-local" id="dueDate" formControlName="dueDate"
+                <input type="number" id="progress" formControlName="progress" min="0" max="100"
                   class="shadow-sm focus:ring-indigo-500 focus:border-indigo-500 block w-full sm:text-sm border-gray-300 rounded-md">
-              </div>
-            </div>
-
-            <!-- 担当者 -->
-            <div>
-              <label for="assignee" class="block text-sm font-medium text-gray-700">担当者</label>
-              <div class="mt-1">
-                <input type="text" id="assignee" formControlName="assignee"
-                  class="shadow-sm focus:ring-indigo-500 focus:border-indigo-500 block w-full sm:text-sm border-gray-300 rounded-md">
+                <p class="text-sm text-gray-500 mt-1">
+                  進捗0%：未着手、1-99%：進行中、100%：完了として自動的に設定されます
+                </p>
               </div>
             </div>
           </div>
 
-          <!-- 進捗 -->
-          <div>
-            <label for="progress" class="block text-sm font-medium text-gray-700">進捗 ({{ editForm.get('progress')?.value || 0 }}%)</label>
+          <!-- 対応期限 -->
+          <div class="sm:col-span-6">
+            <label for="dueDate" class="block text-sm font-medium text-gray-700">対応期限</label>
             <div class="mt-1">
-              <input type="range" id="progress" formControlName="progress" min="0" max="100" step="5"
-                class="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer">
+              <input type="datetime-local" id="dueDate" formControlName="dueDate"
+                class="shadow-sm focus:ring-indigo-500 focus:border-indigo-500 block w-full sm:text-sm border-gray-300 rounded-md">
             </div>
           </div>
 
@@ -255,6 +238,15 @@
             <div class="mt-1">
               <textarea id="solution" rows="3" formControlName="solution"
                 class="shadow-sm focus:ring-indigo-500 focus:border-indigo-500 block w-full sm:text-sm border-gray-300 rounded-md"></textarea>
+            </div>
+          </div>
+
+          <!-- 担当者 -->
+          <div>
+            <label for="assignee" class="block text-sm font-medium text-gray-700">担当者</label>
+            <div class="mt-1">
+              <input type="text" id="assignee" formControlName="assignee"
+                class="shadow-sm focus:ring-indigo-500 focus:border-indigo-500 block w-full sm:text-sm border-gray-300 rounded-md">
             </div>
           </div>
         </form>

@@ -25,7 +25,6 @@ export class IssueFormComponent implements OnInit, OnDestroy {
   issueForm: FormGroup;
   isSubmitting = false;
   teams: Team[] = [];
-  statusOptions = ['未着手', '対応中', '完了', '保留'];
   importanceOptions = ['低', '中', '高', '緊急'];
   private destroy$ = new Subject<void>();
 
@@ -38,9 +37,8 @@ export class IssueFormComponent implements OnInit, OnDestroy {
     this.issueForm = this.fb.group({
       title: ['', [Validators.required, Validators.minLength(3)]],
       description: ['', [Validators.required]],
-      status: ['未着手', [Validators.required]],
       importance: ['中', [Validators.required]],
-      progress: [0, [Validators.required]],
+      progress: [0, [Validators.required, Validators.min(0), Validators.max(100)]],
       occurrenceDate: ['', [Validators.required]],
       dueDate: ['', [Validators.required]],
       dueTime: ['', [Validators.required]],
@@ -90,6 +88,16 @@ export class IssueFormComponent implements OnInit, OnDestroy {
     try {
       const formData = this.issueForm.value;
       formData.isPrivate = !formData.teamId;
+      
+      // 進捗率に基づいてステータスを自動設定
+      const progress = formData.progress;
+      if (progress === 0) {
+        formData.status = '未着手';
+      } else if (progress === 100) {
+        formData.status = '完了';
+      } else {
+        formData.status = '進行中';
+      }
       
       await this.issueService.addIssue(formData);
       this.router.navigate(['/issues']);

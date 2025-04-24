@@ -28,6 +28,8 @@ interface IssueSummary {
 })
 export class IssueListComponent implements OnInit, OnDestroy {
   issues: Issue[] = [];
+  completedIssues: Issue[] = [];
+  incompleteIssues: Issue[] = [];
   isLoading = true;
   searchForm: FormGroup;
   showFilters = false;
@@ -143,6 +145,7 @@ export class IssueListComponent implements OnInit, OnDestroy {
         const allIssues = results.flat();
         const uniqueIssues = Array.from(new Map(allIssues.map(issue => [issue.id, issue])).values());
         this.issues = uniqueIssues;
+        this.separateIssuesByStatus(uniqueIssues);
         this.filteredIssuesSubject.next(uniqueIssues);
         this.isLoading = false;
         this.updateIssueSummary();
@@ -156,6 +159,7 @@ export class IssueListComponent implements OnInit, OnDestroy {
       // 特定のチームまたは個人の課題を取得
       this.issueService.getIssues(this.selectedTeamId).then(issues => {
         this.issues = issues;
+        this.separateIssuesByStatus(issues);
         this.filteredIssuesSubject.next(issues);
         this.isLoading = false;
         this.updateIssueSummary();
@@ -166,6 +170,61 @@ export class IssueListComponent implements OnInit, OnDestroy {
         this.isLoading = false;
       });
     }
+  }
+
+  private separateIssuesByStatus(issues: Issue[]): void {
+    // 進捗率に応じてステータスを自動更新
+    const updatedIssues = issues.map(issue => this.updateStatusByProgress(issue));
+
+    // 完了済みと未完了の課題を分離
+    this.completedIssues = updatedIssues.filter(issue => issue.status === '完了');
+    const unsortedIncompleteIssues = updatedIssues.filter(issue => issue.status !== '完了');
+
+    // 未完了の課題をソート
+    this.incompleteIssues = this.sortIncompleteIssues(unsortedIncompleteIssues);
+
+    // 更新されたステータスをデータベースに反映
+    updatedIssues.forEach(issue => {
+      if (issue.status !== issues.find(i => i.id === issue.id)?.status) {
+        this.issueService.updateIssue(issue.id, { status: issue.status });
+      }
+    });
+  }
+
+  private updateStatusByProgress(issue: Issue): Issue {
+    const progress = issue.progress ?? 0;
+    let newStatus = issue.status;
+
+    if (progress === 0) {
+      newStatus = '未着手';
+    } else if (progress === 100) {
+      newStatus = '完了';
+    } else if (progress > 0 && progress < 100 && issue.status === '未着手') {
+      newStatus = '進行中';
+    }
+
+    if (newStatus !== issue.status) {
+      return { ...issue, status: newStatus };
+    }
+    return issue;
+  }
+
+  private sortIncompleteIssues(issues: Issue[]): Issue[] {
+    const priorityOrder: { [key: string]: number } = { '高': 0, '中': 1, '低': 2 };
+
+    return issues.sort((a, b) => {
+      // 1. 重要度でソート
+      const priorityDiff = (priorityOrder[a.priority] ?? 999) - (priorityOrder[b.priority] ?? 999);
+      if (priorityDiff !== 0) return priorityDiff;
+
+      // 2. 対応期限でソート（期限が近い順）
+      const aDate = a.dueDate ? new Date(a.dueDate).getTime() : Infinity;
+      const bDate = b.dueDate ? new Date(b.dueDate).getTime() : Infinity;
+      if (aDate !== bDate) return aDate - bDate;
+
+      // 3. 進捗でソート（進捗が低い順）
+      return (a.progress ?? 0) - (b.progress ?? 0);
+    });
   }
 
   private updateIssueSummary(): void {
