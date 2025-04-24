@@ -1,0 +1,74 @@
+<header class="bg-white shadow">
+  <nav class="container mx-auto px-4">
+    <div class="flex justify-between items-center h-16">
+      <!-- ロゴ/ホーム -->
+      <div class="flex-shrink-0">
+        <a routerLink="/" class="text-xl font-bold text-gray-800">Donezo</a>
+      </div>
+
+      <!-- メインナビゲーション -->
+      <div class="hidden md:flex space-x-8" *ngIf="isLoggedIn">
+        <a routerLink="/issues" routerLinkActive="text-blue-600" class="text-gray-600 hover:text-gray-900">課題一覧</a>
+        <a routerLink="/issues/new" routerLinkActive="text-blue-600" class="text-gray-600 hover:text-gray-900">課題登録</a>
+        <a routerLink="/calendar" routerLinkActive="text-blue-600" class="text-gray-600 hover:text-gray-900">カレンダー</a>
+        <a routerLink="/teams" routerLinkActive="text-blue-600" class="text-gray-600 hover:text-gray-900">チーム</a>
+      </div>
+
+      <!-- ユーザーメニュー -->
+      <div class="flex items-center">
+        <ng-container *ngIf="isLoggedIn; else loginButton">
+          <div class="relative" #userMenuContainer>
+            <button
+              (click)="toggleUserMenu($event)"
+              class="flex items-center space-x-2 text-gray-600 hover:text-gray-900 focus:outline-none"
+            >
+              <img
+                [src]="user?.photoURL || '/assets/default-avatar.svg'"
+                alt="ユーザーアバター"
+                class="w-8 h-8 rounded-full"
+              >
+              <span class="hidden md:inline">{{ user?.displayName || 'ユーザー' }}</span>
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7" />
+              </svg>
+            </button>
+
+            <!-- ドロップダウンメニュー -->
+            <div
+              *ngIf="showUserMenu"
+              class="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg py-1 z-50"
+            >
+              <a
+                routerLink="/profile"
+                class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+              >
+                プロフィール
+              </a>
+              <a
+                routerLink="/settings"
+                class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+              >
+                設定
+              </a>
+              <button
+                (click)="logout()"
+                class="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+              >
+                ログアウト
+              </button>
+            </div>
+          </div>
+        </ng-container>
+
+        <ng-template #loginButton>
+          <a
+            routerLink="/login"
+            class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700"
+          >
+            ログイン
+          </a>
+        </ng-template>
+      </div>
+    </div>
+  </nav>
+</header> 

@@ -8,6 +8,7 @@ import { IssueFormComponent } from './components/issue-form/issue-form.component
 import { IssueCalendarComponent } from './components/issue-calendar/issue-calendar.component';
 import { TeamManagementComponent } from './components/team/team-management/team-management.component';
 import { UserProfileComponent } from './components/user/user-profile/user-profile.component';
+import { UserSettingsComponent } from './components/user/user-settings/user-settings.component';
 import { IssueDetailComponent } from './components/issue-detail/issue-detail.component';
 
 export const routes: Routes = [
@@ -41,8 +42,13 @@ export const routes: Routes = [
     canActivate: [AuthGuard]
   },
   { 
-    path: 'settings', 
+    path: 'profile', 
     component: UserProfileComponent,
+    canActivate: [AuthGuard]
+  },
+  { 
+    path: 'settings', 
+    component: UserSettingsComponent,
     canActivate: [AuthGuard]
   },
   { path: '**', redirectTo: '' }

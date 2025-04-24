@@ -1,0 +1,105 @@
+<div class="container mx-auto px-4 py-8">
+  <h1 class="text-2xl font-bold mb-8">ユーザー設定</h1>
+
+  <!-- チーム管理セクション -->
+  <section class="bg-white rounded-lg shadow-md p-6 mb-8">
+    <div class="flex justify-between items-center mb-6">
+      <h2 class="text-xl font-semibold">チーム管理</h2>
+      <button
+        (click)="toggleTeamForm()"
+        class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded"
+      >
+        {{ showTeamForm ? 'キャンセル' : '新しいチームを作成' }}
+      </button>
+    </div>
+
+    <!-- チーム作成フォーム -->
+    <div *ngIf="showTeamForm" class="mb-6 bg-gray-50 p-4 rounded-lg">
+      <form [formGroup]="teamForm" (ngSubmit)="onSubmitTeam()">
+        <div class="mb-4">
+          <label for="name" class="block text-gray-700 text-sm font-bold mb-2">
+            チーム名
+          </label>
+          <input
+            id="name"
+            type="text"
+            formControlName="name"
+            class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
+            [class.border-red-500]="teamForm.get('name')?.invalid && teamForm.get('name')?.touched"
+          >
+          <p class="text-red-500 text-xs italic mt-1" *ngIf="teamForm.get('name')?.invalid && teamForm.get('name')?.touched">
+            {{ getErrorMessage('name') }}
+          </p>
+        </div>
+
+        <div class="mb-4">
+          <label for="description" class="block text-gray-700 text-sm font-bold mb-2">
+            説明
+          </label>
+          <textarea
+            id="description"
+            formControlName="description"
+            rows="3"
+            class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
+            [class.border-red-500]="teamForm.get('description')?.invalid && teamForm.get('description')?.touched"
+          ></textarea>
+          <p class="text-red-500 text-xs italic mt-1" *ngIf="teamForm.get('description')?.invalid && teamForm.get('description')?.touched">
+            {{ getErrorMessage('description') }}
+          </p>
+        </div>
+
+        <div class="flex justify-end">
+          <button
+            type="submit"
+            [disabled]="teamForm.invalid || isSubmitting"
+            class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline disabled:opacity-50"
+          >
+            {{ isSubmitting ? '作成中...' : 'チームを作成' }}
+          </button>
+        </div>
+      </form>
+    </div>
+
+    <!-- チームリスト -->
+    <div *ngIf="isLoading" class="text-center py-4">
+      <p>読み込み中...</p>
+    </div>
+
+    <div *ngIf="!isLoading && userTeams.length === 0" class="text-center py-4 text-gray-600">
+      <p>所属しているチームはありません</p>
+    </div>
+
+    <div *ngIf="!isLoading && userTeams.length > 0" class="space-y-4">
+      <div *ngFor="let team of userTeams" class="border rounded-lg p-4 hover:bg-gray-50">
+        <div class="flex justify-between items-center">
+          <div>
+            <h3 class="font-semibold text-lg">{{ team.name }}</h3>
+            <p class="text-gray-600">{{ team.description }}</p>
+          </div>
+          <div class="flex space-x-2">
+            <button
+              (click)="navigateToTeamSettings(team.id)"
+              class="bg-gray-100 hover:bg-gray-200 text-gray-800 font-bold py-2 px-4 rounded"
+            >
+              設定
+            </button>
+            <button
+              *ngIf="isTeamAdmin(team)"
+              (click)="deleteTeam(team.id)"
+              class="bg-red-600 hover:bg-red-700 text-white font-bold py-2 px-4 rounded"
+            >
+              削除
+            </button>
+            <button
+              *ngIf="!isTeamAdmin(team)"
+              (click)="leaveTeam(team.id)"
+              class="bg-red-100 hover:bg-red-200 text-red-800 font-bold py-2 px-4 rounded"
+            >
+              退出
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+</div> 

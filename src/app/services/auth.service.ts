@@ -233,4 +233,46 @@ export class AuthService {
       throw error;
     }
   }
+
+  async getCurrentUserId(): Promise<string> {
+    const user = this.currentUser;
+    if (!user) {
+      throw new Error('ユーザーが認証されていません');
+    }
+    return user.id;
+  }
+
+  async updateUserProfile(displayName: string, photoURL?: string): Promise<void> {
+    const user = this.auth.currentUser;
+    if (!user) {
+      throw new Error('ユーザーが認証されていません');
+    }
+
+    await updateProfile(user, {
+      displayName,
+      photoURL: photoURL || user.photoURL
+    });
+
+    const userDocRef = doc(this.firestore, 'users', user.uid);
+    const userData = await getDoc(userDocRef);
+    
+    if (!userData.exists()) {
+      throw new Error('ユーザーデータが見つかりません');
+    }
+
+    const currentData = userData.data() as UserProfile;
+    
+    await updateDoc(userDocRef, {
+      displayName,
+      photoURL: photoURL || user.photoURL || '',
+      updatedAt: new Date()
+    });
+
+    this.userSubject.next({
+      ...currentData,
+      displayName,
+      photoURL: photoURL || user.photoURL || '',
+      updatedAt: new Date()
+    } as User);
+  }
 } 

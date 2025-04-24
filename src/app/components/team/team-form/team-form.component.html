@@ -1,0 +1,57 @@
+<div class="form-container">
+  <form [formGroup]="teamForm" (ngSubmit)="onSubmit()" class="form-wrapper">
+    <h2 class="text-xl font-bold text-gray-900 border-b pb-4 mb-8">チーム作成</h2>
+
+    <!-- チーム名 -->
+    <div class="mb-6">
+      <label for="name" class="block text-gray-700 text-sm font-bold mb-2">
+        チーム名
+      </label>
+      <input
+        id="name"
+        type="text"
+        formControlName="name"
+        class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
+        [class.border-red-500]="teamForm.get('name')?.invalid && teamForm.get('name')?.touched"
+      >
+      <p class="text-red-500 text-xs italic mt-1" *ngIf="teamForm.get('name')?.invalid && teamForm.get('name')?.touched">
+        {{ getErrorMessage('name') }}
+      </p>
+    </div>
+
+    <!-- 説明 -->
+    <div class="mb-6">
+      <label for="description" class="block text-gray-700 text-sm font-bold mb-2">
+        説明
+      </label>
+      <textarea
+        id="description"
+        formControlName="description"
+        rows="4"
+        class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
+        [class.border-red-500]="teamForm.get('description')?.invalid && teamForm.get('description')?.touched"
+      ></textarea>
+      <p class="text-red-500 text-xs italic mt-1" *ngIf="teamForm.get('description')?.invalid && teamForm.get('description')?.touched">
+        {{ getErrorMessage('description') }}
+      </p>
+    </div>
+
+    <!-- ボタン -->
+    <div class="flex justify-end space-x-4">
+      <button
+        type="button"
+        (click)="onCancel()"
+        class="bg-gray-300 hover:bg-gray-400 text-gray-800 font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline"
+      >
+        キャンセル
+      </button>
+      <button
+        type="submit"
+        [disabled]="teamForm.invalid || isSubmitting"
+        class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline disabled:opacity-50"
+      >
+        作成する
+      </button>
+    </div>
+  </form>
+</div> 

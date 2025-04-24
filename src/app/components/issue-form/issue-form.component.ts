@@ -3,7 +3,9 @@ import { CommonModule } from '@angular/common';
 import { Router, RouterModule } from '@angular/router';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators, FormsModule } from '@angular/forms';
 import { IssueService } from '../../services/issue.service';
+import { TeamService } from '../../services/team.service';
 import { Issue } from '../../models/issue.model';
+import { Team } from '../../models/team.model';
 
 @Component({
   selector: 'app-issue-form',
@@ -20,6 +22,7 @@ import { Issue } from '../../models/issue.model';
 export class IssueFormComponent implements OnInit {
   issueForm: FormGroup;
   isSubmitting = false;
+  teams: Team[] = [];
 
   readonly statusOptions = ['未着手', '対応中', '完了'];
   readonly importanceOptions = ['低', '中', '高'];
@@ -27,6 +30,7 @@ export class IssueFormComponent implements OnInit {
   constructor(
     private fb: FormBuilder,
     private issueService: IssueService,
+    private teamService: TeamService,
     private router: Router
   ) {
     this.issueForm = this.fb.group({
@@ -40,13 +44,21 @@ export class IssueFormComponent implements OnInit {
       assignee: [''],
       solution: [''],
       completionCriteria: ['', Validators.required],
-      progress: [0, [Validators.required, Validators.min(0), Validators.max(100)]]
+      progress: [0, [Validators.required, Validators.min(0), Validators.max(100)]],
+      teamId: [null],
+      isPrivate: [true]
     });
   }
 
-  ngOnInit(): void {
+  async ngOnInit(): Promise<void> {
     console.log('IssueFormComponent initialized');
     window.scrollTo(0, 0);
+    
+    try {
+      this.teams = await this.teamService.getUserTeams();
+    } catch (error) {
+      console.error('チームの読み込みに失敗しました:', error);
+    }
   }
 
   async onSubmit(): Promise<void> {
@@ -62,7 +74,7 @@ export class IssueFormComponent implements OnInit {
         ? new Date(`${formValue.dueDate}T${formValue.dueTime}`)
         : new Date();
 
-      const issueData: Partial<Issue> = {
+      const newIssue: Partial<Issue> = {
         title: formValue.title,
         description: formValue.description,
         status: formValue.status as '未着手' | '進行中' | '完了',
@@ -79,11 +91,15 @@ export class IssueFormComponent implements OnInit {
         solution: formValue.solution || '',
         completionCriteria: formValue.completionCriteria,
         progress: Number(formValue.progress),
-        createdBy: 'システム',
-        isPrivate: true
+        createdBy: {
+          uid: 'system',
+          displayName: 'システム'
+        },
+        teamId: formValue.teamId,
+        isPrivate: formValue.teamId === null
       };
 
-      await this.issueService.addIssue(issueData);
+      await this.issueService.addIssue(newIssue);
       console.log('課題が正常に作成されました');
       this.router.navigate(['/issues']);
     } catch (error) {

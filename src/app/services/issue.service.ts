@@ -26,6 +26,7 @@ import {
 import { Issue, IssueSummary } from '../models/issue.model';
 import { AuthService } from './auth.service';
 import { TeamService } from './team.service';
+import { TeamRole } from '../models/team.model';
 
 @Injectable({
   providedIn: 'root'
@@ -105,27 +106,41 @@ export class IssueService {
     }
   }
 
+  private async checkTeamIssuePermission(teamId: string | undefined, currentUser: { uid: string } | null, requiredRole: TeamRole): Promise<boolean> {
+    if (!teamId || !currentUser) return false;
+
+    const team = await this.teamService.getTeam(teamId);
+    if (!team) return false;
+
+    return this.teamService.checkTeamPermission(team, currentUser.uid, requiredRole);
+  }
+
   async addIssue(issue: Partial<Issue>): Promise<string> {
-    const currentUser = await firstValueFrom(this.authService.currentUser$);
+    const currentUser = this.authService.currentUser;
     if (!currentUser) throw new Error('認証が必要です');
 
     if (issue.teamId) {
-      const team = await this.teamService.getTeam(issue.teamId);
-      const hasPermission = this.teamService.checkTeamPermission(team, currentUser.uid, 'editor');
-      if (!hasPermission) {
-        throw new Error('権限がありません');
-      }
+      const hasPermission = await this.checkTeamIssuePermission(issue.teamId, currentUser, 'member');
+      if (!hasPermission) throw new Error('権限がありません');
     }
 
-    const newIssue = {
-      ...issue,
-      issueNumber: this.getNextIssueNumber(),
-      userId: currentUser.uid,
-      createdAt: new Date(),
-      updatedAt: new Date()
-    };
+    // 課題番号を生成
+    await this.initLastIssueNumber(); // 最新の課題番号を取得
+    const issueNumber = this.getNextIssueNumber();
 
-    const docRef = await addDoc(this.issuesCollection, newIssue);
+    const newIssue: Issue = {
+      ...issue,
+      issueNumber,
+      createdBy: {
+        uid: currentUser.uid,
+        displayName: currentUser.displayName || ''
+      },
+      createdAt: new Date(),
+      updatedAt: new Date(),
+      progress: 0
+    } as Issue;
+
+    const docRef = await addDoc(collection(this.firestore, 'issues'), newIssue);
     return docRef.id;
   }
 
@@ -145,48 +160,38 @@ export class IssueService {
   }
 
   async updateIssue(issueId: string, updates: Partial<Issue>): Promise<void> {
-    const currentUser = await firstValueFrom(this.authService.currentUser$);
+    const currentUser = this.authService.currentUser;
     if (!currentUser) throw new Error('認証が必要です');
 
     const issue = await this.getIssue(issueId);
     if (!issue) throw new Error('課題が見つかりません');
 
     if (issue.teamId) {
-      const team = await this.teamService.getTeam(issue.teamId);
-      const hasPermission = this.teamService.checkTeamPermission(team, currentUser.uid, 'editor');
-      if (!hasPermission) {
-        throw new Error('権限がありません');
-      }
-    } else if (issue.userId !== currentUser.uid) {
-      throw new Error('権限がありません');
+      const hasPermission = await this.checkTeamIssuePermission(issue.teamId, currentUser, 'member');
+      if (!hasPermission) throw new Error('権限がありません');
     }
 
-    const docRef = doc(this.issuesCollection, issueId);
-    await updateDoc(docRef, {
+    const updateData = {
       ...updates,
       updatedAt: new Date()
-    });
+    };
+
+    await updateDoc(doc(this.firestore, 'issues', issueId), updateData);
   }
 
   async deleteIssue(issueId: string): Promise<void> {
-    const currentUser = await firstValueFrom(this.authService.currentUser$);
+    const currentUser = this.authService.currentUser;
     if (!currentUser) throw new Error('認証が必要です');
 
     const issue = await this.getIssue(issueId);
     if (!issue) throw new Error('課題が見つかりません');
 
     if (issue.teamId) {
-      const team = await this.teamService.getTeam(issue.teamId);
-      const hasPermission = this.teamService.checkTeamPermission(team, currentUser.uid, 'admin');
-      if (!hasPermission) {
-        throw new Error('権限がありません');
-      }
-    } else if (issue.userId !== currentUser.uid) {
-      throw new Error('権限がありません');
+      const hasPermission = await this.checkTeamIssuePermission(issue.teamId, currentUser, 'admin');
+      if (!hasPermission) throw new Error('権限がありません');
     }
 
-    const docRef = doc(this.issuesCollection, issueId);
-    await deleteDoc(docRef);
+    await deleteDoc(doc(this.firestore, 'issues', issueId));
   }
 
   getIssueSummary(): Observable<IssueSummary> {

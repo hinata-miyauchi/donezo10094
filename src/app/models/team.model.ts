@@ -2,17 +2,19 @@ export interface Team {
   id: string;
   name: string;
   description?: string;
-  members: TeamMember[];
   createdAt: Date;
   updatedAt: Date;
+  adminId: string; // チーム作成者のUID
+  members: TeamMember[];
 }
+
+export type TeamRole = 'admin' | 'member' | 'editor';
 
 export interface TeamMember {
   uid: string;
   displayName: string;
-  email: string;
-  photoURL?: string;
-  role: 'admin' | 'editor' | 'viewer';
+  role: TeamRole;
+  joinedAt: Date;
 }
 
 export interface TeamMembership {
@@ -22,13 +24,12 @@ export interface TeamMembership {
   joinedAt: Date;
 }
 
-export type TeamRole = 'viewer' | 'editor' | 'admin';
-
 export interface TeamInvitation {
   id: string;
   teamId: string;
-  email: string;
-  role: 'editor' | 'viewer';
+  teamName: string;
+  invitedBy: string; // 招待者のUID
+  invitedUserEmail: string;
   status: 'pending' | 'accepted' | 'rejected';
   createdAt: Date;
   expiresAt: Date;

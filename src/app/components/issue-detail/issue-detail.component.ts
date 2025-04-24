@@ -1,10 +1,11 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ActivatedRoute, Router, RouterModule } from '@angular/router';
 import { FormBuilder, FormGroup, ReactiveFormsModule, FormControl } from '@angular/forms';
 import { IssueService } from '../../services/issue.service';
 import { Issue } from '../../models/issue.model';
 import { IssueChatComponent } from '../issue-chat/issue-chat.component';
+import { Subscription } from 'rxjs';
 
 @Component({
   selector: 'app-issue-detail',
@@ -13,12 +14,13 @@ import { IssueChatComponent } from '../issue-chat/issue-chat.component';
   standalone: true,
   imports: [CommonModule, RouterModule, ReactiveFormsModule, IssueChatComponent]
 })
-export class IssueDetailComponent implements OnInit {
+export class IssueDetailComponent implements OnInit, OnDestroy {
   issue: Issue | null = null;
   isEditing = false;
   editForm: FormGroup;
   readonly statusOptions = ['未着手', '進行中', '完了'];
   readonly importanceOptions = ['低', '中', '高'];
+  private subscriptions = new Subscription();
 
   constructor(
     private route: ActivatedRoute,
@@ -45,6 +47,10 @@ export class IssueDetailComponent implements OnInit {
     if (issueId) {
       this.loadIssue(issueId);
     }
+  }
+
+  ngOnDestroy(): void {
+    this.subscriptions.unsubscribe();
   }
 
   private async loadIssue(id: string): Promise<void> {

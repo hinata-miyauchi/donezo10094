@@ -30,6 +30,7 @@ export class IssueListComponent implements OnInit, OnDestroy {
   issues: Issue[] = [];
   isLoading = true;
   searchForm: FormGroup;
+  showFilters = false;
   private destroy$ = new Subject<void>();
   private issueSummarySubject = new BehaviorSubject<IssueSummary>({
     totalIssues: 0,
@@ -51,6 +52,7 @@ export class IssueListComponent implements OnInit, OnDestroy {
   searchTerm: string = '';
   selectedStatus: string = '';
   selectedAssignee: string = '';
+  selectedTeamId: string = 'all';
   summary = {
     totalIssues: 0,
     completedIssues: 0,
@@ -71,7 +73,6 @@ export class IssueListComponent implements OnInit, OnDestroy {
   private readonly DUE_SOON_DAYS = 7; // 期限が7日以内の課題を「期限が近い」と定義
 
   teams: Team[] = [];
-  selectedTeamId: string = '';
   filters = {
     status: '',
     priority: '',
@@ -99,8 +100,10 @@ export class IssueListComponent implements OnInit, OnDestroy {
   }
 
   ngOnInit(): void {
-    this.loadTeams();
-    this.loadIssues();
+    // チームの読み込みが完了してから課題を読み込む
+    this.loadTeams().then(() => {
+      this.loadIssues();
+    });
   }
 
   ngOnDestroy(): void {
@@ -112,23 +115,57 @@ export class IssueListComponent implements OnInit, OnDestroy {
     this.filteredIssuesSubject.complete();
   }
 
-  private loadTeams(): void {
-    this.teamService.getUserTeams().then(teams => {
-      this.teams = teams;
+  private async loadTeams(): Promise<void> {
+    try {
+      this.teams = await this.teamService.getUserTeams();
       this.updateCanCreateIssue();
-    });
+    } catch (error) {
+      console.error('チームの取得に失敗しました:', error);
+      this.teams = [];
+    }
+  }
+
+  onTeamChange(teamId: string): void {
+    this.selectedTeamId = teamId;
+    this.isLoading = true;
+    this.loadIssues();
   }
 
   private loadIssues(): void {
-    this.issueService.getIssues(this.selectedTeamId).then(issues => {
-      this.issues = issues;
-      this.filteredIssuesSubject.next(issues);
-      this.isLoading = false;
-      this.updateIssueSummary();
-      this.updateAssigneesList();
-      this.applyFilters();
-      this.updateCanCreateIssue();
-    });
+    this.isLoading = true;
+    if (this.selectedTeamId === 'all') {
+      // すべてのチームの課題を取得
+      Promise.all([
+        this.issueService.getIssues(), // 個人の課題
+        ...this.teams.map(team => this.issueService.getIssues(team.id)) // 各チームの課題
+      ]).then(results => {
+        // 結果を結合して重複を除去
+        const allIssues = results.flat();
+        const uniqueIssues = Array.from(new Map(allIssues.map(issue => [issue.id, issue])).values());
+        this.issues = uniqueIssues;
+        this.filteredIssuesSubject.next(uniqueIssues);
+        this.isLoading = false;
+        this.updateIssueSummary();
+        this.updateAssigneesList();
+        this.applyFilters();
+      }).catch(error => {
+        console.error('課題の取得に失敗しました:', error);
+        this.isLoading = false;
+      });
+    } else {
+      // 特定のチームまたは個人の課題を取得
+      this.issueService.getIssues(this.selectedTeamId).then(issues => {
+        this.issues = issues;
+        this.filteredIssuesSubject.next(issues);
+        this.isLoading = false;
+        this.updateIssueSummary();
+        this.updateAssigneesList();
+        this.applyFilters();
+      }).catch(error => {
+        console.error('課題の取得に失敗しました:', error);
+        this.isLoading = false;
+      });
+    }
   }
 
   private updateIssueSummary(): void {
@@ -185,7 +222,8 @@ export class IssueListComponent implements OnInit, OnDestroy {
 
       const matchesStatus = status === 'すべて' || issue.status === status;
       const matchesPriority = priority === 'すべて' || issue.priority === priority;
-      const matchesAssignee = assignee === 'すべて' || issue.assignee.displayName === assignee;
+      const matchesAssignee = assignee === 'すべて' || 
+        (issue.assignee && issue.assignee.displayName === assignee);
 
       const issueDueDate = new Date(issue.dueDate);
       const matchesDate = (!startDate || new Date(startDate) <= issueDueDate) &&
@@ -284,8 +322,10 @@ export class IssueListComponent implements OnInit, OnDestroy {
     }
 
     const currentUser = this.authService.currentUser;
-    const membership = team.members.find(m => m.uid === currentUser?.uid);
-    this.canCreateIssue = membership?.role === 'admin' || membership?.role === 'editor';
+    if (!currentUser) return;
+
+    const membership = team?.members.find(m => m.uid === currentUser.uid);
+    this.canCreateIssue = membership?.role === 'admin' || membership?.role === 'member';
   }
 
   sortIssues(issues: Issue[], sortBy: string, sortOrder: 'asc' | 'desc'): Issue[] {
@@ -310,5 +350,9 @@ export class IssueListComponent implements OnInit, OnDestroy {
 
   navigateToIssueDetail(issueId: string) {
     this.router.navigate(['/issues', issueId]);
+  }
+
+  toggleFilters(): void {
+    this.showFilters = !this.showFilters;
   }
 }

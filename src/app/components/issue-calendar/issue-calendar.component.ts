@@ -4,7 +4,9 @@ import { CalendarOptions, EventClickArg } from '@fullcalendar/core';
 import { FullCalendarModule } from '@fullcalendar/angular';
 import { Router } from '@angular/router';
 import { IssueService } from '../../services/issue.service';
+import { TeamService } from '../../services/team.service';
 import { Issue } from '../../models/issue.model';
+import { Team } from '../../models/team.model';
 import dayGridPlugin from '@fullcalendar/daygrid';
 import interactionPlugin from '@fullcalendar/interaction';
 import timeGridPlugin from '@fullcalendar/timegrid';
@@ -57,6 +59,7 @@ import timeGridPlugin from '@fullcalendar/timegrid';
   imports: [CommonModule, FullCalendarModule]
 })
 export class IssueCalendarComponent implements OnInit {
+  private teams: Team[] = [];
   calendarOptions: CalendarOptions = {
     plugins: [dayGridPlugin, timeGridPlugin, interactionPlugin],
     initialView: 'dayGridMonth',
@@ -107,17 +110,32 @@ export class IssueCalendarComponent implements OnInit {
 
   constructor(
     private issueService: IssueService,
+    private teamService: TeamService,
     private router: Router
   ) {}
 
   ngOnInit() {
-    this.loadIssues();
+    this.loadTeamsAndIssues();
   }
 
-  async loadIssues(): Promise<void> {
+  private async loadTeamsAndIssues(): Promise<void> {
     try {
-      const issues = await this.issueService.getIssues();
-      this.updateCalendarEvents(issues);
+      // まずチームを読み込む
+      this.teams = await this.teamService.getUserTeams();
+      
+      // 個人の課題とすべてのチームの課題を取得
+      const allIssuesPromises = [
+        this.issueService.getIssues(), // 個人の課題
+        ...this.teams.map(team => this.issueService.getIssues(team.id)) // 各チームの課題
+      ];
+
+      const results = await Promise.all(allIssuesPromises);
+      
+      // 結果を結合して重複を除去
+      const allIssues = results.flat();
+      const uniqueIssues = Array.from(new Map(allIssues.map(issue => [issue.id, issue])).values());
+      
+      this.updateCalendarEvents(uniqueIssues);
     } catch (error) {
       console.error('課題の読み込みに失敗しました:', error);
     }
@@ -126,7 +144,7 @@ export class IssueCalendarComponent implements OnInit {
   private updateCalendarEvents(issues: Issue[]): void {
     this.calendarOptions.events = issues.map(issue => ({
       id: issue.id,
-      title: issue.title,
+      title: `${issue.title}${issue.teamId ? ' (チーム)' : ''}`,
       start: new Date(issue.dueDate),
       end: new Date(issue.dueDate),
       backgroundColor: this.getStatusColor(issue.status),
@@ -135,7 +153,8 @@ export class IssueCalendarComponent implements OnInit {
       extendedProps: {
         status: issue.status,
         priority: issue.priority,
-        description: issue.description
+        description: issue.description,
+        isTeamIssue: !!issue.teamId
       }
     }));
   }
