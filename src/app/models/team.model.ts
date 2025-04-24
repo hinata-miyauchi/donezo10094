@@ -5,6 +5,7 @@ export interface Team {
   createdAt: Date;
   updatedAt: Date;
   adminId: string; // チーム作成者のUID
+  createdBy: string; // チーム作成者のUID
   members: TeamMember[];
 }
 
@@ -13,6 +14,7 @@ export type TeamRole = 'admin' | 'member' | 'editor';
 export interface TeamMember {
   uid: string;
   displayName: string;
+  email?: string; // メールアドレスを追加
   role: TeamRole;
   joinedAt: Date;
 }

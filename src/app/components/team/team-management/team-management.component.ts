@@ -5,6 +5,7 @@ import { TeamService } from '../../../services/team.service';
 import { AuthService } from '../../../services/auth.service';
 import { Team, TeamMembership, TeamMember, TeamRole } from '../../../models/team.model';
 import { Subscription } from 'rxjs';
+import { MessageService } from '../../../services/message.service';
 
 @Component({
   selector: 'app-team-management',
@@ -18,12 +19,15 @@ export class TeamManagementComponent implements OnInit, OnDestroy {
   teamForm: FormGroup;
   inviteForm: FormGroup;
   isLoading = false;
+  pendingInvitations: any[] = [];
+  receivedInvitations: any[] = [];
   private subscriptions = new Subscription();
 
   constructor(
     private teamService: TeamService,
     private authService: AuthService,
-    private fb: FormBuilder
+    private fb: FormBuilder,
+    private messageService: MessageService
   ) {
     this.teamForm = this.fb.group({
       name: ['', [Validators.required, Validators.minLength(3)]],
@@ -37,6 +41,7 @@ export class TeamManagementComponent implements OnInit, OnDestroy {
 
   ngOnInit(): void {
     this.loadTeams();
+    this.loadReceivedInvitations();
   }
 
   ngOnDestroy(): void {
@@ -85,14 +90,28 @@ export class TeamManagementComponent implements OnInit, OnDestroy {
   }
 
   async inviteMember(teamId: string): Promise<void> {
-    if (this.inviteForm.invalid) return;
+    if (this.inviteForm.invalid || !this.selectedTeam) return;
 
     try {
       this.isLoading = true;
-      await this.teamService.createTeamInvitation(teamId, this.inviteForm.value.email);
-      this.inviteForm.reset();
-    } catch (error) {
+      const result = await this.teamService.createTeamInvitation(
+        this.selectedTeam.id,
+        this.inviteForm.value.email
+      );
+      
+      // 結果に基づいてメッセージを表示
+      if (result.success) {
+        this.messageService.showSuccess(result.message);
+        this.inviteForm.reset();
+      } else {
+        this.messageService.showInfo(result.message);
+      }
+
+      // 招待リストを更新
+      await this.loadPendingInvitations();
+    } catch (error: any) {
       console.error('メンバーの招待に失敗しました:', error);
+      this.messageService.showError(error.message || 'メンバーの招待に失敗しました');
     } finally {
       this.isLoading = false;
     }
@@ -130,15 +149,115 @@ export class TeamManagementComponent implements OnInit, OnDestroy {
     }
   }
 
-  selectTeam(team: Team): void {
+  async selectTeam(team: Team): Promise<void> {
     this.selectedTeam = team;
+    
+    // デバッグ情報
+    const currentUser = this.authService.currentUser;
+    const isCreator = team.adminId === currentUser?.uid;
+    const isAdminRole = team.members.some(member => 
+      member.uid === currentUser?.uid && member.role === 'admin'
+    );
+    
+    console.log('Selected Team:', {
+      teamId: team.id,
+      teamName: team.name,
+      adminId: team.adminId,
+      currentUserId: currentUser?.uid,
+      isCreator,
+      isAdminRole,
+      isAdmin: this.isTeamAdmin(team),
+      currentUserRole: team.members.find(m => m.uid === currentUser?.uid)?.role
+    });
+    
+    await this.loadPendingInvitations();
   }
 
-  isTeamAdmin(team: Team): boolean {
+  private async loadPendingInvitations(): Promise<void> {
+    if (!this.selectedTeam) return;
+
+    try {
+      this.pendingInvitations = await this.teamService.getTeamInvitations(this.selectedTeam.id);
+      console.log('Loaded pending invitations:', this.pendingInvitations.length); // デバッグ用
+    } catch (error) {
+      console.error('招待情報の読み込みに失敗しました:', error);
+      this.messageService.showError('招待情報の読み込みに失敗しました');
+    }
+  }
+
+  async cancelInvitation(invitationId: string): Promise<void> {
+    if (!confirm('この招待をキャンセルしてもよろしいですか？')) return;
+
+    try {
+      this.isLoading = true;
+      await this.teamService.cancelInvitation(invitationId);
+      await this.loadPendingInvitations();
+    } catch (error) {
+      console.error('招待のキャンセルに失敗しました:', error);
+    } finally {
+      this.isLoading = false;
+    }
+  }
+
+  isTeamAdmin(team: Team | null): boolean {
+    if (!team) return false;
+    
     const currentUser = this.authService.currentUser;
     if (!currentUser) return false;
     
-    const membership = team.members.find(m => m.uid === currentUser.uid);
-    return membership?.role === 'admin';
+    // チームの作成者（adminId）または管理者ロールを持つメンバーをチーム管理者として認識
+    const isCreator = team.adminId === currentUser.uid;
+    const isAdminRole = team.members.some(member => 
+      member.uid === currentUser.uid && member.role === 'admin'
+    );
+    
+    return isCreator || isAdminRole;
+  }
+
+  // チームの作成者かどうかを判定
+  isTeamCreator(team: Team | null): boolean {
+    if (!team) return false;
+    
+    const currentUser = this.authService.currentUser;
+    if (!currentUser) return false;
+    
+    return team.adminId === currentUser.uid;
+  }
+
+  private async loadReceivedInvitations(): Promise<void> {
+    try {
+      this.receivedInvitations = await this.teamService.getUserInvitations();
+    } catch (error) {
+      console.error('招待情報の読み込みに失敗しました:', error);
+    }
+  }
+
+  async acceptInvitation(invitationId: string): Promise<void> {
+    try {
+      this.isLoading = true;
+      await this.teamService.acceptInvitation(invitationId);
+      setTimeout(async () => {
+        await this.loadTeams();
+        await this.loadReceivedInvitations();
+        this.isLoading = false;
+      }, 1000);
+    } catch (error) {
+      console.error('招待の承認に失敗しました:', error);
+      this.isLoading = false;
+    }
+  }
+
+  async rejectInvitation(invitationId: string): Promise<void> {
+    if (!confirm('この招待を拒否してもよろしいですか？')) return;
+
+    try {
+      this.isLoading = true;
+      await this.teamService.rejectInvitation(invitationId);
+      await this.loadReceivedInvitations();
+    } catch (error) {
+      console.error('招待の拒否に失敗しました:', error);
+    } finally {
+      this.isLoading = false;
+    }
   }
 } 

@@ -1,20 +1,23 @@
 import { Component, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router } from '@angular/router';
-import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
+import { FormBuilder, FormGroup, ReactiveFormsModule, Validators, FormsModule } from '@angular/forms';
 import { TeamService } from '../../../services/team.service';
 import { AuthService } from '../../../services/auth.service';
 import { Team } from '../../../models/team.model';
 import { Subject } from 'rxjs';
 import { takeUntil } from 'rxjs/operators';
+import { User } from '../../../models/user.model';
 
 @Component({
   selector: 'app-user-settings',
   templateUrl: './user-settings.component.html',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule]
+  imports: [CommonModule, ReactiveFormsModule, FormsModule]
 })
 export class UserSettingsComponent implements OnInit, OnDestroy {
+  user: User | null = null;
+  displayName: string = '';
   userTeams: Team[] = [];
   isLoading = true;
   isSubmitting = false;
@@ -30,17 +33,27 @@ export class UserSettingsComponent implements OnInit, OnDestroy {
   ) {
     this.teamForm = this.fb.group({
       name: ['', [Validators.required, Validators.minLength(2)]],
-      description: ['']  // 説明は任意項目に変更
+      description: ['']
     });
   }
 
   ngOnInit(): void {
+    this.loadUserData();
     this.loadTeams();
   }
 
   ngOnDestroy(): void {
     this.destroy$.next();
     this.destroy$.complete();
+  }
+
+  private loadUserData(): void {
+    this.authService.currentUser$.pipe(
+      takeUntil(this.destroy$)
+    ).subscribe(user => {
+      this.user = user;
+      this.displayName = user?.displayName || '';
+    });
   }
 
   private async loadTeams(): Promise<void> {
@@ -128,8 +141,13 @@ export class UserSettingsComponent implements OnInit, OnDestroy {
   }
 
   isTeamAdmin(team: Team): boolean {
+    return this.teamService.isTeamAdmin(team);
+  }
+
+  isTeamCreator(team: Team): boolean {
     const currentUser = this.authService.currentUser;
-    return currentUser?.uid === team.adminId;
+    if (!currentUser) return false;
+    return team.adminId === currentUser.uid;
   }
 
   async deleteTeam(teamId: string): Promise<void> {
@@ -148,6 +166,21 @@ export class UserSettingsComponent implements OnInit, OnDestroy {
       } else {
         alert('チームの削除に失敗しました。もう一度お試しください。');
       }
+    }
+  }
+
+  async updateProfileImage(): Promise<void> {
+    // ファイル選択ダイアログを表示する処理を実装
+    console.log('プロフィール画像の更新機能は未実装です');
+  }
+
+  async updateProfile(): Promise<void> {
+    try {
+      await this.authService.updateProfile({
+        displayName: this.displayName
+      });
+    } catch (error) {
+      console.error('プロフィールの更新に失敗しました:', error);
     }
   }
 } 

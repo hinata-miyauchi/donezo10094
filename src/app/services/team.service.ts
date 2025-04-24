@@ -10,7 +10,8 @@ import {
   where, 
   getDocs,
   getDoc,
-  DocumentSnapshot
+  DocumentSnapshot,
+  orderBy
 } from '@angular/fire/firestore';
 import { Team, TeamMember, TeamRole } from '../models/team.model';
 import { AuthService } from './auth.service';
@@ -29,37 +30,26 @@ export class TeamService {
     if (!user) throw new Error('認証が必要です');
 
     try {
-      const teamsQuery = query(
-        collection(this.firestore, 'teams'),
-        where('members', 'array-contains', { uid: user.uid })
-      );
-
-      const snapshot = await getDocs(teamsQuery);
-      console.log('Found teams:', snapshot.docs.length); // デバッグ用
-
-      if (snapshot.empty) {
-        // チームが見つからない場合は、adminIdでも検索
-        const adminTeamsQuery = query(
-          collection(this.firestore, 'teams'),
-          where('adminId', '==', user.uid)
-        );
-        const adminSnapshot = await getDocs(adminTeamsQuery);
-        console.log('Found admin teams:', adminSnapshot.docs.length); // デバッグ用
-
-        return adminSnapshot.docs.map(doc => ({
+      // メンバーのUIDで検索するシンプルなクエリ
+      const teamsRef = collection(this.firestore, 'teams');
+      const snapshot = await getDocs(teamsRef);
+      
+      // クライアントサイドでフィルタリング
+      const teams = snapshot.docs
+        .map(doc => ({
           id: doc.id,
           ...doc.data(),
           createdAt: doc.data()['createdAt']?.toDate(),
           updatedAt: doc.data()['updatedAt']?.toDate()
-        } as Team));
-      }
+        } as Team))
+        .filter(team => 
+          // 管理者として所属しているか、メンバーとして所属しているかをチェック
+          team.adminId === user.uid || 
+          team.members.some(member => member.uid === user.uid)
+        );
 
-      return snapshot.docs.map(doc => ({
-        id: doc.id,
-        ...doc.data(),
-        createdAt: doc.data()['createdAt']?.toDate(),
-        updatedAt: doc.data()['updatedAt']?.toDate()
-      } as Team));
+      console.log('Found teams:', teams.length, 'for user:', user.uid); // デバッグ用
+      return teams;
     } catch (error) {
       console.error('Error fetching teams:', error);
       throw new Error('チームの取得に失敗しました');
@@ -81,6 +71,7 @@ export class TeamService {
       const member = {
         uid: user.uid,
         displayName: user.displayName || '',
+        email: user.email || undefined,
         role: 'admin' as TeamRole,
         joinedAt: now
       };
@@ -89,6 +80,7 @@ export class TeamService {
         name: teamData.name,
         description: teamData.description || '',
         adminId: user.uid,
+        createdBy: user.uid,
         members: [member],
         createdAt: now,
         updatedAt: now
@@ -169,27 +161,76 @@ export class TeamService {
     await this.updateTeam(teamId, { members: updatedMembers });
   }
 
-  async createTeamInvitation(teamId: string, userEmail: string): Promise<void> {
+  async createTeamInvitation(teamId: string, userEmail: string): Promise<{ success: boolean; message: string }> {
     const user = this.authService.currentUser;
     if (!user) throw new Error('認証が必要です');
 
     const team = await this.getTeam(teamId);
     if (!team) throw new Error('チームが見つかりません');
 
-    const hasPermission = this.checkTeamPermission(team, user.uid, 'admin');
-    if (!hasPermission) throw new Error('権限がありません');
+    // 管理者のみが招待可能
+    if (team.adminId !== user.uid) {
+      throw new Error('権限がありません');
+    }
 
-    const invitation = {
-      teamId,
-      teamName: team.name,
-      invitedBy: user.uid,
-      invitedUserEmail: userEmail,
-      status: 'pending',
-      createdAt: new Date(),
-      expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000) // 7日後
-    };
+    // 自分自身を招待しようとしていないかチェック
+    if (user.email === userEmail) {
+      return {
+        success: false,
+        message: '自分自身を招待することはできません'
+      };
+    }
 
-    await addDoc(collection(this.firestore, 'teamInvitations'), invitation);
+    try {
+      // 既に招待されているかチェック
+      const existingInvitations = await getDocs(
+        query(
+          collection(this.firestore, 'teamInvitations'),
+          where('teamId', '==', teamId),
+          where('invitedUserEmail', '==', userEmail),
+          where('status', '==', 'pending')
+        )
+      );
+
+      if (!existingInvitations.empty) {
+        return {
+          success: false,
+          message: '招待済みです'
+        };
+      }
+
+      // 既にメンバーかどうかチェック（メールアドレスで確認）
+      const isMember = team.members.some(member => 
+        member.email === userEmail
+      );
+      
+      if (isMember) {
+        return {
+          success: false,
+          message: 'このユーザーは既にメンバーです'
+        };
+      }
+
+      const invitation = {
+        teamId,
+        teamName: team.name,
+        invitedBy: user.uid,
+        invitedUserEmail: userEmail,
+        status: 'pending',
+        createdAt: new Date(),
+        expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000) // 7日後
+      };
+
+      await addDoc(collection(this.firestore, 'teamInvitations'), invitation);
+
+      return {
+        success: true,
+        message: '招待しました'
+      };
+    } catch (error) {
+      console.error('Error creating invitation:', error);
+      throw new Error('招待の作成に失敗しました');
+    }
   }
 
   checkTeamPermission(team: Team | null, userId: string, requiredRole: TeamRole): boolean {
@@ -241,5 +282,153 @@ export class TeamService {
       adminId: team.adminId,
       updatedAt: new Date()
     });
+  }
+
+  async getTeamInvitations(teamId: string): Promise<any[]> {
+    const user = this.authService.currentUser;
+    if (!user) throw new Error('認証が必要です');
+
+    try {
+      // 複合インデックスが必要なクエリを単純化
+      const invitationsQuery = query(
+        collection(this.firestore, 'teamInvitations'),
+        where('teamId', '==', teamId),
+        where('status', '==', 'pending')
+      );
+
+      const snapshot = await getDocs(invitationsQuery);
+      const invitations = snapshot.docs.map(doc => {
+        const data = doc.data();
+        return {
+          id: doc.id,
+          ...data,
+          invitedUserEmail: data['invitedUserEmail'] || '',
+          createdAt: data['createdAt']?.toDate(),
+          expiresAt: data['expiresAt']?.toDate()
+        };
+      });
+
+      // クライアント側でソート
+      return invitations.sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime());
+    } catch (error) {
+      console.error('Error fetching team invitations:', error);
+      throw new Error('招待情報の取得に失敗しました');
+    }
+  }
+
+  async cancelInvitation(invitationId: string): Promise<void> {
+    const user = this.authService.currentUser;
+    if (!user) throw new Error('認証が必要です');
+
+    try {
+      await deleteDoc(doc(this.firestore, 'teamInvitations', invitationId));
+    } catch (error) {
+      console.error('Error canceling invitation:', error);
+      throw new Error('招待のキャンセルに失敗しました');
+    }
+  }
+
+  async getUserInvitations(): Promise<any[]> {
+    const user = this.authService.currentUser;
+    if (!user || !user.email) throw new Error('認証が必要です');
+
+    try {
+      const invitationsQuery = query(
+        collection(this.firestore, 'teamInvitations'),
+        where('invitedUserEmail', '==', user.email),
+        where('status', '==', 'pending')
+      );
+
+      const snapshot = await getDocs(invitationsQuery);
+      const invitations = snapshot.docs.map(doc => {
+        const data = doc.data();
+        return {
+          id: doc.id,
+          ...data,
+          createdAt: data['createdAt']?.toDate(),
+          expiresAt: data['expiresAt']?.toDate()
+        };
+      });
+
+      // クライアント側でソート
+      return invitations.sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime());
+    } catch (error) {
+      console.error('Error fetching user invitations:', error);
+      throw new Error('招待情報の取得に失敗しました');
+    }
+  }
+
+  async acceptInvitation(invitationId: string): Promise<void> {
+    const user = this.authService.currentUser;
+    if (!user) throw new Error('認証が必要です');
+
+    try {
+      const invitationRef = doc(this.firestore, 'teamInvitations', invitationId);
+      const invitationSnap = await getDoc(invitationRef);
+      
+      if (!invitationSnap.exists()) {
+        throw new Error('招待が見つかりません');
+      }
+
+      const invitation = invitationSnap.data();
+      const teamId = invitation['teamId'];
+
+      // チームにメンバーとして追加
+      const team = await this.getTeam(teamId);
+      if (!team) throw new Error('チームが見つかりません');
+
+      // 既にメンバーかどうかチェック
+      const isAlreadyMember = team.members.some(m => m.uid === user.uid);
+      if (isAlreadyMember) {
+        await deleteDoc(invitationRef);
+        return;
+      }
+
+      const now = new Date();
+      const newMember = {
+        uid: user.uid,
+        displayName: user.displayName || '',
+        role: 'member' as TeamRole,
+        joinedAt: now
+      };
+
+      // メンバーリストを更新
+      const updatedMembers = [...team.members, newMember];
+      const teamRef = doc(this.firestore, 'teams', teamId);
+      
+      // トランザクションで更新を確実に行う
+      await updateDoc(teamRef, {
+        members: updatedMembers,
+        updatedAt: now
+      });
+
+      // 招待を削除
+      await deleteDoc(invitationRef);
+
+      console.log('チームメンバーとして追加されました:', teamId); // デバッグ用
+    } catch (error) {
+      console.error('Error accepting invitation:', error);
+      throw new Error('招待の承認に失敗しました');
+    }
+  }
+
+  async rejectInvitation(invitationId: string): Promise<void> {
+    const user = this.authService.currentUser;
+    if (!user) throw new Error('認証が必要です');
+
+    try {
+      await deleteDoc(doc(this.firestore, 'teamInvitations', invitationId));
+    } catch (error) {
+      console.error('Error rejecting invitation:', error);
+      throw new Error('招待の拒否に失敗しました');
+    }
+  }
+
+  isTeamAdmin(team: Team): boolean {
+    const currentUser = this.authService.currentUser;
+    if (!currentUser) return false;
+    
+    // チームの管理者（adminId）であるかチェック
+    return team.adminId === currentUser.uid;
   }
 } 

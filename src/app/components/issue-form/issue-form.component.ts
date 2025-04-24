@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router, RouterModule } from '@angular/router';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators, FormsModule } from '@angular/forms';
@@ -6,6 +6,8 @@ import { IssueService } from '../../services/issue.service';
 import { TeamService } from '../../services/team.service';
 import { Issue } from '../../models/issue.model';
 import { Team } from '../../models/team.model';
+import { Subject, from } from 'rxjs';
+import { takeUntil } from 'rxjs/operators';
 
 @Component({
   selector: 'app-issue-form',
@@ -19,13 +21,13 @@ import { Team } from '../../models/team.model';
     FormsModule
   ]
 })
-export class IssueFormComponent implements OnInit {
+export class IssueFormComponent implements OnInit, OnDestroy {
   issueForm: FormGroup;
   isSubmitting = false;
   teams: Team[] = [];
-
-  readonly statusOptions = ['未着手', '対応中', '完了'];
-  readonly importanceOptions = ['低', '中', '高'];
+  statusOptions = ['未着手', '対応中', '完了', '保留'];
+  importanceOptions = ['低', '中', '高', '緊急'];
+  private destroy$ = new Subject<void>();
 
   constructor(
     private fb: FormBuilder,
@@ -34,77 +36,65 @@ export class IssueFormComponent implements OnInit {
     private router: Router
   ) {
     this.issueForm = this.fb.group({
-      title: ['', [Validators.required, Validators.minLength(5)]],
-      description: ['', Validators.required],
-      status: ['未着手', Validators.required],
-      importance: ['中', Validators.required],
-      occurrenceDate: [new Date().toISOString().split('T')[0], Validators.required],
-      dueDate: [null, Validators.required],
-      dueTime: ['17:00', Validators.required],
+      title: ['', [Validators.required, Validators.minLength(3)]],
+      description: [''],
+      status: ['未着手'],
+      importance: ['中'],
+      progress: [0],
+      occurrenceDate: [''],
+      dueDate: [''],
+      dueTime: [''],
       assignee: [''],
+      completionCriteria: [''],
       solution: [''],
-      completionCriteria: ['', Validators.required],
-      progress: [0, [Validators.required, Validators.min(0), Validators.max(100)]],
-      teamId: [null],
-      isPrivate: [true]
+      teamId: [''],
+      isPrivate: [false]
     });
   }
 
-  async ngOnInit(): Promise<void> {
-    console.log('IssueFormComponent initialized');
-    window.scrollTo(0, 0);
-    
+  ngOnInit(): void {
+    this.loadTeams();
+  }
+
+  ngOnDestroy(): void {
+    this.destroy$.next();
+    this.destroy$.complete();
+  }
+
+  private async loadTeams(): Promise<void> {
     try {
-      this.teams = await this.teamService.getUserTeams();
-    } catch (error) {
+      const teams = await this.teamService.getUserTeams();
+      this.teams = teams;
+    } catch (error: any) {
       console.error('チームの読み込みに失敗しました:', error);
     }
   }
 
-  async onSubmit(): Promise<void> {
-    if (this.issueForm.invalid || this.isSubmitting) {
-      return;
+  getErrorMessage(fieldName: string): string {
+    const control = this.issueForm.get(fieldName);
+    if (control?.errors) {
+      if (control.errors['required']) {
+        return 'この項目は必須です';
+      }
+      if (control.errors['minlength']) {
+        return `最低${control.errors['minlength'].requiredLength}文字必要です`;
+      }
     }
+    return '';
+  }
 
+  async onSubmit(): Promise<void> {
+    if (this.issueForm.invalid) return;
+
+    this.isSubmitting = true;
     try {
-      this.isSubmitting = true;
-      const formValue = this.issueForm.value;
+      const formData = this.issueForm.value;
+      formData.isPrivate = !formData.teamId;
       
-      const dueDateWithTime = formValue.dueDate && formValue.dueTime
-        ? new Date(`${formValue.dueDate}T${formValue.dueTime}`)
-        : new Date();
-
-      const newIssue: Partial<Issue> = {
-        title: formValue.title,
-        description: formValue.description,
-        status: formValue.status as '未着手' | '進行中' | '完了',
-        priority: formValue.importance as '高' | '中' | '低',
-        occurrenceDate: new Date(formValue.occurrenceDate),
-        dueDate: dueDateWithTime,
-        assignee: formValue.assignee ? {
-          uid: '',
-          displayName: formValue.assignee
-        } : {
-          uid: '',
-          displayName: ''
-        },
-        solution: formValue.solution || '',
-        completionCriteria: formValue.completionCriteria,
-        progress: Number(formValue.progress),
-        createdBy: {
-          uid: 'system',
-          displayName: 'システム'
-        },
-        teamId: formValue.teamId,
-        isPrivate: formValue.teamId === null
-      };
-
-      await this.issueService.addIssue(newIssue);
-      console.log('課題が正常に作成されました');
+      await this.issueService.addIssue(formData);
       this.router.navigate(['/issues']);
     } catch (error) {
       console.error('課題の作成に失敗しました:', error);
-      alert('課題の作成に失敗しました。もう一度お試しください。');
     } finally {
       this.isSubmitting = false;
     }
@@ -112,18 +102,5 @@ export class IssueFormComponent implements OnInit {
 
   onCancel(): void {
     this.router.navigate(['/issues']);
-  }
-
-  getErrorMessage(controlName: string): string {
-    const control = this.issueForm.get(controlName);
-    if (!control || !control.errors) return '';
-
-    const errors = control.errors;
-    if (errors['required']) return 'この項目は必須です';
-    if (errors['minlength']) return `最低${errors['minlength'].requiredLength}文字必要です`;
-    if (errors['min']) return `${errors['min'].min}以上の値を入力してください`;
-    if (errors['max']) return `${errors['max'].max}以下の値を入力してください`;
-    
-    return '入力値が不正です';
   }
 } 

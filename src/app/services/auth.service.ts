@@ -6,7 +6,8 @@ import {
   signOut,
   onAuthStateChanged,
   User as FirebaseUser,
-  updateProfile
+  updateProfile,
+  getAuth
 } from '@angular/fire/auth';
 import { 
   Firestore,
@@ -17,7 +18,7 @@ import {
   DocumentReference,
   DocumentData
 } from '@angular/fire/firestore';
-import { Storage, ref, uploadBytes, getDownloadURL } from '@angular/fire/storage';
+import { Storage, ref, uploadBytes, getDownloadURL, getStorage } from '@angular/fire/storage';
 import { BehaviorSubject, Observable, from, of, firstValueFrom } from 'rxjs';
 import { map, switchMap, tap } from 'rxjs/operators';
 import { User, UserProfile } from '../models/user.model';
@@ -192,22 +193,15 @@ export class AuthService {
     );
   }
 
-  async updateProfile(profile: Partial<UserProfile>): Promise<void> {
-    const user = this.auth.currentUser;
+  async updateProfile(profile: { displayName?: string | null }): Promise<void> {
+    const auth = getAuth();
+    const user = auth.currentUser;
     if (!user) throw new Error('認証が必要です');
 
     try {
-      if (profile.displayName) {
-        await updateProfile(user, { displayName: profile.displayName });
-      }
-
-      const userDocRef = doc(this.firestore, 'users', user.uid);
-      await updateDoc(userDocRef, {
-        ...profile,
-        updatedAt: new Date()
-      });
-    } catch (error: any) {
-      console.error('プロフィール更新エラー:', error);
+      await updateProfile(user, profile);
+    } catch (error) {
+      console.error('プロフィールの更新に失敗しました:', error);
       throw error;
     }
   }
@@ -274,5 +268,25 @@ export class AuthService {
       photoURL: photoURL || user.photoURL || '',
       updatedAt: new Date()
     } as User);
+  }
+
+  async updateProfileImage(file: File): Promise<string> {
+    const auth = getAuth();
+    const user = auth.currentUser;
+    if (!user) throw new Error('認証が必要です');
+
+    try {
+      const storage = getStorage();
+      const storageRef = ref(storage, `profile-images/${user.uid}/${file.name}`);
+      
+      await uploadBytes(storageRef, file);
+      const downloadURL = await getDownloadURL(storageRef);
+      
+      await updateProfile(user, { photoURL: downloadURL });
+      return downloadURL;
+    } catch (error) {
+      console.error('プロフィール画像のアップロードに失敗しました:', error);
+      throw error;
+    }
   }
 } 

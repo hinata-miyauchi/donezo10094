@@ -2,13 +2,15 @@ import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormBuilder, FormGroup, ReactiveFormsModule } from '@angular/forms';
 import { AuthService } from '../../../services/auth.service';
-import { Router } from '@angular/router';
+import { Router, RouterModule } from '@angular/router';
+import { TeamService } from '../../../services/team.service';
+import { Team } from '../../../models/team.model';
 
 @Component({
   selector: 'app-user-profile',
   templateUrl: './user-profile.component.html',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule]
+  imports: [CommonModule, ReactiveFormsModule, RouterModule]
 })
 export class UserProfileComponent implements OnInit {
   profileForm: FormGroup;
@@ -16,11 +18,13 @@ export class UserProfileComponent implements OnInit {
   profileImageUrl: string | null = null;
   userEmail: string | null = null;
   isSubmitting = false;
+  teams: Team[] = [];
 
   constructor(
     private fb: FormBuilder,
     private authService: AuthService,
-    private router: Router
+    private router: Router,
+    private teamService: TeamService
   ) {
     this.profileForm = this.fb.group({
       displayName: ['']
@@ -42,6 +46,25 @@ export class UserProfileComponent implements OnInit {
         this.userEmail = user.email;
       }
     });
+    this.loadUserTeams();
+  }
+
+  async loadUserTeams() {
+    try {
+      this.teams = await this.teamService.getUserTeams();
+    } catch (error) {
+      console.error('チームの読み込みに失敗しました:', error);
+    }
+  }
+
+  isTeamAdmin(team: Team): boolean {
+    return this.teamService.isTeamAdmin(team);
+  }
+
+  isTeamCreator(team: Team): boolean {
+    const currentUser = this.authService.currentUser;
+    if (!currentUser) return false;
+    return team.adminId === currentUser.uid;
   }
 
   async onProfileSubmit(): Promise<void> {

@@ -4,6 +4,40 @@
       <h1 class="text-3xl font-bold text-gray-900">チーム管理</h1>
     </div>
 
+    <!-- 受け取った招待 -->
+    <div class="mb-8" *ngIf="receivedInvitations.length > 0">
+      <div class="bg-white shadow rounded-lg p-6">
+        <h2 class="text-xl font-semibold mb-4">チームへの招待</h2>
+        <div class="divide-y divide-gray-200">
+          <div *ngFor="let invitation of receivedInvitations" class="py-4">
+            <div class="flex items-center justify-between">
+              <div>
+                <p class="font-medium text-gray-900">{{ invitation.teamName }}</p>
+                <p class="text-sm text-gray-500">
+                  招待日: {{ invitation.createdAt | date:'yyyy/MM/dd' }}
+                  (期限: {{ invitation.expiresAt | date:'yyyy/MM/dd' }})
+                </p>
+              </div>
+              <div class="flex space-x-4">
+                <button
+                  (click)="acceptInvitation(invitation.id)"
+                  class="px-4 py-2 text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 rounded-md focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+                >
+                  承認
+                </button>
+                <button
+                  (click)="rejectInvitation(invitation.id)"
+                  class="px-4 py-2 text-sm font-medium text-red-600 hover:text-red-800 rounded-md focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500"
+                >
+                  拒否
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
     <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
       <!-- チーム一覧 -->
       <div class="md:col-span-1">
@@ -60,21 +94,30 @@
         <div class="bg-white shadow rounded-lg p-6">
           <div class="flex justify-between items-start mb-6">
             <div>
-              <h2 class="text-2xl font-bold">{{ selectedTeam.name }}</h2>
-              <p class="text-gray-600">{{ selectedTeam.description }}</p>
+              <div class="flex items-center gap-3">
+                <h2 class="text-2xl font-bold">{{ selectedTeam.name }}</h2>
+                <span *ngIf="isTeamAdmin(selectedTeam)" class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                  管理者
+                </span>
+                <span *ngIf="isTeamCreator(selectedTeam)" class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-purple-100 text-purple-800">
+                  作成者
+                </span>
+              </div>
+              <p class="text-gray-600 mt-1">{{ selectedTeam.description }}</p>
             </div>
             <button
+              *ngIf="isTeamCreator(selectedTeam)"
               (click)="deleteTeam(selectedTeam.id)"
-              class="px-4 py-2 text-sm font-medium text-red-600 hover:text-red-800"
+              class="px-4 py-2 text-sm font-medium text-red-600 hover:text-red-800 focus:outline-none focus:ring-2 focus:ring-red-500"
             >
               チームを削除
             </button>
           </div>
 
           <!-- メンバー招待フォーム -->
-          <div class="mb-6">
+          <div class="mb-6" *ngIf="isTeamAdmin(selectedTeam)">
             <h3 class="text-lg font-medium mb-4">メンバーを招待</h3>
-            <form [formGroup]="inviteForm" (ngSubmit)="inviteMember(selectedTeam.id)" class="flex gap-4">
+            <form [formGroup]="inviteForm" (ngSubmit)="inviteMember(inviteForm.value.email)" class="flex gap-4">
               <div class="flex-1">
                 <input
                   type="email"
@@ -100,24 +143,39 @@
               <li *ngFor="let member of selectedTeam.members" class="py-4 flex items-center justify-between">
                 <div class="flex items-center">
                   <span class="font-medium">{{ member.displayName }}</span>
-                  <span class="ml-2 text-sm text-gray-500">
-                    {{ member.role === 'admin' ? '管理者' : 'メンバー' }}
-                  </span>
                 </div>
-                <div class="flex items-center space-x-4">
-                  <select
-                    [value]="member.role"
-                    (change)="handleRoleChange($event, selectedTeam.id, member.uid)"
-                    class="block rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
-                  >
-                    <option value="member">メンバー</option>
-                    <option value="admin">管理者</option>
-                  </select>
+                <div class="flex items-center">
                   <button
+                    *ngIf="isTeamAdmin(selectedTeam) && member.uid !== selectedTeam.adminId"
                     (click)="removeMember(selectedTeam.id, member.uid)"
-                    class="text-red-600 hover:text-red-800"
+                    class="text-red-600 hover:text-red-800 px-3 py-1 rounded-md hover:bg-red-50"
                   >
                     削除
+                  </button>
+                </div>
+              </li>
+            </ul>
+          </div>
+
+          <!-- 保留中の招待 -->
+          <div class="mt-8" *ngIf="pendingInvitations.length > 0 && isTeamAdmin(selectedTeam)">
+            <h3 class="text-lg font-medium mb-4">保留中の招待</h3>
+            <ul class="divide-y divide-gray-200">
+              <li *ngFor="let invitation of pendingInvitations" class="py-4 flex items-center justify-between">
+                <div class="flex-1">
+                  <p class="text-base font-medium text-gray-900">{{ invitation.invitedUserEmail }}</p>
+                  <p class="text-sm text-gray-500">
+                    招待日: {{ invitation.createdAt | date:'yyyy/MM/dd' }}
+                    <span class="mx-2">·</span>
+                    期限: {{ invitation.expiresAt | date:'yyyy/MM/dd' }}
+                  </p>
+                </div>
+                <div class="flex items-center">
+                  <button
+                    (click)="cancelInvitation(invitation.id)"
+                    class="text-red-600 hover:text-red-800 px-3 py-1 rounded-md hover:bg-red-50 focus:outline-none focus:ring-2 focus:ring-red-500"
+                  >
+                    キャンセル
                   </button>
                 </div>
               </li>
