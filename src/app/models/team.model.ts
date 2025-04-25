@@ -15,6 +15,7 @@ export interface TeamMember {
   uid: string;
   displayName: string;
   email?: string; // メールアドレスを追加
+  photoURL?: string;
   role: TeamRole;
   joinedAt: Date;
 }

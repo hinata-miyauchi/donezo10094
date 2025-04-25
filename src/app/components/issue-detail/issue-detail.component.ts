@@ -8,13 +8,21 @@ import { Issue } from '../../models/issue.model';
 import { Team } from '../../models/team.model';
 import { IssueChatComponent } from '../issue-chat/issue-chat.component';
 import { Subscription } from 'rxjs';
+import { CommentComponent } from '../comment/comment.component';
+import { NotificationService } from '../../services/notification.service';
 
 @Component({
   selector: 'app-issue-detail',
   templateUrl: './issue-detail.component.html',
   styleUrls: ['./issue-detail.component.scss'],
   standalone: true,
-  imports: [CommonModule, RouterModule, ReactiveFormsModule, IssueChatComponent]
+  imports: [
+    CommonModule,
+    RouterModule,
+    ReactiveFormsModule,
+    IssueChatComponent,
+    CommentComponent
+  ]
 })
 export class IssueDetailComponent implements OnInit, OnDestroy {
   issue: Issue | null = null;
@@ -30,7 +38,8 @@ export class IssueDetailComponent implements OnInit, OnDestroy {
     private issueService: IssueService,
     private teamService: TeamService,
     private fb: FormBuilder,
-    private location: Location
+    private location: Location,
+    private notificationService: NotificationService
   ) {
     this.editForm = this.fb.group({
       title: [''],

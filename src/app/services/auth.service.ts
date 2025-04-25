@@ -293,4 +293,20 @@ export class AuthService {
       throw error;
     }
   }
+
+  async getUserById(userId: string): Promise<{ displayName: string; photoURL?: string } | null> {
+    try {
+      const userDoc = await getDoc(doc(this.firestore, 'users', userId));
+      if (!userDoc.exists()) return null;
+      
+      const userData = userDoc.data();
+      return {
+        displayName: userData['displayName'] || '不明なユーザー',
+        photoURL: userData['photoURL']
+      };
+    } catch (error) {
+      console.error('ユーザー情報の取得に失敗しました:', error);
+      return null;
+    }
+  }
 } 

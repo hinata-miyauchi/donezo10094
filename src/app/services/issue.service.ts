@@ -27,6 +27,7 @@ import { Issue, IssueSummary } from '../models/issue.model';
 import { AuthService } from './auth.service';
 import { TeamService } from './team.service';
 import { TeamRole } from '../models/team.model';
+import { Comment } from '../interfaces/comment.interface';
 
 @Injectable({
   providedIn: 'root'
@@ -343,5 +344,89 @@ export class IssueService {
     const threshold = new Date();
     threshold.setDate(now.getDate() + days);
     return date <= threshold && date >= now;
+  }
+
+  // コメントを追加
+  async addComment(data: { issueId: string; content: string; mentions: string[] }) {
+    const { issueId, content, mentions } = data;
+    const commentRef = collection(this.firestore, 'comments');
+    
+    const commentData = {
+      issueId,
+      content,
+      mentions,
+      authorId: this.authService.currentUser?.uid,
+      createdAt: serverTimestamp(),
+      updatedAt: serverTimestamp()
+    };
+
+    const docRef = await addDoc(commentRef, commentData);
+    
+    // メンションされたユーザーに通知を送る
+    if (mentions.length > 0) {
+      await this.sendMentionNotifications(mentions, issueId, content);
+    }
+
+    return docRef.id;
+  }
+
+  // コメントを取得
+  async getComments(issueId: string): Promise<Comment[]> {
+    const commentsRef = collection(this.firestore, 'comments');
+    const q = query(
+      commentsRef,
+      where('issueId', '==', issueId),
+      orderBy('createdAt', 'desc')
+    );
+
+    try {
+      const querySnapshot = await getDocs(q);
+      return querySnapshot.docs.map(doc => ({
+        id: doc.id,
+        ...doc.data(),
+        createdAt: doc.data()['createdAt']?.toDate(),
+        updatedAt: doc.data()['updatedAt']?.toDate()
+      } as Comment));
+    } catch (error: any) {
+      // インデックスが必要な場合のエラー処理
+      if (error.code === 'failed-precondition') {
+        // インデックスなしで取得を試みる
+        const simpleQuery = query(
+          commentsRef,
+          where('issueId', '==', issueId)
+        );
+        const snapshot = await getDocs(simpleQuery);
+        const comments = snapshot.docs.map(doc => ({
+          id: doc.id,
+          ...doc.data(),
+          createdAt: doc.data()['createdAt']?.toDate(),
+          updatedAt: doc.data()['updatedAt']?.toDate()
+        } as Comment));
+        
+        // メモリ上でソート
+        return comments.sort((a, b) => 
+          b.createdAt.getTime() - a.createdAt.getTime()
+        );
+      }
+      throw error;
+    }
+  }
+
+  // メンション通知を送信
+  private async sendMentionNotifications(userIds: string[], issueId: string, content: string) {
+    const notificationsRef = collection(this.firestore, 'notifications');
+    const issue = await this.getIssue(issueId);
+    
+    for (const userId of userIds) {
+      await addDoc(notificationsRef, {
+        userId,
+        type: 'mention',
+        issueId,
+        issueName: issue?.title,
+        content: `あなたが課題「${issue?.title}」のコメントでメンションされました`,
+        createdAt: serverTimestamp(),
+        read: false
+      });
+    }
   }
 }

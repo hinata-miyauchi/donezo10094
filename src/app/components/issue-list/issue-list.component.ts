@@ -230,18 +230,41 @@ export class IssueListComponent implements OnInit, OnDestroy {
   private updateIssueSummary(): void {
     const now = new Date();
     const sevenDaysFromNow = new Date(now.getTime() + (this.DUE_SOON_DAYS * 24 * 60 * 60 * 1000));
+    const priorityOrder: { [key: string]: number } = { '高': 0, '中': 1, '低': 2 };
 
-    const overdueIssues = this.issues.filter(i => {
-      const dueDate = new Date(i.dueDate);
-      return i.status !== '完了' && dueDate < now;
-    });
+    // 期限切れの課題を取得してソート
+    const overdueIssues = this.issues
+      .filter(i => {
+        const dueDate = new Date(i.dueDate);
+        return i.status !== '完了' && dueDate < now;
+      })
+      .sort((a, b) => {
+        // 1. 期限日でソート（期限が古い順）
+        const aDate = new Date(a.dueDate).getTime();
+        const bDate = new Date(b.dueDate).getTime();
+        if (aDate !== bDate) return aDate - bDate;
 
-    const dueSoonIssues = this.issues.filter(i => {
-      const dueDate = new Date(i.dueDate);
-      return i.status !== '完了' && 
-             dueDate >= now && 
-             dueDate <= sevenDaysFromNow;
-    });
+        // 2. 重要度でソート
+        return (priorityOrder[a.priority] ?? 999) - (priorityOrder[b.priority] ?? 999);
+      });
+
+    // 期限が近い課題を取得してソート
+    const dueSoonIssues = this.issues
+      .filter(i => {
+        const dueDate = new Date(i.dueDate);
+        return i.status !== '完了' && 
+               dueDate >= now && 
+               dueDate <= sevenDaysFromNow;
+      })
+      .sort((a, b) => {
+        // 1. 期限日でソート（期限が近い順）
+        const aDate = new Date(a.dueDate).getTime();
+        const bDate = new Date(b.dueDate).getTime();
+        if (aDate !== bDate) return aDate - bDate;
+
+        // 2. 重要度でソート
+        return (priorityOrder[a.priority] ?? 999) - (priorityOrder[b.priority] ?? 999);
+      });
 
     const summary: IssueSummary = {
       totalIssues: this.issues.length,

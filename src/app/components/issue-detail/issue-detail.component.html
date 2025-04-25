@@ -254,7 +254,10 @@
 
       <!-- チャット -->
       <div class="border-t border-gray-200 mt-6" *ngIf="issue?.id">
-        <app-issue-chat [issueId]="issue!.id"></app-issue-chat>
+        <div class="px-4 py-5 sm:px-6">
+          <h3 class="text-lg leading-6 font-medium text-gray-900">コメント</h3>
+        </div>
+        <app-comment [issueId]="issue!.id"></app-comment>
       </div>
     </div>
   </div>

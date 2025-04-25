@@ -242,9 +242,10 @@ export class TeamService {
     return true; // memberロールの場合は、すべてのロールでOK
   }
 
-  private async getTeamMembers(teamId: string): Promise<TeamMember[]> {
+  async getTeamMembers(teamId: string): Promise<TeamMember[]> {
     const team = await this.getTeam(teamId);
-    return team?.members || [];
+    if (!team) return [];
+    return team.members;
   }
 
   async leaveTeam(teamId: string, userId: string): Promise<void> {
