@@ -314,6 +314,10 @@ export class IssueListComponent implements OnInit, OnDestroy {
       filtered = this.sortIssues(filtered, sortBy, sortOrder as 'asc' | 'desc');
     }
 
+    // フィルタリング結果を完了/未完了で分離
+    this.completedIssues = filtered.filter(issue => issue.status === '完了');
+    this.incompleteIssues = filtered.filter(issue => issue.status !== '完了');
+
     this.filteredIssuesSubject.next(filtered);
   }
 
@@ -413,5 +417,15 @@ export class IssueListComponent implements OnInit, OnDestroy {
 
   toggleFilters(): void {
     this.showFilters = !this.showFilters;
+  }
+
+  hasActiveFilters(): boolean {
+    const { keyword, status, priority, assignee, startDate, endDate } = this.searchForm.value;
+    return !!(keyword || 
+      status !== 'すべて' || 
+      priority !== 'すべて' || 
+      assignee !== 'すべて' || 
+      startDate || 
+      endDate);
   }
 }

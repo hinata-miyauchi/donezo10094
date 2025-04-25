@@ -1,5 +1,5 @@
 import { Component, OnInit, OnDestroy } from '@angular/core';
-import { CommonModule } from '@angular/common';
+import { CommonModule, Location } from '@angular/common';
 import { ActivatedRoute, Router, RouterModule } from '@angular/router';
 import { FormBuilder, FormGroup, ReactiveFormsModule, FormControl, Validators } from '@angular/forms';
 import { IssueService } from '../../services/issue.service';
@@ -29,7 +29,8 @@ export class IssueDetailComponent implements OnInit, OnDestroy {
     private router: Router,
     private issueService: IssueService,
     private teamService: TeamService,
-    private fb: FormBuilder
+    private fb: FormBuilder,
+    private location: Location
   ) {
     this.editForm = this.fb.group({
       title: [''],
@@ -139,7 +140,15 @@ export class IssueDetailComponent implements OnInit, OnDestroy {
   }
 
   goBack(): void {
-    this.router.navigate(['/issues']);
+    // カレンダーからの遷移の場合、ビュー状態を保持して戻る
+    const returnView = this.route.snapshot.queryParams['returnView'];
+    if (returnView) {
+      this.router.navigate(['/calendar'], {
+        queryParams: { view: returnView }
+      });
+    } else {
+      this.location.back();
+    }
   }
 
   private formatDateForInput(date: Date): string {

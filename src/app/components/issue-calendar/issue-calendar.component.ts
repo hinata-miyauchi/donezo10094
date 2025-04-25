@@ -1,8 +1,8 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { CalendarOptions, EventClickArg } from '@fullcalendar/core';
+import { CalendarOptions, EventClickArg, DatesSetArg } from '@fullcalendar/core';
 import { FullCalendarModule } from '@fullcalendar/angular';
-import { Router } from '@angular/router';
+import { Router, ActivatedRoute } from '@angular/router';
 import { IssueService } from '../../services/issue.service';
 import { TeamService } from '../../services/team.service';
 import { Issue } from '../../models/issue.model';
@@ -70,6 +70,7 @@ export class IssueCalendarComponent implements OnInit {
       right: 'dayGridMonth,timeGridWeek'
     },
     eventClick: this.handleEventClick.bind(this),
+    datesSet: this.handleDatesSet.bind(this),
     events: [],
     height: 'auto',
     contentHeight: 'auto',
@@ -111,10 +112,17 @@ export class IssueCalendarComponent implements OnInit {
   constructor(
     private issueService: IssueService,
     private teamService: TeamService,
-    private router: Router
+    private router: Router,
+    private route: ActivatedRoute
   ) {}
 
   ngOnInit() {
+    // クエリパラメータからビュー状態を復元
+    this.route.queryParams.subscribe(params => {
+      if (params['view']) {
+        this.calendarOptions.initialView = params['view'];
+      }
+    });
     this.loadTeamsAndIssues();
   }
 
@@ -146,11 +154,15 @@ export class IssueCalendarComponent implements OnInit {
       const team = issue.teamId ? this.teams.find(t => t.id === issue.teamId) : null;
       const teamName = team ? team.name : '';
       
+      // 日付をJSTとして扱う
+      const dueDate = issue.dueDate instanceof Date ? issue.dueDate : new Date(issue.dueDate);
+      const jstDate = new Date(dueDate.getTime() + (9 * 60 * 60 * 1000)); // UTC+9に調整
+      
       return {
         id: issue.id,
         title: `${issue.title}${team ? ` (${teamName})` : ''}`,
-        start: new Date(issue.dueDate),
-        end: new Date(issue.dueDate),
+        start: jstDate,
+        end: jstDate,
         backgroundColor: this.getImportanceColor(issue.priority),
         borderColor: this.getStatusBorderColor(issue.status),
         textColor: issue.status === '完了' ? 'rgb(75, 85, 99)' : this.getTextColor(issue.priority),
@@ -207,8 +219,21 @@ export class IssueCalendarComponent implements OnInit {
     }
   }
 
+  // カレンダーのビューが変更されたときのハンドラ
+  private handleDatesSet(arg: DatesSetArg): void {
+    // 現在のビューをURLに反映
+    this.router.navigate([], {
+      relativeTo: this.route,
+      queryParams: { view: arg.view.type },
+      queryParamsHandling: 'merge',
+      replaceUrl: true
+    });
+  }
+
   private handleEventClick(clickInfo: EventClickArg) {
-    const issueId = clickInfo.event.id;
-    this.router.navigate(['/issues', issueId]);
+    // 現在のビューの状態を保持したまま課題詳細に遷移
+    this.router.navigate(['/issues', clickInfo.event.id], {
+      queryParams: { returnView: clickInfo.view.type }
+    });
   }
 } 

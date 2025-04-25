@@ -26,6 +26,7 @@ export class TeamManagementComponent implements OnInit, OnDestroy {
   private subscriptions = new Subscription();
   isSubmitting = false;
   showTeamForm = true;
+  showCreateTeamModal = false;
 
   constructor(
     private teamService: TeamService,

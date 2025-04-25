@@ -72,13 +72,24 @@ export class IssueService {
     if (!data) {
       throw new Error('ドキュメントデータが存在しません');
     }
+
+    // 日付フィールドの変換を行うヘルパー関数
+    const convertToDate = (field: any): Date => {
+      if (!field) return new Date();
+      if (field instanceof Date) return field;
+      if (typeof field.toDate === 'function') return field.toDate();
+      if (field.seconds) return new Date(field.seconds * 1000);
+      if (typeof field === 'string') return new Date(field);
+      return new Date();
+    };
+
     return {
       ...data,
       id: doc.id,
-      dueDate: data['dueDate']?.toDate() || new Date(),
-      occurrenceDate: data['occurrenceDate']?.toDate(),
-      createdAt: data['createdAt']?.toDate() || new Date(),
-      updatedAt: data['updatedAt']?.toDate() || new Date()
+      dueDate: convertToDate(data['dueDate']),
+      occurrenceDate: data['occurrenceDate'] ? convertToDate(data['occurrenceDate']) : undefined,
+      createdAt: convertToDate(data['createdAt']),
+      updatedAt: convertToDate(data['updatedAt'])
     } as Issue;
   }
 

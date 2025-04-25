@@ -1,9 +1,13 @@
-<div class="min-h-screen bg-gray-50 py-8">
-  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-    <div class="mb-8">
+<div class="min-h-screen bg-gray-50">
+  <!-- ヘッダー部分 -->
+  <div class="sticky top-0 z-10 bg-gray-50 py-4 shadow-sm">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
       <h1 class="text-3xl font-bold text-gray-900">プロジェクト管理</h1>
     </div>
+  </div>
 
+  <!-- メインコンテンツ -->
+  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
     <!-- 受け取った招待 -->
     <div class="mb-8" *ngIf="receivedInvitations.length > 0">
       <div class="bg-white shadow rounded-lg p-6">
@@ -42,8 +46,19 @@
       <!-- プロジェクト一覧 -->
       <div class="md:col-span-1">
         <div class="bg-white shadow rounded-lg p-6">
-          <h2 class="text-xl font-semibold mb-4">プロジェクト一覧</h2>
-          <div class="space-y-3">
+          <div class="flex items-center justify-between mb-4">
+            <h2 class="text-xl font-semibold">プロジェクト一覧</h2>
+            <button
+              (click)="showCreateTeamModal = true"
+              class="inline-flex items-center px-3 py-2 border border-transparent text-sm leading-4 font-medium rounded-md shadow-sm text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+            >
+              <svg class="h-4 w-4 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+              </svg>
+              新規作成
+            </button>
+          </div>
+          <div class="space-y-3 max-h-[calc(4*5.5rem)] overflow-y-auto pr-2">
             <button
               *ngFor="let team of teams | sortTeams:(authService.currentUser?.uid)"
               (click)="selectTeam(team)"
@@ -73,44 +88,12 @@
                     <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
                     </svg>
-                    {{ team.members?.length || 1 }}名
+                    {{ team.members.length || 1 }}名
                   </div>
                 </div>
               </div>
             </button>
           </div>
-        </div>
-
-        <!-- プロジェクト作成フォーム -->
-        <div class="bg-white shadow rounded-lg p-6 mt-6">
-          <h2 class="text-xl font-semibold mb-4">新しいプロジェクト作成</h2>
-          <form [formGroup]="teamForm" (ngSubmit)="onSubmitTeam()" class="space-y-4">
-            <div>
-              <label for="name" class="block text-sm font-medium text-gray-700">プロジェクト名</label>
-              <input
-                type="text"
-                id="name"
-                formControlName="name"
-                class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
-              >
-            </div>
-            <div>
-              <label for="description" class="block text-sm font-medium text-gray-700">説明</label>
-              <textarea
-                id="description"
-                formControlName="description"
-                rows="3"
-                class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
-              ></textarea>
-            </div>
-            <button
-              type="submit"
-              [disabled]="teamForm.invalid || isLoading"
-              class="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:bg-blue-300"
-            >
-              プロジェクトを作成
-            </button>
-          </form>
         </div>
       </div>
 
@@ -203,6 +186,74 @@
                 </div>
               </li>
             </ul>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- プロジェクト作成モーダル -->
+  <div *ngIf="showCreateTeamModal" class="fixed inset-0 z-50 overflow-y-auto" aria-labelledby="modal-title" role="dialog" aria-modal="true">
+    <div class="flex items-center justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
+      <!-- 背景オーバーレイ -->
+      <div class="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity" aria-hidden="true"></div>
+
+      <!-- モーダルパネル -->
+      <div class="relative inline-block align-bottom bg-white rounded-lg px-4 pt-5 pb-4 text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full sm:p-6">
+        <div class="absolute top-0 right-0 pt-4 pr-4">
+          <button type="button" (click)="showCreateTeamModal = false" class="bg-white rounded-md text-gray-400 hover:text-gray-500 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
+            <span class="sr-only">閉じる</span>
+            <svg class="h-6 w-6" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+            </svg>
+          </button>
+        </div>
+
+        <div class="sm:flex sm:items-start">
+          <div class="mt-3 text-center sm:mt-0 sm:text-left w-full">
+            <h3 class="text-lg leading-6 font-medium text-gray-900" id="modal-title">
+              新しいプロジェクトを作成
+            </h3>
+            <div class="mt-4">
+              <form [formGroup]="teamForm" (ngSubmit)="onSubmitTeam(); showCreateTeamModal = false" class="space-y-4">
+                <div>
+                  <label for="name" class="block text-sm font-medium text-gray-700">プロジェクト名</label>
+                  <input
+                    type="text"
+                    id="name"
+                    formControlName="name"
+                    class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
+                    placeholder="プロジェクト名を入力してください"
+                  >
+                </div>
+                <div>
+                  <label for="description" class="block text-sm font-medium text-gray-700">説明</label>
+                  <textarea
+                    id="description"
+                    formControlName="description"
+                    rows="3"
+                    class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
+                    placeholder="プロジェクトの説明を入力してください"
+                  ></textarea>
+                </div>
+                <div class="mt-5 sm:mt-6 sm:grid sm:grid-cols-2 sm:gap-3 sm:grid-flow-row-dense">
+                  <button
+                    type="submit"
+                    [disabled]="teamForm.invalid || isLoading"
+                    class="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-indigo-600 text-base font-medium text-white hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 sm:col-start-2 sm:text-sm disabled:bg-indigo-300"
+                  >
+                    作成する
+                  </button>
+                  <button
+                    type="button"
+                    (click)="showCreateTeamModal = false"
+                    class="mt-3 w-full inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 sm:mt-0 sm:col-start-1 sm:text-sm"
+                  >
+                    キャンセル
+                  </button>
+                </div>
+              </form>
+            </div>
           </div>
         </div>
       </div>
