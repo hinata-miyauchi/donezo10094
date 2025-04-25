@@ -6,12 +6,14 @@ import { AuthService } from '../../../services/auth.service';
 import { Team, TeamMembership, TeamMember, TeamRole } from '../../../models/team.model';
 import { Subscription } from 'rxjs';
 import { MessageService } from '../../../services/message.service';
+import { SortMembersPipe } from '../../../pipes/sort-members.pipe';
+import { SortTeamsPipe } from '../../../pipes/sort-teams.pipe';
 
 @Component({
   selector: 'app-team-management',
   templateUrl: './team-management.component.html',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule]
+  imports: [CommonModule, ReactiveFormsModule, SortMembersPipe, SortTeamsPipe]
 })
 export class TeamManagementComponent implements OnInit, OnDestroy {
   teams: Team[] = [];
@@ -27,7 +29,7 @@ export class TeamManagementComponent implements OnInit, OnDestroy {
 
   constructor(
     private teamService: TeamService,
-    private authService: AuthService,
+    public authService: AuthService,
     private fb: FormBuilder,
     private messageService: MessageService
   ) {

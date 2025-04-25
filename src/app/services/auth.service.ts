@@ -193,6 +193,10 @@ export class AuthService {
     );
   }
 
+  async isLoggedIn(): Promise<boolean> {
+    return firstValueFrom(this.isAuthenticated());
+  }
+
   async updateProfile(profile: { displayName?: string | null }): Promise<void> {
     const auth = getAuth();
     const user = auth.currentUser;

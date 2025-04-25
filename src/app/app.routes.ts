@@ -12,7 +12,11 @@ import { UserSettingsComponent } from './components/user/user-settings/user-sett
 import { IssueDetailComponent } from './components/issue-detail/issue-detail.component';
 
 export const routes: Routes = [
-  { path: '', component: HomeComponent },
+  { 
+    path: '', 
+    component: HomeComponent,
+    canActivate: [AuthGuard]
+  },
   { path: 'login', component: LoginComponent },
   { path: 'register', component: RegisterComponent },
   { 
@@ -28,8 +32,12 @@ export const routes: Routes = [
   { 
     path: 'issues/:id', 
     component: IssueDetailComponent,
-    canActivate: [AuthGuard],
-    data: { scrollPositionRestoration: 'top' }
+    canActivate: [AuthGuard]
+  },
+  { 
+    path: 'issues/:id/edit', 
+    component: IssueFormComponent,
+    canActivate: [AuthGuard]
   },
   { 
     path: 'calendar', 
@@ -54,11 +62,12 @@ export const routes: Routes = [
   {
     path: 'teams/:id/settings',
     loadComponent: () => import('./components/team/team-settings/team-settings.component').then(m => m.TeamSettingsComponent),
+    canActivate: [AuthGuard]
   },
   {
     path: 'tasks',
     loadComponent: () => import('./components/task/task-list/task-list.component').then(m => m.TaskListComponent),
     canActivate: [AuthGuard]
   },
-  { path: '**', redirectTo: '' }
+  { path: '**', redirectTo: 'login' }
 ];

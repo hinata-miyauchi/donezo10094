@@ -8,12 +8,13 @@ import { Team } from '../../../models/team.model';
 import { Subject } from 'rxjs';
 import { takeUntil } from 'rxjs/operators';
 import { User } from '../../../models/user.model';
+import { SortTeamsPipe } from '../../../pipes/sort-teams.pipe';
 
 @Component({
   selector: 'app-user-settings',
   templateUrl: './user-settings.component.html',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, FormsModule]
+  imports: [CommonModule, ReactiveFormsModule, FormsModule, SortTeamsPipe]
 })
 export class UserSettingsComponent implements OnInit, OnDestroy {
   user: User | null = null;
@@ -28,7 +29,7 @@ export class UserSettingsComponent implements OnInit, OnDestroy {
   constructor(
     private fb: FormBuilder,
     private teamService: TeamService,
-    private authService: AuthService,
+    public authService: AuthService,
     private router: Router
   ) {
     this.teamForm = this.fb.group({
