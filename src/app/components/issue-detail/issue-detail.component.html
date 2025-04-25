@@ -253,12 +253,17 @@
       </div>
 
       <!-- チャット -->
-      <div class="border-t border-gray-200 mt-6" *ngIf="issue?.id">
-        <div class="px-4 py-5 sm:px-6">
-          <h3 class="text-lg leading-6 font-medium text-gray-900">コメント</h3>
+      <ng-container *ngIf="issue">
+        <div class="border-t border-gray-200 mt-6" *ngIf="issue.id && issue.teamId">
+          <div class="px-4 py-5 sm:px-6">
+            <h3 class="text-lg leading-6 font-medium text-gray-900">コメント</h3>
+          </div>
+          <app-issue-chat 
+            [issueId]="issue.id"
+            [teamId]="issue.teamId">
+          </app-issue-chat>
         </div>
-        <app-comment [issueId]="issue!.id"></app-comment>
-      </div>
+      </ng-container>
     </div>
   </div>
 </div> 
