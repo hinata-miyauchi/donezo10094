@@ -19,7 +19,7 @@
               </svg>
               保存
             </button>
-            <button type="button" (click)="cancelEditing()"
+            <button type="button" (click)="onCancel()"
               class="inline-flex items-center px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
               <svg class="-ml-1 mr-2 h-5 w-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
                 stroke="currentColor">
@@ -172,7 +172,11 @@
               </label>
               <div class="mt-1">
                 <input type="text" id="title" formControlName="title"
-                  class="shadow-sm focus:ring-indigo-500 focus:border-indigo-500 block w-full px-3 py-2 text-sm border-gray-300 rounded-md">
+                  class="shadow-sm focus:ring-indigo-500 focus:border-indigo-500 block w-full px-3 py-2 text-sm border-gray-300 rounded-md"
+                  [class.border-red-500]="editForm.get('title')?.invalid && editForm.get('title')?.touched">
+                <p class="text-red-500 text-sm mt-1" *ngIf="editForm.get('title')?.invalid && editForm.get('title')?.touched">
+                  タイトルは必須項目です
+                </p>
               </div>
             </div>
 
@@ -193,7 +197,11 @@
               </label>
               <div class="mt-1">
                 <textarea id="description" rows="3" formControlName="description"
-                  class="shadow-sm focus:ring-indigo-500 focus:border-indigo-500 block w-full px-3 py-2 text-sm border-gray-300 rounded-md"></textarea>
+                  class="shadow-sm focus:ring-indigo-500 focus:border-indigo-500 block w-full px-3 py-2 text-sm border-gray-300 rounded-md"
+                  [class.border-red-500]="editForm.get('description')?.invalid && editForm.get('description')?.touched"></textarea>
+                <p class="text-red-500 text-sm mt-1" *ngIf="editForm.get('description')?.invalid && editForm.get('description')?.touched">
+                  説明は必須項目です
+                </p>
               </div>
             </div>
           </div>
@@ -210,9 +218,13 @@
                 </label>
                 <div class="mt-1">
                   <select id="priority" formControlName="priority"
-                    class="shadow-sm focus:ring-indigo-500 focus:border-indigo-500 block w-full px-3 py-2 text-sm border-gray-300 rounded-md">
+                    class="shadow-sm focus:ring-indigo-500 focus:border-indigo-500 block w-full px-3 py-2 text-sm border-gray-300 rounded-md"
+                    [class.border-red-500]="editForm.get('priority')?.invalid && editForm.get('priority')?.touched">
                     <option *ngFor="let importance of importanceOptions" [value]="importance">{{ importance }}</option>
                   </select>
+                  <p class="text-red-500 text-sm mt-1" *ngIf="editForm.get('priority')?.invalid && editForm.get('priority')?.touched">
+                    重要度は必須項目です
+                  </p>
                 </div>
               </div>
 
@@ -223,7 +235,11 @@
                 </label>
                 <div class="mt-1">
                   <input type="number" id="progress" formControlName="progress" min="0" max="100"
-                    class="shadow-sm focus:ring-indigo-500 focus:border-indigo-500 block w-full px-3 py-2 text-sm border-gray-300 rounded-md">
+                    class="shadow-sm focus:ring-indigo-500 focus:border-indigo-500 block w-full px-3 py-2 text-sm border-gray-300 rounded-md"
+                    [class.border-red-500]="editForm.get('progress')?.invalid && editForm.get('progress')?.touched">
+                  <p class="text-red-500 text-sm mt-1" *ngIf="editForm.get('progress')?.invalid && editForm.get('progress')?.touched">
+                    進捗は0から100の間で入力してください
+                  </p>
                   <p class="text-xs text-gray-500 mt-1">
                     進捗0%：未着手、1-99%：進行中、100%：完了として自動的に設定されます
                   </p>
@@ -248,35 +264,47 @@
             <h4 class="text-base font-medium text-gray-900 mb-3">詳細情報</h4>
 
             <!-- 完了条件 -->
-            <div class="sm:col-span-6">
+            <div>
               <label for="completionCriteria" class="block text-sm font-medium text-gray-700">
-                完了条件
+                完了条件<span class="text-red-500 ml-1">*</span>
               </label>
               <div class="mt-1">
                 <textarea id="completionCriteria" rows="3" formControlName="completionCriteria"
-                  class="shadow-sm focus:ring-indigo-500 focus:border-indigo-500 block w-full px-3 py-2 text-sm border-gray-300 rounded-md"></textarea>
+                  class="shadow-sm focus:ring-indigo-500 focus:border-indigo-500 block w-full px-3 py-2 text-sm border-gray-300 rounded-md"
+                  [class.border-red-500]="editForm.get('completionCriteria')?.invalid && editForm.get('completionCriteria')?.touched"></textarea>
+                <p class="text-red-500 text-sm mt-1" *ngIf="editForm.get('completionCriteria')?.invalid && editForm.get('completionCriteria')?.touched">
+                  完了条件は必須項目です
+                </p>
               </div>
             </div>
 
             <!-- 対応・解決方法 -->
-            <div class="sm:col-span-6">
+            <div>
               <label for="solution" class="block text-sm font-medium text-gray-700">
-                対応・解決方法
+                対応・解決方法<span class="text-red-500 ml-1">*</span>
               </label>
               <div class="mt-1">
                 <textarea id="solution" rows="3" formControlName="solution"
-                  class="shadow-sm focus:ring-indigo-500 focus:border-indigo-500 block w-full px-3 py-2 text-sm border-gray-300 rounded-md"></textarea>
+                  class="shadow-sm focus:ring-indigo-500 focus:border-indigo-500 block w-full px-3 py-2 text-sm border-gray-300 rounded-md"
+                  [class.border-red-500]="editForm.get('solution')?.invalid && editForm.get('solution')?.touched"></textarea>
+                <p class="text-red-500 text-sm mt-1" *ngIf="editForm.get('solution')?.invalid && editForm.get('solution')?.touched">
+                  対応・解決方法は必須項目です
+                </p>
               </div>
             </div>
 
             <!-- 担当者 -->
             <div>
               <label for="assignee" class="block text-sm font-medium text-gray-700">
-                担当者
+                担当者<span class="text-red-500 ml-1">*</span>
               </label>
               <div class="mt-1">
                 <input type="text" id="assignee" formControlName="assignee"
-                  class="shadow-sm focus:ring-indigo-500 focus:border-indigo-500 block w-full px-3 py-2 text-sm border-gray-300 rounded-md">
+                  class="shadow-sm focus:ring-indigo-500 focus:border-indigo-500 block w-full px-3 py-2 text-sm border-gray-300 rounded-md"
+                  [class.border-red-500]="editForm.get('assignee')?.invalid && editForm.get('assignee')?.touched">
+                <p class="text-red-500 text-sm mt-1" *ngIf="editForm.get('assignee')?.invalid && editForm.get('assignee')?.touched">
+                  担当者は必須項目です
+                </p>
               </div>
             </div>
           </div>

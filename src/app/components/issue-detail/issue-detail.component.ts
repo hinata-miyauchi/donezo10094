@@ -27,6 +27,7 @@ export class IssueDetailComponent implements OnInit, OnDestroy {
   issue: Issue | null = null;
   team: Team | null = null;
   isEditing = false;
+  isSubmitting = false;
   editForm: FormGroup;
   readonly importanceOptions = ['低', '中', '高'];
   private subscriptions = new Subscription();
@@ -40,13 +41,13 @@ export class IssueDetailComponent implements OnInit, OnDestroy {
     private location: Location
   ) {
     this.editForm = this.fb.group({
-      title: [''],
-      description: [''],
-      priority: [''],
-      dueDate: [''],
-      completionCriteria: [''],
-      solution: [''],
-      assignee: new FormControl(''),
+      title: ['', [Validators.required]],
+      description: ['', [Validators.required]],
+      priority: ['', [Validators.required]],
+      dueDate: ['', [Validators.required]],
+      completionCriteria: ['', [Validators.required]],
+      solution: ['', [Validators.required]],
+      assignee: new FormControl('', [Validators.required]),
       progress: [0, [Validators.required, Validators.min(0), Validators.max(100)]]
     });
 
@@ -110,7 +111,7 @@ export class IssueDetailComponent implements OnInit, OnDestroy {
     this.isEditing = true;
   }
 
-  cancelEditing(): void {
+  onCancel(): void {
     this.isEditing = false;
     if (this.issue) {
       this.loadIssue(this.issue.id);
@@ -118,8 +119,20 @@ export class IssueDetailComponent implements OnInit, OnDestroy {
   }
 
   async saveChanges(): Promise<void> {
-    if (this.issue && this.editForm.valid) {
+    if (this.editForm.invalid) {
+      // すべてのフォームコントロールをタッチ済みにしてエラーメッセージを表示
+      Object.keys(this.editForm.controls).forEach(key => {
+        const control = this.editForm.get(key);
+        if (control) {
+          control.markAsTouched();
+        }
+      });
+      return;
+    }
+
+    if (this.issue) {
       try {
+        this.isSubmitting = true;
         const formValues = this.editForm.value;
         const updatedIssue: Partial<Issue> = {
           title: formValues.title,
@@ -142,6 +155,8 @@ export class IssueDetailComponent implements OnInit, OnDestroy {
         await this.loadIssue(this.issue.id);
       } catch (error) {
         console.error('課題の更新に失敗しました:', error);
+      } finally {
+        this.isSubmitting = false;
       }
     }
   }

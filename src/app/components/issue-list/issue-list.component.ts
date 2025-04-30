@@ -64,9 +64,9 @@ export class IssueListComponent implements OnInit, OnDestroy {
   readonly statusOptions = ['すべて', '未着手', '進行中', '完了'];
   readonly priorityOptions = ['すべて', '低', '中', '高'];
   readonly sortOptions = [
-    { value: 'default', label: 'デフォルト（ステータス→優先度→期限）' },
-    { value: 'dueDate', label: '期限日' },
-    { value: 'priority', label: '優先度' },
+    { value: 'default', label: 'デフォルト（ステータス→重要度→期限）' },
+    { value: 'dueDate', label: '期限' },
+    { value: 'priority', label: '重要度' },
     { value: 'status', label: 'ステータス' },
     { value: 'progress', label: '進捗' },
     { value: 'title', label: 'タイトル' },

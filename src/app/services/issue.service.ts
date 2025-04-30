@@ -127,19 +127,13 @@ export class IssueService {
     return this.teamService.checkTeamPermission(team, currentUser.uid, requiredRole);
   }
 
-  async addIssue(issue: Partial<Issue>): Promise<string> {
-    const currentUser = this.authService.currentUser;
-    if (!currentUser) throw new Error('認証が必要です');
-
-    if (issue.teamId) {
-      const hasPermission = await this.checkTeamIssuePermission(issue.teamId, currentUser, 'member');
-      if (!hasPermission) throw new Error('権限がありません');
+  async addIssue(issue: Partial<Issue>): Promise<void> {
+    const currentUser = await firstValueFrom(this.authService.currentUser$);
+    if (!currentUser) {
+      throw new Error('ユーザーが認証されていません');
     }
 
-    // 課題番号を生成
-    await this.initLastIssueNumber(); // 最新の課題番号を取得
-    const issueNumber = this.getNextIssueNumber();
-
+    const issueNumber = await this.getNextIssueNumber();
     const newIssue: Issue = {
       ...issue,
       issueNumber,
@@ -148,12 +142,10 @@ export class IssueService {
         displayName: currentUser.displayName || ''
       },
       createdAt: new Date(),
-      updatedAt: new Date(),
-      progress: 0
+      updatedAt: new Date()
     } as Issue;
 
-    const docRef = await addDoc(collection(this.firestore, 'issues'), newIssue);
-    return docRef.id;
+    await addDoc(this.issuesCollection, newIssue);
   }
 
   async getIssue(id: string): Promise<Issue | null> {

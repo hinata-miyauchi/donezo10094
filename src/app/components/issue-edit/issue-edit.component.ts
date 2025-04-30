@@ -31,8 +31,8 @@ export class IssueEditComponent implements OnInit {
       occurrenceDate: [new Date(), Validators.required],
       dueDate: [null, Validators.required],
       assignee: ['', Validators.required],
-      handler: [''],
-      solution: [''],
+      handler: ['', Validators.required],
+      solution: ['', Validators.required],
       completionCriteria: ['', Validators.required],
       progress: [0, [Validators.required, Validators.min(0), Validators.max(100)]]
     });
@@ -68,9 +68,16 @@ export class IssueEditComponent implements OnInit {
       const issue = await this.issueService.getIssue(this.issueId);
       if (issue) {
         this.issueForm.patchValue({
-          ...issue,
+          title: issue.title,
+          description: issue.description,
+          importance: issue.priority,
           occurrenceDate: this.formatDate(issue.occurrenceDate),
-          dueDate: this.formatDate(issue.dueDate)
+          dueDate: this.formatDate(issue.dueDate),
+          assignee: issue.assignee?.displayName || '',
+          handler: issue.handler || '',
+          solution: issue.solution || '',
+          completionCriteria: issue.completionCriteria || '',
+          progress: issue.progress
         });
       }
     } catch (error) {
@@ -87,6 +94,16 @@ export class IssueEditComponent implements OnInit {
 
   async onSubmit(): Promise<void> {
     if (this.issueForm.invalid || this.isSubmitting) {
+      // フォームが無効な場合、エラーメッセージを表示
+      if (this.issueForm.invalid) {
+        Object.keys(this.issueForm.controls).forEach(key => {
+          const control = this.issueForm.get(key);
+          if (control?.invalid) {
+            control.markAsTouched();
+          }
+        });
+        return;
+      }
       return;
     }
 
@@ -99,7 +116,11 @@ export class IssueEditComponent implements OnInit {
         occurrenceDate: new Date(formValue.occurrenceDate),
         dueDate: new Date(formValue.dueDate),
         progress: Number(formValue.progress),
-        status: this.getStatusFromProgress(Number(formValue.progress)) // 進捗率に基づいてステータスを設定
+        status: this.getStatusFromProgress(Number(formValue.progress)), // 進捗率に基づいてステータスを設定
+        assignee: {
+          uid: '', // 一時的に空文字列を設定
+          displayName: formValue.assignee
+        }
       };
 
       await this.issueService.updateIssue(this.issueId, issueData);

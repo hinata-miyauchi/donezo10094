@@ -252,16 +252,6 @@
                 <div class="mt-4">
                   <form [formGroup]="searchForm" class="space-y-6">
                     <div class="grid grid-cols-1 gap-y-6 gap-x-4 sm:grid-cols-6">
-                      <!-- キーワード検索 -->
-                      <div class="sm:col-span-3">
-                        <label for="keyword" class="block text-sm font-medium text-gray-700">キーワード</label>
-                        <div class="mt-1">
-                          <input type="text" id="keyword" formControlName="keyword"
-                            class="shadow-sm focus:ring-indigo-500 focus:border-indigo-500 block w-full sm:text-sm border-gray-300 rounded-md"
-                            placeholder="タイトルまたは説明文で検索">
-                        </div>
-                      </div>
-
                       <!-- プロジェクト -->
                       <div class="sm:col-span-3">
                         <label for="team" class="block text-sm font-medium text-gray-700">プロジェクト</label>
@@ -286,9 +276,9 @@
                         </div>
                       </div>
 
-                      <!-- 優先度 -->
+                      <!-- 重要度 -->
                       <div class="sm:col-span-3">
-                        <label for="priority" class="block text-sm font-medium text-gray-700">優先度</label>
+                        <label for="priority" class="block text-sm font-medium text-gray-700">重要度</label>
                         <div class="mt-1">
                           <select id="priority" formControlName="priority"
                             class="shadow-sm focus:ring-indigo-500 focus:border-indigo-500 block w-full sm:text-sm border-gray-300 rounded-md">
@@ -308,7 +298,7 @@
                         </div>
                       </div>
 
-                      <!-- 期間 -->
+                      <!-- 期間（開始） -->
                       <div class="sm:col-span-3">
                         <label for="startDate" class="block text-sm font-medium text-gray-700">期間（開始）</label>
                         <div class="mt-1">
@@ -317,6 +307,7 @@
                         </div>
                       </div>
 
+                      <!-- 期間（終了） -->
                       <div class="sm:col-span-3">
                         <label for="endDate" class="block text-sm font-medium text-gray-700">期間（終了）</label>
                         <div class="mt-1">
@@ -325,7 +316,7 @@
                         </div>
                       </div>
 
-                      <!-- ソート -->
+                      <!-- ソート項目 -->
                       <div class="sm:col-span-3">
                         <label for="sortBy" class="block text-sm font-medium text-gray-700">ソート項目</label>
                         <div class="mt-1">
@@ -336,6 +327,7 @@
                         </div>
                       </div>
 
+                      <!-- ソート順 -->
                       <div class="sm:col-span-3">
                         <label for="sortOrder" class="block text-sm font-medium text-gray-700">ソート順</label>
                         <div class="mt-1">
@@ -344,6 +336,16 @@
                             <option value="asc">昇順</option>
                             <option value="desc">降順</option>
                           </select>
+                        </div>
+                      </div>
+
+                      <!-- キーワード検索 -->
+                      <div class="sm:col-span-6">
+                        <label for="keyword" class="block text-sm font-medium text-gray-700">キーワード</label>
+                        <div class="mt-1">
+                          <input type="text" id="keyword" formControlName="keyword"
+                            class="shadow-sm focus:ring-indigo-500 focus:border-indigo-500 block w-full sm:text-sm border-gray-300 rounded-md"
+                            placeholder="タイトルまたは説明文で検索">
                         </div>
                       </div>
                     </div>

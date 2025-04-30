@@ -8,7 +8,7 @@
       <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
         <!-- タイトル -->
         <div>
-          <label for="title" class="block text-sm text-gray-600 mb-1">タイトル</label>
+          <label for="title" class="block text-sm text-gray-600 mb-1">タイトル<span class="text-red-500 ml-1">*</span></label>
           <input id="title" type="text" formControlName="title"
             class="form-input"
             [class.border-red-500]="issueForm.get('title')?.invalid && issueForm.get('title')?.touched">
@@ -19,9 +19,13 @@
 
         <!-- 発生日 -->
         <div>
-          <label for="occurrenceDate" class="block text-sm text-gray-600 mb-1">発生日</label>
+          <label for="occurrenceDate" class="block text-sm text-gray-600 mb-1">発生日<span class="text-red-500 ml-1">*</span></label>
           <input id="occurrenceDate" type="date" formControlName="occurrenceDate"
-            class="form-input">
+            class="form-input"
+            [class.border-red-500]="issueForm.get('occurrenceDate')?.invalid && issueForm.get('occurrenceDate')?.touched">
+          <p class="text-red-500 text-sm mt-1" *ngIf="issueForm.get('occurrenceDate')?.invalid && issueForm.get('occurrenceDate')?.touched">
+            {{ getErrorMessage('occurrenceDate') }}
+          </p>
         </div>
       </div>
     </section>
@@ -30,9 +34,13 @@
     <section>
       <h3 class="text-base font-semibold text-gray-700 mb-4">課題の詳細</h3>
       <div>
-        <label for="description" class="block text-sm text-gray-600 mb-1">説明</label>
+        <label for="description" class="block text-sm text-gray-600 mb-1">説明<span class="text-red-500 ml-1">*</span></label>
         <textarea id="description" formControlName="description" rows="4"
-          class="form-textarea w-full resize-y min-h-[100px]"></textarea>
+          class="form-textarea w-full resize-y min-h-[100px]"
+          [class.border-red-500]="issueForm.get('description')?.invalid && issueForm.get('description')?.touched"></textarea>
+        <p class="text-red-500 text-sm mt-1" *ngIf="issueForm.get('description')?.invalid && issueForm.get('description')?.touched">
+          {{ getErrorMessage('description') }}
+        </p>
       </div>
     </section>
 
@@ -42,17 +50,25 @@
       <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
         <!-- 重要度 -->
         <div>
-          <label for="importance" class="block text-sm text-gray-600 mb-1">重要度</label>
-          <select id="importance" formControlName="importance" class="form-select">
+          <label for="importance" class="block text-sm text-gray-600 mb-1">重要度<span class="text-red-500 ml-1">*</span></label>
+          <select id="importance" formControlName="importance" class="form-select"
+            [class.border-red-500]="issueForm.get('importance')?.invalid && issueForm.get('importance')?.touched">
             <option *ngFor="let importance of importanceOptions" [value]="importance">{{ importance }}</option>
           </select>
+          <p class="text-red-500 text-sm mt-1" *ngIf="issueForm.get('importance')?.invalid && issueForm.get('importance')?.touched">
+            {{ getErrorMessage('importance') }}
+          </p>
         </div>
 
         <!-- 進捗 -->
         <div>
-          <label for="progress" class="block text-sm text-gray-600 mb-1">進捗（％）</label>
+          <label for="progress" class="block text-sm text-gray-600 mb-1">進捗（％）<span class="text-red-500 ml-1">*</span></label>
           <input id="progress" type="number" formControlName="progress" min="0" max="100"
-            class="form-input">
+            class="form-input"
+            [class.border-red-500]="issueForm.get('progress')?.invalid && issueForm.get('progress')?.touched">
+          <p class="text-red-500 text-sm mt-1" *ngIf="issueForm.get('progress')?.invalid && issueForm.get('progress')?.touched">
+            {{ getErrorMessage('progress') }}
+          </p>
           <p class="text-sm text-gray-500 mt-1">
             進捗0%：未着手、1-99%：進行中、100%：完了として自動的に設定されます
           </p>
@@ -65,12 +81,20 @@
       <h3 class="text-base font-semibold text-gray-700 mb-4">担当者情報</h3>
       <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
         <div>
-          <label for="assignee" class="block text-sm text-gray-600 mb-1">責任者</label>
-          <input id="assignee" type="text" formControlName="assignee" class="form-input">
+          <label for="assignee" class="block text-sm text-gray-600 mb-1">責任者<span class="text-red-500 ml-1">*</span></label>
+          <input id="assignee" type="text" formControlName="assignee" class="form-input"
+            [class.border-red-500]="issueForm.get('assignee')?.invalid && issueForm.get('assignee')?.touched">
+          <p class="text-red-500 text-sm mt-1" *ngIf="issueForm.get('assignee')?.invalid && issueForm.get('assignee')?.touched">
+            {{ getErrorMessage('assignee') }}
+          </p>
         </div>
         <div>
-          <label for="handler" class="block text-sm text-gray-600 mb-1">対応者</label>
-          <input id="handler" type="text" formControlName="handler" class="form-input">
+          <label for="handler" class="block text-sm text-gray-600 mb-1">対応者<span class="text-red-500 ml-1">*</span></label>
+          <input id="handler" type="text" formControlName="handler" class="form-input"
+            [class.border-red-500]="issueForm.get('handler')?.invalid && issueForm.get('handler')?.touched">
+          <p class="text-red-500 text-sm mt-1" *ngIf="issueForm.get('handler')?.invalid && issueForm.get('handler')?.touched">
+            {{ getErrorMessage('handler') }}
+          </p>
         </div>
       </div>
     </section>
@@ -80,20 +104,32 @@
       <h3 class="text-base font-semibold text-gray-700 mb-4">期限・完了条件</h3>
       <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
         <div>
-          <label for="dueDate" class="block text-sm text-gray-600 mb-1">対応期限</label>
-          <input id="dueDate" type="date" formControlName="dueDate" class="form-input">
+          <label for="dueDate" class="block text-sm text-gray-600 mb-1">対応期限<span class="text-red-500 ml-1">*</span></label>
+          <input id="dueDate" type="date" formControlName="dueDate" class="form-input"
+            [class.border-red-500]="issueForm.get('dueDate')?.invalid && issueForm.get('dueDate')?.touched">
+          <p class="text-red-500 text-sm mt-1" *ngIf="issueForm.get('dueDate')?.invalid && issueForm.get('dueDate')?.touched">
+            {{ getErrorMessage('dueDate') }}
+          </p>
         </div>
         <div>
-          <label for="completionCriteria" class="block text-sm text-gray-600 mb-1">完了条件</label>
-          <textarea id="completionCriteria" formControlName="completionCriteria" rows="2" class="form-textarea w-full"></textarea>
+          <label for="completionCriteria" class="block text-sm text-gray-600 mb-1">完了条件<span class="text-red-500 ml-1">*</span></label>
+          <textarea id="completionCriteria" formControlName="completionCriteria" rows="2" class="form-textarea w-full"
+            [class.border-red-500]="issueForm.get('completionCriteria')?.invalid && issueForm.get('completionCriteria')?.touched"></textarea>
+          <p class="text-red-500 text-sm mt-1" *ngIf="issueForm.get('completionCriteria')?.invalid && issueForm.get('completionCriteria')?.touched">
+            {{ getErrorMessage('completionCriteria') }}
+          </p>
         </div>
       </div>
     </section>
 
     <!-- 6. 解決方法 -->
     <section>
-      <label for="solution" class="block text-sm text-gray-600 mb-1">対応・解決方法</label>
-      <textarea id="solution" formControlName="solution" rows="3" class="form-textarea w-full"></textarea>
+      <label for="solution" class="block text-sm text-gray-600 mb-1">対応・解決方法<span class="text-red-500 ml-1">*</span></label>
+      <textarea id="solution" formControlName="solution" rows="3" class="form-textarea w-full"
+        [class.border-red-500]="issueForm.get('solution')?.invalid && issueForm.get('solution')?.touched"></textarea>
+      <p class="text-red-500 text-sm mt-1" *ngIf="issueForm.get('solution')?.invalid && issueForm.get('solution')?.touched">
+        {{ getErrorMessage('solution') }}
+      </p>
     </section>
 
     <!-- ボタン -->
@@ -104,8 +140,9 @@
       </button>
       <button type="submit"
         [disabled]="issueForm.invalid || isSubmitting"
-        class="px-4 py-2 text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 rounded disabled:opacity-50">
-        更新する
+        class="px-4 py-2 text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 rounded disabled:opacity-50 disabled:cursor-not-allowed">
+        <span *ngIf="isSubmitting">更新中...</span>
+        <span *ngIf="!isSubmitting">更新する</span>
       </button>
     </div>
   </div>

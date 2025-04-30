@@ -16,6 +16,7 @@ export interface Issue {
         displayName: string;
         photoURL?: string;
     };
+    handler?: string;         // 対応者
     progress: number;          // 進捗率（0-100）
     createdAt: Date;          // 作成日時
     updatedAt: Date;          // 更新日時
