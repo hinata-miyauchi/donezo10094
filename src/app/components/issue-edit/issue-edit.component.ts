@@ -80,7 +80,8 @@ export class IssueEditComponent implements OnInit {
     }
   }
 
-  private formatDate(date: Date): string {
+  private formatDate(date: Date | undefined): string {
+    if (!date) return '';
     return new Date(date).toISOString().split('T')[0];
   }
 

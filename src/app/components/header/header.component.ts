@@ -1,8 +1,9 @@
-import { Component, OnInit, ViewChild, ElementRef, HostListener } from '@angular/core';
+import { Component, OnInit, OnDestroy, ViewChild, ElementRef, HostListener } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule, Router } from '@angular/router';
 import { AuthService } from '../../services/auth.service';
 import { User } from '../../models/user.model';
+import { Subject, takeUntil } from 'rxjs';
 
 @Component({
   selector: 'app-header',
@@ -11,8 +12,10 @@ import { User } from '../../models/user.model';
   standalone: true,
   imports: [CommonModule, RouterModule]
 })
-export class HeaderComponent implements OnInit {
+export class HeaderComponent implements OnInit, OnDestroy {
   @ViewChild('userMenuContainer') userMenuContainer!: ElementRef;
+  
+  private destroy$ = new Subject<void>();
   
   isLoggedIn = false;
   user: User | null = null;
@@ -24,10 +27,19 @@ export class HeaderComponent implements OnInit {
   ) {}
 
   ngOnInit(): void {
-    this.authService.user$.subscribe(user => {
-      this.isLoggedIn = !!user;
-      this.user = user;
-    });
+    // ユーザー認証状態の監視
+    this.authService.user$
+      .pipe(takeUntil(this.destroy$))
+      .subscribe(user => {
+        console.log('認証状態の変更を検知:', user);
+        this.isLoggedIn = !!user;
+        this.user = user;
+      });
+  }
+
+  ngOnDestroy(): void {
+    this.destroy$.next();
+    this.destroy$.complete();
   }
 
   @HostListener('document:click', ['$event'])
@@ -42,19 +54,15 @@ export class HeaderComponent implements OnInit {
   }
 
   toggleUserMenu(event: Event): void {
-    event.stopPropagation(); // イベントの伝播を停止
+    event.stopPropagation();
     this.showUserMenu = !this.showUserMenu;
-  }
-
-  closeUserMenu(): void {
-    this.showUserMenu = false;
   }
 
   async logout(): Promise<void> {
     try {
       await this.authService.logout();
-      this.closeUserMenu();
-      await this.router.navigate(['/login']); // ログイン画面に遷移
+      this.showUserMenu = false;
+      await this.router.navigate(['/login']);
     } catch (error) {
       console.error('ログアウトに失敗しました:', error);
     }

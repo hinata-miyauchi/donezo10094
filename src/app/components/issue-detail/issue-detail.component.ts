@@ -9,7 +9,6 @@ import { Team } from '../../models/team.model';
 import { IssueChatComponent } from '../issue-chat/issue-chat.component';
 import { Subscription } from 'rxjs';
 import { CommentComponent } from '../comment/comment.component';
-import { NotificationService } from '../../services/notification.service';
 
 @Component({
   selector: 'app-issue-detail',
@@ -38,8 +37,7 @@ export class IssueDetailComponent implements OnInit, OnDestroy {
     private issueService: IssueService,
     private teamService: TeamService,
     private fb: FormBuilder,
-    private location: Location,
-    private notificationService: NotificationService
+    private location: Location
   ) {
     this.editForm = this.fb.group({
       title: [''],

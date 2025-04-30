@@ -1,8 +1,9 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, OnDestroy } from '@angular/core';
 import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
 import { AuthService } from '../../services/auth.service';
 import { CommonModule } from '@angular/common';
+import { Subject, takeUntil } from 'rxjs';
 
 @Component({
   selector: 'app-login',
@@ -59,7 +60,8 @@ import { CommonModule } from '@angular/common';
     }
   `]
 })
-export class LoginComponent implements OnInit {
+export class LoginComponent implements OnInit, OnDestroy {
+  private destroy$ = new Subject<void>();
   loginForm: FormGroup;
 
   constructor(
@@ -73,17 +75,43 @@ export class LoginComponent implements OnInit {
     });
   }
 
-  ngOnInit(): void {}
+  ngOnInit(): void {
+    // 認証状態の監視
+    this.authService.user$
+      .pipe(takeUntil(this.destroy$))
+      .subscribe({
+        next: (user) => {
+          if (user) {
+            this.router.navigate(['/']);
+          }
+        },
+        error: (error) => {
+          console.error('認証状態の監視中にエラーが発生:', error);
+        }
+      });
+  }
+
+  ngOnDestroy() {
+    this.destroy$.next();
+    this.destroy$.complete();
+  }
 
   async onSubmit() {
     if (this.loginForm.valid) {
       try {
         const { email, password } = this.loginForm.value;
         await this.authService.login(email, password);
-        this.router.navigate(['/']);
       } catch (error) {
         console.error('ログインエラー:', error);
       }
+    }
+  }
+
+  async login() {
+    try {
+      await this.authService.googleSignIn();
+    } catch (error) {
+      console.error('ログインに失敗しました:', error);
     }
   }
 } 

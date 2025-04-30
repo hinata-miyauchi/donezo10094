@@ -4,12 +4,29 @@ service cloud.firestore {
   match /databases/{database}/documents {
     // チャットメッセージのルール
     match /chat-messages/{messageId} {
-      allow read, write: if true;  // 開発中は一時的にすべてのアクセスを許可
+      allow read: if request.auth != null;
+      allow create: if request.auth != null;
+      allow update: if request.auth != null && (
+        // 自分のメッセージの更新
+        resource.data.senderId == request.auth.uid ||
+        // メンションされている場合の既読状態の更新
+        (request.resource.data.diff(resource.data).affectedKeys().hasOnly(['read', 'readAt']) &&
+         resource.data.mentions.hasAny([request.auth.uid]))
+      );
+      allow delete: if request.auth != null && resource.data.senderId == request.auth.uid;
     }
     
+    // 通知のルール
+    match /notifications/{notificationId} {
+      allow read: if request.auth != null && request.auth.uid == resource.data.userId;
+      allow create: if request.auth != null;
+      allow update: if request.auth != null && request.auth.uid == resource.data.userId;
+      allow delete: if request.auth != null && request.auth.uid == resource.data.userId;
+    }
+
     // その他のコレクションのデフォルトルール
     match /{document=**} {
-      allow read, write: if true;  // 開発中は一時的にすべてのアクセスを許可
+      allow read, write: if request.auth != null;
     }
 
     // TODO: 本番環境では以下のようなより厳密なルールに変更する

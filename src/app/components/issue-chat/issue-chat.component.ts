@@ -52,7 +52,7 @@ import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
           [(ngModel)]="newMessage" 
           (keydown)="onKeyDown($event)"
           (input)="onInputChange($event)"
-          placeholder="コメントを入力... (@または＠でメンション、Enterで送信、Shift+Enterで改行)"
+          placeholder="コメントを入力... (@でメンション、Enterで送信、Shift+Enterで改行)"
           rows="3"
           class="flex-1 rounded border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 resize-none"
         ></textarea>

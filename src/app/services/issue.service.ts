@@ -347,36 +347,79 @@ export class IssueService {
   }
 
   // コメントを追加
-  async addComment(data: { issueId: string; content: string; mentions: string[] }) {
-    const { issueId, content, mentions } = data;
-    const commentRef = collection(this.firestore, 'comments');
-    
-    const commentData = {
-      issueId,
-      content,
-      mentions,
-      authorId: this.authService.currentUser?.uid,
-      createdAt: serverTimestamp(),
-      updatedAt: serverTimestamp()
-    };
+  async addComment(data: {
+    issueId: string;
+    content: string;
+    mentions: string[];
+    authorId: string;
+  }): Promise<void> {
+    try {
+      console.log('=== コメント追加開始 ===');
+      console.log('入力データ:', data);
 
-    const docRef = await addDoc(commentRef, commentData);
-    
-    // メンションされたユーザーに通知を送る
-    if (mentions.length > 0) {
-      await this.sendMentionNotifications(mentions, issueId, content);
+      const currentUser = this.authService.currentUser;
+      if (!currentUser) {
+        throw new Error('認証が必要です');
+      }
+
+      // 課題の詳細を取得
+      const issue = await this.getIssue(data.issueId);
+      if (!issue) {
+        throw new Error('課題が見つかりません');
+      }
+
+      console.log('課題情報:', issue);
+
+      // メッセージデータを作成
+      const messageData = {
+        content: data.content,
+        issueId: data.issueId,
+        issueTitle: issue.title || '無題の課題',
+        senderId: currentUser.uid,
+        senderName: currentUser.displayName || 'Unknown User',
+        senderPhotoURL: currentUser.photoURL || '',
+        timestamp: serverTimestamp(),
+        mentions: data.mentions,
+        type: 'comment',
+        read: false
+      };
+
+      console.log('保存するメッセージデータ:', messageData);
+
+      // chat-messagesコレクションにメッセージを保存
+      const chatMessagesRef = collection(this.firestore, 'chat-messages');
+      const docRef = await addDoc(chatMessagesRef, messageData);
+
+      console.log('コメントが保存されました:', {
+        id: docRef.id,
+        content: data.content,
+        mentions: data.mentions,
+        issueId: data.issueId
+      });
+
+      // 保存されたデータを確認
+      const savedDoc = await getDoc(docRef);
+      if (savedDoc.exists()) {
+        console.log('保存されたコメントデータ:', savedDoc.data());
+      } else {
+        console.error('コメントドキュメントが見つかりません');
+      }
+
+      console.log('=== コメント追加完了 ===');
+    } catch (error) {
+      console.error('コメントの追加に失敗しました:', error);
+      throw error;
     }
-
-    return docRef.id;
   }
 
   // コメントを取得
   async getComments(issueId: string): Promise<Comment[]> {
-    const commentsRef = collection(this.firestore, 'comments');
+    const messagesRef = collection(this.firestore, 'chat-messages');
     const q = query(
-      commentsRef,
+      messagesRef,
       where('issueId', '==', issueId),
-      orderBy('createdAt', 'desc')
+      where('type', '==', 'comment'),
+      orderBy('timestamp', 'desc')
     );
 
     try {
@@ -384,23 +427,24 @@ export class IssueService {
       return querySnapshot.docs.map(doc => ({
         id: doc.id,
         ...doc.data(),
-        createdAt: doc.data()['createdAt']?.toDate(),
-        updatedAt: doc.data()['updatedAt']?.toDate()
+        createdAt: doc.data()['timestamp']?.toDate(),
+        updatedAt: doc.data()['timestamp']?.toDate()
       } as Comment));
     } catch (error: any) {
       // インデックスが必要な場合のエラー処理
       if (error.code === 'failed-precondition') {
         // インデックスなしで取得を試みる
         const simpleQuery = query(
-          commentsRef,
-          where('issueId', '==', issueId)
+          messagesRef,
+          where('issueId', '==', issueId),
+          where('type', '==', 'comment')
         );
         const snapshot = await getDocs(simpleQuery);
         const comments = snapshot.docs.map(doc => ({
           id: doc.id,
           ...doc.data(),
-          createdAt: doc.data()['createdAt']?.toDate(),
-          updatedAt: doc.data()['updatedAt']?.toDate()
+          createdAt: doc.data()['timestamp']?.toDate(),
+          updatedAt: doc.data()['timestamp']?.toDate()
         } as Comment));
         
         // メモリ上でソート
@@ -412,21 +456,8 @@ export class IssueService {
     }
   }
 
-  // メンション通知を送信
+  // メンション通知を送信（非推奨 - NotificationServiceを使用してください）
   private async sendMentionNotifications(userIds: string[], issueId: string, content: string) {
-    const notificationsRef = collection(this.firestore, 'notifications');
-    const issue = await this.getIssue(issueId);
-    
-    for (const userId of userIds) {
-      await addDoc(notificationsRef, {
-        userId,
-        type: 'mention',
-        issueId,
-        issueName: issue?.title,
-        content: `あなたが課題「${issue?.title}」のコメントでメンションされました`,
-        createdAt: serverTimestamp(),
-        read: false
-      });
-    }
+    console.warn('このメソッドは非推奨です。代わりにNotificationServiceを使用してください。');
   }
 }

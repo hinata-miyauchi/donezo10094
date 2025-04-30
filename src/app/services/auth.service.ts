@@ -1,4 +1,4 @@
-import { Injectable } from '@angular/core';
+import { Injectable, inject } from '@angular/core';
 import { 
   Auth,
   signInWithEmailAndPassword, 
@@ -21,8 +21,22 @@ import {
 import { Storage, ref, uploadBytes, getDownloadURL, getStorage } from '@angular/fire/storage';
 import { BehaviorSubject, Observable, from, of, firstValueFrom } from 'rxjs';
 import { map, switchMap, tap } from 'rxjs/operators';
-import { User, UserProfile } from '../models/user.model';
-import { inject } from '@angular/core';
+import { User } from '../models/user.model';
+import { TeamMembership } from '../models/team.model';
+
+interface UserProfile {
+  uid: string;
+  email: string;
+  displayName: string | null;
+  photoURL: string | null;
+  bio?: string;
+  emailNotifications?: boolean;
+  taskReminders?: boolean;
+  teams?: TeamMembership[];
+  isEmailVerified?: boolean;
+  createdAt?: Date;
+  updatedAt?: Date;
+}
 
 @Injectable({
   providedIn: 'root'
@@ -142,6 +156,7 @@ export class AuthService {
         uid: user.uid,
         email: user.email || '',
         displayName,
+        photoURL: null,
         bio: '',
         emailNotifications: true,
         taskReminders: true,
@@ -178,9 +193,11 @@ export class AuthService {
           return {
             ...data,
             id: doc.id,
+            uid: doc.id,
+            teams: data['teams'] || [],
             createdAt: data['createdAt']?.toDate() || new Date(),
             updatedAt: data['updatedAt']?.toDate() || new Date()
-          } as User;
+          } as unknown as User;
         }
         return null;
       })
@@ -268,10 +285,11 @@ export class AuthService {
 
     this.userSubject.next({
       ...currentData,
+      id: user.uid,
       displayName,
       photoURL: photoURL || user.photoURL || '',
       updatedAt: new Date()
-    } as User);
+    } as unknown as User);
   }
 
   async updateProfileImage(file: File): Promise<string> {
@@ -308,5 +326,21 @@ export class AuthService {
       console.error('ユーザー情報の取得に失敗しました:', error);
       return null;
     }
+  }
+
+  getUserProfile(userId: string): Observable<UserProfile | null> {
+    const userDocRef = doc(this.firestore, 'users', userId);
+    return from(getDoc(userDocRef)).pipe(
+      map(docSnap => {
+        if (!docSnap.exists()) return null;
+        const data = docSnap.data();
+        return {
+          uid: userId,
+          email: data['email'] || '',
+          displayName: data['displayName'] || null,
+          photoURL: data['photoURL'] || null
+        };
+      })
+    );
   }
 } 

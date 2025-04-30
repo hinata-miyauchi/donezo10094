@@ -7,7 +7,6 @@ import { registerLocaleData } from '@angular/common';
 import localeJa from '@angular/common/locales/ja';
 import { environment } from '../environments/environment';
 import { provideAnimations } from '@angular/platform-browser/animations';
-import { NotificationService } from './services/notification.service';
 
 // Firebase imports
 import { AngularFireModule } from '@angular/fire/compat';
@@ -29,7 +28,6 @@ export const appConfig: ApplicationConfig = {
     provideRouter(routes),
     provideClientHydration(),
     provideAnimations(),
-    { provide: LOCALE_ID, useValue: 'ja-JP' },
-    NotificationService
+    { provide: LOCALE_ID, useValue: 'ja-JP' }
   ]
 };

@@ -91,6 +91,7 @@ export class IssueListComponent implements OnInit, OnDestroy {
   ) {
     this.searchForm = this.fb.group({
       keyword: [''],
+      team: ['all'],
       status: ['すべて'],
       priority: ['すべて'],
       assignee: ['すべて'],
@@ -98,6 +99,12 @@ export class IssueListComponent implements OnInit, OnDestroy {
       endDate: [''],
       sortBy: ['dueDate'],
       sortOrder: ['asc']
+    });
+
+    // チーム選択の変更を監視
+    this.searchForm.get('team')?.valueChanges.subscribe(teamId => {
+      this.selectedTeamId = teamId;
+      this.loadIssues();
     });
   }
 
@@ -295,53 +302,65 @@ export class IssueListComponent implements OnInit, OnDestroy {
   }
 
   private applyFilters(): void {
-    const { keyword, status, priority, assignee, startDate, endDate, sortBy, sortOrder } = this.searchForm.value;
-    
-    let filtered = this.issues.filter(issue => {
-      const matchesKeyword = !keyword || 
-        issue.title.toLowerCase().includes(keyword.toLowerCase()) ||
-        (issue.description?.toLowerCase().includes(keyword.toLowerCase()));
+    if (!this.issues) return;
 
-      const matchesStatus = status === 'すべて' || issue.status === status;
-      const matchesPriority = priority === 'すべて' || issue.priority === priority;
-      const matchesAssignee = assignee === 'すべて' || 
-        (issue.assignee && issue.assignee.displayName === assignee);
+    let filteredIssues = [...this.issues];
+    const filters = this.searchForm.value;
 
-      const issueDueDate = new Date(issue.dueDate);
-      const matchesDate = (!startDate || new Date(startDate) <= issueDueDate) &&
-                         (!endDate || new Date(endDate) >= issueDueDate);
-
-      return matchesKeyword && matchesStatus && matchesPriority && matchesAssignee && matchesDate;
-    });
-
-    // デフォルトのソート順
-    filtered.sort((a, b) => {
-      // 1. まずステータスでソート
-      const statusOrder: { [key: string]: number } = { '未着手': 0, '進行中': 1, '完了': 2 };
-      const statusCompare = statusOrder[a.status] - statusOrder[b.status];
-      if (statusCompare !== 0) return statusCompare;
-
-      // 2. 次に優先度でソート
-      const priorityOrder: { [key: string]: number } = { '高': 0, '中': 1, '低': 2 };
-      const priorityCompare = priorityOrder[a.priority] - priorityOrder[b.priority];
-      if (priorityCompare !== 0) return priorityCompare;
-
-      // 3. 最後に期限日でソート
-      const dueDateA = new Date(a.dueDate).getTime();
-      const dueDateB = new Date(b.dueDate).getTime();
-      return dueDateA - dueDateB;
-    });
-
-    // ユーザーが選択したソート順で最終的なソートを適用
-    if (sortBy !== 'default') {
-      filtered = this.sortIssues(filtered, sortBy, sortOrder as 'asc' | 'desc');
+    // キーワード検索
+    if (filters.keyword) {
+      const keyword = filters.keyword.toLowerCase();
+      filteredIssues = filteredIssues.filter(issue =>
+        issue.title.toLowerCase().includes(keyword) ||
+        (issue.description && issue.description.toLowerCase().includes(keyword))
+      );
     }
 
-    // フィルタリング結果を完了/未完了で分離
-    this.completedIssues = filtered.filter(issue => issue.status === '完了');
-    this.incompleteIssues = filtered.filter(issue => issue.status !== '完了');
+    // プロジェクト（チーム）での絞り込み
+    if (filters.team && filters.team !== 'all') {
+      filteredIssues = filteredIssues.filter(issue =>
+        filters.team === '' ? !issue.teamId : issue.teamId === filters.team
+      );
+    }
 
-    this.filteredIssuesSubject.next(filtered);
+    // ステータスでの絞り込み
+    if (filters.status && filters.status !== 'すべて') {
+      filteredIssues = filteredIssues.filter(issue => issue.status === filters.status);
+    }
+
+    // 優先度での絞り込み
+    if (filters.priority && filters.priority !== 'すべて') {
+      filteredIssues = filteredIssues.filter(issue => issue.priority === filters.priority);
+    }
+
+    // 担当者での絞り込み
+    if (filters.assignee && filters.assignee !== 'すべて') {
+      filteredIssues = filteredIssues.filter(issue => issue.assignee?.displayName === filters.assignee);
+    }
+
+    // 期間での絞り込み
+    if (filters.startDate) {
+      const startDate = new Date(filters.startDate);
+      filteredIssues = filteredIssues.filter(issue => {
+        const dueDate = new Date(issue.dueDate);
+        return dueDate >= startDate;
+      });
+    }
+    if (filters.endDate) {
+      const endDate = new Date(filters.endDate);
+      endDate.setHours(23, 59, 59);
+      filteredIssues = filteredIssues.filter(issue => {
+        const dueDate = new Date(issue.dueDate);
+        return dueDate <= endDate;
+      });
+    }
+
+    // ソート処理
+    filteredIssues = this.sortIssues(filteredIssues, filters.sortBy, filters.sortOrder);
+
+    // 完了/未完了の課題を分離
+    this.separateIssuesByStatus(filteredIssues);
+    this.filteredIssuesSubject.next(filteredIssues);
   }
 
   getRemainingDays(dueDate: Date | string): number {
@@ -356,6 +375,7 @@ export class IssueListComponent implements OnInit, OnDestroy {
   clearFilters(): void {
     this.searchForm.patchValue({
       keyword: '',
+      team: 'all',
       status: 'すべて',
       priority: 'すべて',
       assignee: 'すべて',
@@ -443,12 +463,17 @@ export class IssueListComponent implements OnInit, OnDestroy {
   }
 
   hasActiveFilters(): boolean {
-    const { keyword, status, priority, assignee, startDate, endDate } = this.searchForm.value;
-    return !!(keyword || 
-      status !== 'すべて' || 
-      priority !== 'すべて' || 
-      assignee !== 'すべて' || 
-      startDate || 
-      endDate);
+    const filters = this.searchForm.value;
+    return !!(
+      filters.keyword ||
+      (filters.team && filters.team !== 'all') ||
+      (filters.status && filters.status !== 'すべて') ||
+      (filters.priority && filters.priority !== 'すべて') ||
+      (filters.assignee && filters.assignee !== 'すべて') ||
+      filters.startDate ||
+      filters.endDate ||
+      (filters.sortBy && filters.sortBy !== 'dueDate') ||
+      filters.sortOrder !== 'asc'
+    );
   }
 }

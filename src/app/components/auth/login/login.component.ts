@@ -5,6 +5,7 @@ import { Router, RouterModule } from '@angular/router';
 import { AuthService } from '../../../services/auth.service';
 import { User } from '../../../models/user.model';
 import { firstValueFrom } from 'rxjs';
+import { Subscription } from 'rxjs';
 
 @Component({
   selector: 'app-login',
@@ -127,24 +128,39 @@ export class LoginComponent implements OnInit {
       await this.authService.login(email, password);
       
       // 認証状態の更新を待つ
-      await new Promise<void>((resolve) => {
-        let timeoutId: NodeJS.Timeout;
-        let subscription: any;
+      await new Promise<void>((resolve, reject) => {
+        const timeoutDuration = 5000;
+        let timeoutId: NodeJS.Timeout | null = null;
+        let subscription: Subscription | null = null;
+
+        const cleanup = () => {
+          if (timeoutId) {
+            clearTimeout(timeoutId);
+            timeoutId = null;
+          }
+          if (subscription) {
+            subscription.unsubscribe();
+            subscription = null;
+          }
+        };
 
         // タイムアウトの設定
         timeoutId = setTimeout(() => {
-          if (subscription) {
-            subscription.unsubscribe();
-          }
-          resolve();
-        }, 5000);
+          cleanup();
+          resolve(); // タイムアウトした場合も正常に処理を続行
+        }, timeoutDuration);
 
         // 認証状態の監視を開始
-        subscription = this.authService.isAuthenticated().subscribe(isAuth => {
-          if (isAuth) {
-            clearTimeout(timeoutId);
-            subscription.unsubscribe();
-            resolve();
+        subscription = this.authService.isAuthenticated().subscribe({
+          next: (isAuth) => {
+            if (isAuth) {
+              cleanup();
+              resolve();
+            }
+          },
+          error: (error) => {
+            cleanup();
+            reject(error);
           }
         });
       });

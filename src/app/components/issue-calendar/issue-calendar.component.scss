@@ -66,6 +66,49 @@
       font-weight: bold;
     }
 
+    .fc-scrollgrid {
+      overflow: auto !important;
+    }
+
+    .fc-scrollgrid-section-header {
+      position: sticky;
+      top: 0;
+      z-index: 10;
+      background-color: white;
+    }
+
+    .fc-scrollgrid-section-header th {
+      background-color: white;
+      position: sticky;
+      top: 0;
+      z-index: 10;
+    }
+
+    .fc-timegrid {
+      .fc-col-header {
+        position: sticky;
+        top: 0;
+        z-index: 10;
+        background-color: white;
+      }
+
+      .fc-scroller {
+        overflow-y: auto !important;
+      }
+
+      .fc-timegrid-axis-frame {
+        position: sticky;
+        left: 0;
+        background-color: white;
+        z-index: 9;
+      }
+    }
+
+    .fc-daygrid-body,
+    .fc-timegrid-body {
+      overflow-y: auto !important;
+    }
+
     .fc-button {
       @apply bg-indigo-600 hover:bg-indigo-700 text-white font-medium py-2 px-4 rounded;
       border: none;
@@ -231,6 +274,62 @@
           height: 6px;
           cursor: ns-resize;
         }
+      }
+    }
+
+    // 月表示の設定
+    &.fc-dayGridMonth-view {
+      .fc-scrollgrid {
+        overflow: auto !important;
+      }
+
+      .fc-scrollgrid-section-header,
+      .fc-scrollgrid-section-header th {
+        position: static; // 固定表示を解除
+        background-color: white;
+      }
+
+      .fc-daygrid-body {
+        overflow: auto !important;
+      }
+    }
+
+    // 週表示の設定
+    &.fc-timeGridWeek-view {
+      .fc-scrollgrid {
+        overflow: visible !important;
+      }
+
+      thead.fc-scrollgrid-section-header {
+        position: sticky !important;
+        top: 0 !important;
+        z-index: 10 !important;
+        background-color: white !important;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1) !important;
+
+        th {
+          position: sticky !important;
+          top: 0 !important;
+          background-color: white !important;
+        }
+
+        .fc-col-header-cell {
+          position: sticky !important;
+          top: 0 !important;
+          background-color: white !important;
+        }
+      }
+
+      .fc-timegrid-axis-frame {
+        position: sticky !important;
+        left: 0 !important;
+        background-color: white !important;
+        z-index: 9 !important;
+      }
+
+      .fc-timegrid-body {
+        height: calc(100vh - 250px) !important;
+        overflow-y: auto !important;
       }
     }
   }
