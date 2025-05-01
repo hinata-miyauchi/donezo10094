@@ -19,6 +19,17 @@ export class UserProfileComponent implements OnInit {
   userEmail: string | null = null;
   isSubmitting = false;
   teams: Team[] = [];
+  showAvatarModal = false;
+
+  // アバターイラストの配列
+  readonly avatars = [
+    { id: 1, url: 'assets/avatars/avatar-1.svg', name: 'アバター1' },
+    { id: 2, url: 'assets/avatars/avatar-2.svg', name: 'アバター2' },
+    { id: 3, url: 'assets/avatars/avatar-3.svg', name: 'アバター3' },
+    { id: 4, url: 'assets/avatars/avatar-4.svg', name: 'アバター4' },
+    { id: 5, url: 'assets/avatars/avatar-5.svg', name: 'アバター5' },
+    { id: 6, url: 'assets/avatars/avatar-6.svg', name: 'アバター6' },
+  ];
 
   constructor(
     private fb: FormBuilder,
@@ -112,6 +123,33 @@ export class UserProfileComponent implements OnInit {
     } catch (error) {
       console.error('アプリケーション設定の更新に失敗しました:', error);
       alert('アプリケーション設定の更新に失敗しました。もう一度お試しください。');
+    } finally {
+      this.isSubmitting = false;
+    }
+  }
+
+  // アバター選択モーダルの表示
+  openAvatarModal(): void {
+    this.showAvatarModal = true;
+  }
+
+  // アバター選択モーダルを閉じる
+  closeAvatarModal(): void {
+    this.showAvatarModal = false;
+  }
+
+  // アバターの選択
+  async selectAvatar(avatarUrl: string): Promise<void> {
+    try {
+      console.log('アバター選択開始:', avatarUrl);
+      this.isSubmitting = true;
+      await this.authService.updateProfilePhotoUrl(avatarUrl);
+      this.profileImageUrl = avatarUrl;
+      this.showAvatarModal = false;
+      console.log('プロフィール画像が更新されました');
+    } catch (error) {
+      console.error('プロフィール画像の更新に失敗しました:', error);
+      alert('プロフィール画像の更新に失敗しました。もう一度お試しください。');
     } finally {
       this.isSubmitting = false;
     }

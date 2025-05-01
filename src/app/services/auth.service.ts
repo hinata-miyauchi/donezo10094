@@ -249,6 +249,43 @@ export class AuthService {
     }
   }
 
+  async updateProfilePhotoUrl(photoUrl: string): Promise<void> {
+    try {
+      console.log('updateProfilePhotoUrl開始:', photoUrl);
+      const user = this.auth.currentUser;
+      if (!user) {
+        throw new Error('ユーザーが見つかりません');
+      }
+
+      console.log('ユーザー取得成功:', user.uid);
+      // Firebaseユーザープロフィールを更新
+      await updateProfile(user, {
+        photoURL: photoUrl
+      });
+      console.log('Firebaseプロフィール更新完了');
+
+      // Firestoreのユーザードキュメントを更新
+      const userDocRef = doc(this.firestore, 'users', user.uid);
+      await updateDoc(userDocRef, {
+        photoURL: photoUrl,
+        updatedAt: new Date()
+      });
+      console.log('Firestoreドキュメント更新完了');
+
+      // 現在のユーザーデータを取得して更新
+      const userData = await firstValueFrom(this.getUserData(user.uid));
+      if (userData) {
+        this.userSubject.next(userData);
+        console.log('ユーザーデータ更新完了:', userData);
+      }
+
+      console.log('プロフィール画像が更新されました');
+    } catch (error) {
+      console.error('プロフィール画像の更新に失敗しました:', error);
+      throw error;
+    }
+  }
+
   async getCurrentUserId(): Promise<string> {
     const user = this.currentUser;
     if (!user) {

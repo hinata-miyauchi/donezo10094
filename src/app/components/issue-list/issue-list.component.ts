@@ -476,4 +476,33 @@ export class IssueListComponent implements OnInit, OnDestroy {
       filters.sortOrder !== 'asc'
     );
   }
+
+  async archiveIssue(issue: Issue): Promise<void> {
+    if (issue.status !== '完了') {
+      alert('完了済みの課題のみアーカイブできます。');
+      return;
+    }
+
+    if (confirm('この課題をアーカイブしてもよろしいですか？\nアーカイブされた課題は「アーカイブ済み」タブで確認できます。')) {
+      try {
+        await this.issueService.updateIssue(issue.id, {
+          is_archived: true,
+          archived_at: new Date().toISOString()
+        });
+        
+        // 課題リストから削除
+        this.issues = this.issues.filter(i => i.id !== issue.id);
+        this.completedIssues = this.completedIssues.filter(i => i.id !== issue.id);
+        this.incompleteIssues = this.incompleteIssues.filter(i => i.id !== issue.id);
+        
+        // フィルター適用済みリストも更新
+        this.filteredIssuesSubject.next(this.issues);
+        
+        // サマリーの更新
+        this.updateIssueSummary();
+      } catch (error) {
+        console.error('課題のアーカイブに失敗しました:', error);
+      }
+    }
+  }
 }

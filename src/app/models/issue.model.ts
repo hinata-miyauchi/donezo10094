@@ -29,6 +29,8 @@ export interface Issue {
     watchers?: string[]; // 課題をウォッチしているユーザーのID
     userId: string;
     comments?: IssueComment[];
+    is_archived?: boolean;
+    archived_at?: string;
 }
 
 export interface IssueFilter {

@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="128" height="128" viewBox="0 0 128 128" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <circle cx="64" cy="64" r="64" fill="#10B981"/>
+  <!-- 犬の耳 -->
+  <path d="M35 35C35 35 30 50 40 55C40 55 35 35 35 35Z" fill="white"/>
+  <path d="M93 35C93 35 98 50 88 55C88 55 93 35 93 35Z" fill="white"/>
+  <!-- 犬の顔 -->
+  <circle cx="64" cy="70" r="30" fill="white"/>
+  <!-- 目 -->
+  <circle cx="50" cy="65" r="5" fill="#111827"/>
+  <circle cx="78" cy="65" r="5" fill="#111827"/>
+  <!-- 鼻 -->
+  <circle cx="64" cy="75" r="5" fill="#111827"/>
+  <!-- 口 -->
+  <path d="M54 85C59 90 69 90 74 85" stroke="#111827" stroke-width="2" stroke-linecap="round"/>
+</svg> 

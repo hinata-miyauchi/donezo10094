@@ -25,6 +25,17 @@ export class UserSettingsComponent implements OnInit, OnDestroy {
   showTeamForm = false;
   teamForm: FormGroup;
   private destroy$ = new Subject<void>();
+  showAvatarModal = false;
+
+  // アバターイラストの配列
+  readonly avatars = [
+    { id: 1, url: 'assets/avatars/avatar-1.svg', name: 'ねこ', description: '好奇心旺盛な猫のアバター' },
+    { id: 2, url: 'assets/avatars/avatar-2.svg', name: 'いぬ', description: '忠実な犬のアバター' },
+    { id: 3, url: 'assets/avatars/avatar-3.svg', name: 'うさぎ', description: 'かわいいうさぎのアバター' },
+    { id: 4, url: 'assets/avatars/avatar-4.svg', name: 'パンダ', description: 'のんびり屋のパンダのアバター' },
+    { id: 5, url: 'assets/avatars/avatar-5.svg', name: 'きつね', description: '賢いキツネのアバター' },
+    { id: 6, url: 'assets/avatars/avatar-6.svg', name: 'ペンギン', description: '愛らしいペンギンのアバター' },
+  ];
 
   constructor(
     private fb: FormBuilder,
@@ -177,8 +188,27 @@ export class UserSettingsComponent implements OnInit, OnDestroy {
   }
 
   async updateProfileImage(): Promise<void> {
-    // ファイル選択ダイアログを表示する処理を実装
-    console.log('プロフィール画像の更新機能は未実装です');
+    this.showAvatarModal = true;
+  }
+
+  closeAvatarModal(): void {
+    this.showAvatarModal = false;
+  }
+
+  async selectAvatar(avatarUrl: string): Promise<void> {
+    try {
+      this.isSubmitting = true;
+      await this.authService.updateProfilePhotoUrl(avatarUrl);
+      if (this.user) {
+        this.user.photoURL = avatarUrl;
+      }
+      this.showAvatarModal = false;
+    } catch (error) {
+      console.error('プロフィール画像の更新に失敗しました:', error);
+      alert('プロフィール画像の更新に失敗しました。もう一度お試しください。');
+    } finally {
+      this.isSubmitting = false;
+    }
   }
 
   async updateProfile(): Promise<void> {
