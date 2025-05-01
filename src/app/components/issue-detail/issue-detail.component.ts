@@ -31,6 +31,8 @@ export class IssueDetailComponent implements OnInit, OnDestroy {
   editForm: FormGroup;
   readonly importanceOptions = ['低', '中', '高'];
   private subscriptions = new Subscription();
+  showErrorPopup = false;
+  errorMessage = '';
 
   constructor(
     private route: ActivatedRoute,
@@ -127,6 +129,17 @@ export class IssueDetailComponent implements OnInit, OnDestroy {
           control.markAsTouched();
         }
       });
+      
+      // エラーメッセージをポップアップで表示
+      this.errorMessage = '入力内容に不備があります。必須項目を確認してください。';
+      this.showErrorPopup = true;
+      
+      // 3秒後にポップアップを非表示にする
+      setTimeout(() => {
+        this.showErrorPopup = false;
+        this.errorMessage = '';
+      }, 3000);
+      
       return;
     }
 
