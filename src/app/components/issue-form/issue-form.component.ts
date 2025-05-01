@@ -6,9 +6,11 @@ import { IssueService } from '../../services/issue.service';
 import { TeamService } from '../../services/team.service';
 import { Issue } from '../../models/issue.model';
 import { Team } from '../../models/team.model';
+import { TeamMember } from '../../models/team-member.model';
 import { Subject, from } from 'rxjs';
 import { takeUntil } from 'rxjs/operators';
 import { AbstractControl, ValidationErrors } from '@angular/forms';
+import { AuthService } from '../../services/auth.service';
 
 @Component({
   selector: 'app-issue-form',
@@ -24,6 +26,31 @@ import { AbstractControl, ValidationErrors } from '@angular/forms';
             </h3>
             
             <form [formGroup]="issueForm" (ngSubmit)="onSubmit()" class="space-y-5">
+              <!-- プロジェクト選択 -->
+              <div>
+                <label for="teamId" class="block text-sm font-medium text-gray-700">
+                  プロジェクト<span class="text-red-500 ml-1">*</span>
+                </label>
+                <div class="mt-1">
+                  <select
+                    id="teamId"
+                    formControlName="teamId"
+                    class="bg-gray-50 shadow-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 block w-full sm:text-sm border-gray-300 rounded-md"
+                    [class.border-red-500]="isFieldInvalid('teamId')"
+                  >
+                    <option value="プロジェクトを選択してください" class="text-gray-400">プロジェクトを選択してください</option>
+                    <option value="" class="text-gray-900">個人の課題</option>
+                    <option *ngFor="let team of teams" [value]="team.id" class="text-gray-900">{{ team.name }}</option>
+                  </select>
+                  <p *ngIf="isFieldInvalid('teamId')" class="mt-1 text-sm text-red-600">
+                    {{ getErrorMessage('teamId') }}
+                  </p>
+                  <p class="mt-1 text-sm text-gray-500">
+                    課題の所属プロジェクトを選択してください。個人の課題の場合は「個人の課題」を選択してください。
+                  </p>
+                </div>
+              </div>
+
               <div>
                 <label for="title" class="block text-sm font-medium text-gray-700">
                   タイトル<span class="text-red-500 ml-1">*</span>
@@ -33,7 +60,8 @@ import { AbstractControl, ValidationErrors } from '@angular/forms';
                     type="text"
                     id="title"
                     formControlName="title"
-                    class="bg-gray-50 shadow-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 block w-full sm:text-sm border-gray-300 rounded-md"
+                    placeholder="入力してください"
+                    class="bg-gray-50 shadow-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 block w-full sm:text-sm border-gray-300 rounded-md placeholder-gray-400"
                     [class.border-red-500]="isFieldInvalid('title')"
                   />
                   <p *ngIf="isFieldInvalid('title')" class="mt-1 text-sm text-red-600">
@@ -51,7 +79,8 @@ import { AbstractControl, ValidationErrors } from '@angular/forms';
                     id="description"
                     formControlName="description"
                     rows="3"
-                    class="bg-gray-50 shadow-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 block w-full sm:text-sm border-gray-300 rounded-md"
+                    placeholder="入力してください"
+                    class="bg-gray-50 shadow-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 block w-full sm:text-sm border-gray-300 rounded-md placeholder-gray-400"
                     [class.border-red-500]="isFieldInvalid('description')"
                   ></textarea>
                   <p *ngIf="isFieldInvalid('description')" class="mt-1 text-sm text-red-600">
@@ -165,15 +194,29 @@ import { AbstractControl, ValidationErrors } from '@angular/forms';
                     担当者<span class="text-red-500 ml-1">*</span>
                   </label>
                   <div class="mt-1">
-                    <input
-                      type="text"
+                    <select
                       id="assignee"
                       formControlName="assignee"
                       class="bg-gray-50 shadow-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 block w-full sm:text-sm border-gray-300 rounded-md"
                       [class.border-red-500]="isFieldInvalid('assignee')"
-                    />
+                    >
+                      <option value="">担当者を選択してください</option>
+                      <ng-container *ngIf="!issueForm.get('teamId')?.value">
+                        <option [value]="currentUserName">
+                          {{ currentUserName }}
+                        </option>
+                      </ng-container>
+                      <ng-container *ngIf="issueForm.get('teamId')?.value">
+                        <option *ngFor="let member of teamMembers" [value]="member.displayName">
+                          {{ member.displayName }}
+                        </option>
+                      </ng-container>
+                    </select>
                     <p *ngIf="isFieldInvalid('assignee')" class="mt-1 text-sm text-red-600">
                       {{ getErrorMessage('assignee') }}
+                    </p>
+                    <p class="mt-1 text-sm text-gray-500">
+                      プロジェクト所属メンバーのみ選択可
                     </p>
                   </div>
                 </div>
@@ -188,7 +231,8 @@ import { AbstractControl, ValidationErrors } from '@angular/forms';
                     id="completionCriteria"
                     formControlName="completionCriteria"
                     rows="2"
-                    class="bg-gray-50 shadow-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 block w-full sm:text-sm border-gray-300 rounded-md"
+                    placeholder="入力してください"
+                    class="bg-gray-50 shadow-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 block w-full sm:text-sm border-gray-300 rounded-md placeholder-gray-400"
                     [class.border-red-500]="isFieldInvalid('completionCriteria')"
                   ></textarea>
                   <p *ngIf="isFieldInvalid('completionCriteria')" class="mt-1 text-sm text-red-600">
@@ -199,13 +243,13 @@ import { AbstractControl, ValidationErrors } from '@angular/forms';
 
               <div>
                 <label for="solution" class="block text-sm font-medium text-gray-700">
-                  対応内容<span class="text-red-500 ml-1">*</span>
+                  対応・解決方法<span class="text-red-500 ml-1">*</span>
                 </label>
                 <div class="mt-1">
                   <textarea
                     id="solution"
                     formControlName="solution"
-                    rows="2"
+                    rows="3"
                     (focus)="onSolutionFocus()"
                     (blur)="onSolutionBlur()"
                     class="bg-gray-50 shadow-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 block w-full sm:text-sm border-gray-300 rounded-md"
@@ -218,29 +262,20 @@ import { AbstractControl, ValidationErrors } from '@angular/forms';
                 </div>
               </div>
 
-              <div>
-                <label for="teamId" class="block text-sm font-medium text-gray-700">プロジェクト</label>
-                <div class="mt-1">
-                  <select
-                    id="teamId"
-                    formControlName="teamId"
-                    class="bg-gray-50 shadow-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 block w-full sm:text-sm border-gray-300 rounded-md"
-                  >
-                    <option value="">個人の課題</option>
-                    <option *ngFor="let team of teams" [value]="team.id">
-                      {{ team.name }}
-                    </option>
-                  </select>
-                </div>
-              </div>
-
-              <div class="pt-4">
+              <div class="flex justify-end space-x-3">
+                <button
+                  type="button"
+                  (click)="onCancel()"
+                  class="inline-flex justify-center py-2 px-4 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+                >
+                  キャンセル
+                </button>
                 <button
                   type="submit"
-                  [disabled]="!issueForm.valid || isSubmitting"
-                  class="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:bg-gray-400"
+                  [disabled]="issueForm.invalid || isSubmitting"
+                  class="inline-flex justify-center py-2 px-4 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:opacity-50 disabled:cursor-not-allowed"
                 >
-                  {{ isSubmitting ? '送信中...' : (isEditMode ? '更新' : '登録') }}
+                  {{ isSubmitting ? '保存中...' : (isEditMode ? '更新' : '登録') }}
                 </button>
               </div>
             </form>
@@ -255,7 +290,9 @@ export class IssueFormComponent implements OnInit, OnDestroy {
   isSubmitting = false;
   isEditMode = false;
   teams: Team[] = [];
+  teamMembers: any[] = [];
   importanceOptions = ['低', '中', '高'];
+  currentUserName: string | null = null;
   private destroy$ = new Subject<void>();
 
   constructor(
@@ -263,8 +300,11 @@ export class IssueFormComponent implements OnInit, OnDestroy {
     private issueService: IssueService,
     private teamService: TeamService,
     private router: Router,
-    private route: ActivatedRoute
+    private route: ActivatedRoute,
+    private authService: AuthService
   ) {
+    this.currentUserName = this.authService.currentUser?.displayName || '自分';
+    
     this.issueForm = this.fb.group({
       title: ['', [Validators.required, Validators.minLength(3), Validators.maxLength(100)]],
       description: ['', [Validators.required]],
@@ -276,8 +316,19 @@ export class IssueFormComponent implements OnInit, OnDestroy {
       assignee: ['', [Validators.required]],
       completionCriteria: ['', [Validators.required]],
       solution: ['検討中', [Validators.required]],
-      teamId: ['']
+      teamId: ['プロジェクトを選択してください', [this.projectSelectionValidator()]]
     });
+
+    // チーム選択の変更を監視
+    this.issueForm.get('teamId')?.valueChanges
+      .pipe(takeUntil(this.destroy$))
+      .subscribe(async (teamId: string) => {
+        if (teamId) {
+          await this.loadTeamMembers(teamId);
+        } else {
+          this.teamMembers = [];
+        }
+      });
 
     this.isEditMode = this.route.snapshot.url.some(segment => segment.path === 'edit');
   }
@@ -300,6 +351,16 @@ export class IssueFormComponent implements OnInit, OnDestroy {
     }
   }
 
+  // チームメンバーを読み込む
+  private async loadTeamMembers(teamId: string): Promise<void> {
+    try {
+      this.teamMembers = await this.teamService.getTeamMembers(teamId);
+    } catch (error) {
+      console.error('チームメンバーの読み込みに失敗しました:', error);
+      this.teamMembers = [];
+    }
+  }
+
   isFieldInvalid(fieldName: string): boolean {
     const field = this.issueForm.get(fieldName);
     return field ? (field.invalid && (field.dirty || field.touched)) : false;
@@ -319,6 +380,7 @@ export class IssueFormComponent implements OnInit, OnDestroy {
     if (errors['invalidDate']) return '正しい日付を入力してください';
     if (errors['pastDate']) return '過去の日付は選択できません';
     if (errors['invalidTime']) return '正しい時刻を入力してください';
+    if (errors['invalidProjectSelection']) return 'プロジェクトを選択してください';
 
     return '入力値が不正です';
   }
@@ -350,6 +412,17 @@ export class IssueFormComponent implements OnInit, OnDestroy {
       
       const timeRegex = /^([01]?[0-9]|2[0-3]):[0-5][0-9]$/;
       return timeRegex.test(control.value) ? null : { invalidTime: true };
+    };
+  }
+
+  // プロジェクト選択のバリデーター
+  private projectSelectionValidator() {
+    return (control: AbstractControl): ValidationErrors | null => {
+      const value = control.value;
+      if (value === 'プロジェクトを選択してください') {
+        return { invalidProjectSelection: true };
+      }
+      return null; // それ以外の値（空文字列を含む）はすべて有効
     };
   }
 
