@@ -1,6 +1,6 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { CalendarOptions, EventClickArg, DatesSetArg } from '@fullcalendar/core';
+import { CalendarOptions, EventClickArg, DatesSetArg, EventDropArg } from '@fullcalendar/core';
 import { FullCalendarModule } from '@fullcalendar/angular';
 import { Router, ActivatedRoute } from '@angular/router';
 import { IssueService } from '../../services/issue.service';
@@ -70,6 +70,7 @@ export class IssueCalendarComponent implements OnInit {
       right: 'dayGridMonth,timeGridWeek'
     },
     eventClick: this.handleEventClick.bind(this),
+    eventDrop: this.handleEventDrop.bind(this),
     datesSet: this.handleDatesSet.bind(this),
     events: [],
     height: 'auto',
@@ -231,9 +232,62 @@ export class IssueCalendarComponent implements OnInit {
   }
 
   private handleEventClick(clickInfo: EventClickArg) {
-    // 現在のビューの状態を保持したまま課題詳細に遷移
-    this.router.navigate(['/issues', clickInfo.event.id], {
-      queryParams: { returnView: clickInfo.view.type }
-    });
+    const issueId = clickInfo.event.id;
+    this.router.navigate(['/issues', issueId]);
+  }
+
+  private async handleEventDrop(dropInfo: EventDropArg) {
+    try {
+      const issueId = dropInfo.event.id;
+      const newDate = dropInfo.event.start;
+      const currentView = dropInfo.view.type;
+
+      if (!issueId || !newDate) {
+        console.error('必要な情報が不足しています');
+        dropInfo.revert();
+        return;
+      }
+
+      // 課題を取得
+      const issue = await this.issueService.getIssue(issueId);
+      if (!issue) {
+        console.error('課題が見つかりません');
+        dropInfo.revert();
+        return;
+      }
+
+      // 現在の期限の日時を取得
+      const currentDueDate = new Date(issue.dueDate);
+      
+      // 新しい日時を設定
+      let updatedDate: Date;
+      
+      if (currentView === 'dayGridMonth') {
+        // 月表示の場合は時間を保持
+        updatedDate = new Date(newDate);
+        updatedDate.setHours(currentDueDate.getHours());
+        updatedDate.setMinutes(currentDueDate.getMinutes());
+        updatedDate.setSeconds(currentDueDate.getSeconds());
+      } else {
+        // 週表示の場合は、タイムゾーンオフセットを考慮して時間を設定
+        updatedDate = new Date(newDate.getTime() - (9 * 60 * 60 * 1000)); // UTC+9の調整を戻す
+      }
+
+      // 課題を更新
+      const updatedIssue = {
+        ...issue,
+        dueDate: updatedDate
+      };
+
+      await this.issueService.updateIssue(issueId, updatedIssue);
+      
+      // 課題一覧を再読み込み
+      await this.loadTeamsAndIssues();
+      
+    } catch (error) {
+      console.error('課題の更新に失敗しました:', error);
+      // エラーの場合は元の位置に戻す
+      dropInfo.revert();
+    }
   }
 } 
