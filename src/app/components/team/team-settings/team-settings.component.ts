@@ -39,12 +39,12 @@ export class TeamSettingsComponent implements OnInit {
     try {
       const teamId = this.route.snapshot.paramMap.get('id');
       if (!teamId) {
-        throw new Error('チームIDが見つかりません');
+        throw new Error('プロジェクトIDが見つかりません');
       }
 
       this.team = await this.teamService.getTeam(teamId);
       if (!this.team) {
-        throw new Error('チームが見つかりません');
+        throw new Error('プロジェクトが見つかりません');
       }
 
       this.teamForm.patchValue({
@@ -52,7 +52,7 @@ export class TeamSettingsComponent implements OnInit {
         description: this.team.description
       });
     } catch (error) {
-      console.error('チームの読み込みに失敗しました:', error);
+      console.error('プロジェクトの読み込みに失敗しました:', error);
       this.router.navigate(['/settings']);
     } finally {
       this.isLoading = false;

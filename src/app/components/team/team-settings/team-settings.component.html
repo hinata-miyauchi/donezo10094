@@ -7,7 +7,7 @@
     <div *ngIf="!isLoading && team" class="space-y-6">
       <!-- ヘッダー -->
       <div class="flex items-center justify-between">
-        <h1 class="text-3xl font-bold text-gray-900">{{ team.name }} - チーム設定</h1>
+        <h1 class="text-3xl font-bold text-gray-900">{{ team.name }} - プロジェクト設定</h1>
         <button
           (click)="navigateBack()"
           class="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md shadow-sm hover:bg-gray-50"
@@ -16,12 +16,12 @@
         </button>
       </div>
 
-      <!-- チーム情報 -->
+      <!-- プロジェクト情報 -->
       <div class="bg-white shadow rounded-lg p-6">
-        <h2 class="text-xl font-semibold mb-4">チーム情報</h2>
+        <h2 class="text-xl font-semibold mb-4">プロジェクト情報</h2>
         <form [formGroup]="teamForm" class="space-y-4">
           <div>
-            <label for="name" class="block text-sm font-medium text-gray-700">チーム名</label>
+            <label for="name" class="block text-sm font-medium text-gray-700">プロジェクト名</label>
             <input
               type="text"
               id="name"
@@ -48,9 +48,9 @@
           <div *ngFor="let member of team.members" class="flex items-center justify-between p-4 border rounded-lg">
             <div>
               <p class="font-medium">{{ member.displayName }}</p>
-              <p class="text-sm text-gray-500">
+              <p class="text-sm text-gray-500 flex gap-2">
                 <span *ngIf="member.uid === team.adminId" class="text-purple-600">作成者</span>
-                <span *ngIf="isMemberAdmin(member.uid) && member.uid !== team.adminId" class="text-blue-600">管理者</span>
+                <span *ngIf="isMemberAdmin(member.uid)" class="text-blue-600">管理者</span>
                 <span *ngIf="!isMemberAdmin(member.uid) && member.uid !== team.adminId">メンバー</span>
               </p>
             </div>
