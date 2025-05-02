@@ -15,7 +15,8 @@
       </div>
 
       <!-- ユーザーメニュー -->
-      <div class="flex items-center">
+      <div class="flex items-center space-x-4">
+        <app-notification *ngIf="isLoggedIn"></app-notification>
         <ng-container *ngIf="isLoggedIn; else loginButton">
           <div class="relative" #userMenuContainer>
             <button

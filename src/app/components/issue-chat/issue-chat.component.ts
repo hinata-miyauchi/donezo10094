@@ -21,7 +21,7 @@ import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
       
       <!-- メッセージ一覧 -->
       <div #messageContainer class="space-y-4 h-96 overflow-y-auto mb-4 p-4 bg-gray-50 rounded">
-        <ng-container *ngIf="messages$ | async as messages">
+        <ng-container *ngIf="(messages$ | async) as messages">
           <div *ngFor="let message of messages; trackBy: trackByFn" 
                class="flex flex-col space-y-1"
                [class.items-end]="message.senderId === currentUserId">
@@ -86,7 +86,7 @@ export class IssueChatComponent implements OnInit, OnDestroy, AfterViewChecked {
   @Input() teamId!: string;
   @ViewChild('messageContainer') private messageContainer!: ElementRef;
   
-  messages$!: Observable<ChatMessage[]>;
+  messages$: Observable<ChatMessage[]> = new Observable<ChatMessage[]>();
   newMessage = '';
   private subscription?: Subscription;
   currentUserId: string = '';
@@ -132,7 +132,7 @@ export class IssueChatComponent implements OnInit, OnDestroy, AfterViewChecked {
     }
 
     this.messages$ = this.chatService.getMessages(this.issueId).pipe(
-      tap(messages => {
+      tap((messages: ChatMessage[]) => {
         console.log('Received messages:', messages);
         this.scrollToBottom();
         this.cdr.detectChanges();
@@ -225,11 +225,12 @@ export class IssueChatComponent implements OnInit, OnDestroy, AfterViewChecked {
   }
 
   async sendMessage() {
-    if (!this.newMessage.trim() || !this.issueId || !this.currentUserId) return;
+    if (!this.newMessage.trim() || !this.issueId || !this.currentUserId || !this.teamId) return;
 
     try {
       await this.chatService.sendMessage({
         issueId: this.issueId,
+        teamId: this.teamId,
         senderId: this.currentUserId,
         senderName: this.currentUserName,
         senderPhotoURL: this.currentUserPhotoURL,

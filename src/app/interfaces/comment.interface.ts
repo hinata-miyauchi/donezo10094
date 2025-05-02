@@ -2,10 +2,9 @@ export interface Comment {
   id: string;
   issueId: string;
   content: string;
-  createdAt: Date;
-  updatedAt: Date;
   authorId: string;
-  mentions: string[]; // メンションされたユーザーのID配列
+  createdAt: Date;
+  mentions: string[];
 }
 
 export interface MentionUser {

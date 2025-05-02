@@ -339,113 +339,70 @@ export class IssueService {
   }
 
   // コメントを追加
-  async addComment(data: {
-    issueId: string;
-    content: string;
-    mentions: string[];
-    authorId: string;
-  }): Promise<void> {
-    try {
-      console.log('=== コメント追加開始 ===');
-      console.log('入力データ:', data);
+  async addComment(comment: Omit<Comment, 'id' | 'createdAt'>): Promise<Comment> {
+    const commentsRef = collection(this.firestore, 'comments');
+    const newComment = {
+      ...comment,
+      createdAt: new Date()
+    };
 
-      const currentUser = this.authService.currentUser;
-      if (!currentUser) {
-        throw new Error('認証が必要です');
-      }
-
-      // 課題の詳細を取得
-      const issue = await this.getIssue(data.issueId);
-      if (!issue) {
-        throw new Error('課題が見つかりません');
-      }
-
-      console.log('課題情報:', issue);
-
-      // メッセージデータを作成
-      const messageData = {
-        content: data.content,
-        issueId: data.issueId,
-        issueTitle: issue.title || '無題の課題',
-        senderId: currentUser.uid,
-        senderName: currentUser.displayName || 'Unknown User',
-        senderPhotoURL: currentUser.photoURL || '',
-        timestamp: serverTimestamp(),
-        mentions: data.mentions,
-        type: 'comment',
-        read: false
-      };
-
-      console.log('保存するメッセージデータ:', messageData);
-
-      // chat-messagesコレクションにメッセージを保存
-      const chatMessagesRef = collection(this.firestore, 'chat-messages');
-      const docRef = await addDoc(chatMessagesRef, messageData);
-
-      console.log('コメントが保存されました:', {
-        id: docRef.id,
-        content: data.content,
-        mentions: data.mentions,
-        issueId: data.issueId
-      });
-
-      // 保存されたデータを確認
-      const savedDoc = await getDoc(docRef);
-      if (savedDoc.exists()) {
-        console.log('保存されたコメントデータ:', savedDoc.data());
-      } else {
-        console.error('コメントドキュメントが見つかりません');
-      }
-
-      console.log('=== コメント追加完了 ===');
-    } catch (error) {
-      console.error('コメントの追加に失敗しました:', error);
-      throw error;
-    }
+    const docRef = await addDoc(commentsRef, newComment);
+    return {
+      id: docRef.id,
+      ...newComment
+    } as Comment;
   }
 
   // コメントを取得
   async getComments(issueId: string): Promise<Comment[]> {
-    const messagesRef = collection(this.firestore, 'chat-messages');
+    const commentsRef = collection(this.firestore, 'comments');
     const q = query(
-      messagesRef,
+      commentsRef,
       where('issueId', '==', issueId),
-      where('type', '==', 'comment'),
-      orderBy('timestamp', 'desc')
+      orderBy('createdAt', 'asc')
     );
 
-    try {
-      const querySnapshot = await getDocs(q);
-      return querySnapshot.docs.map(doc => ({
+    const querySnapshot = await getDocs(q);
+    return querySnapshot.docs.map(doc => {
+      const data = doc.data();
+      return {
         id: doc.id,
-        ...doc.data(),
-        createdAt: doc.data()['timestamp']?.toDate(),
-        updatedAt: doc.data()['timestamp']?.toDate()
-      } as Comment));
-    } catch (error: any) {
-      // インデックスが必要な場合のエラー処理
-      if (error.code === 'failed-precondition') {
-        // インデックスなしで取得を試みる
-        const simpleQuery = query(
-          messagesRef,
-          where('issueId', '==', issueId),
-          where('type', '==', 'comment')
-        );
-        const snapshot = await getDocs(simpleQuery);
-        const comments = snapshot.docs.map(doc => ({
-          id: doc.id,
-          ...doc.data(),
-          createdAt: doc.data()['timestamp']?.toDate(),
-          updatedAt: doc.data()['timestamp']?.toDate()
-        } as Comment));
-        
-        // メモリ上でソート
-        return comments.sort((a, b) => 
-          b.createdAt.getTime() - a.createdAt.getTime()
-        );
-      }
-      throw error;
-    }
+        issueId: data['issueId'],
+        content: data['content'],
+        authorId: data['authorId'],
+        createdAt: data['createdAt']?.toDate(),
+        mentions: data['mentions'] || []
+      } as Comment;
+    });
+  }
+
+  // コメントの監視
+  watchComments(issueId: string): Observable<Comment[]> {
+    const commentsRef = collection(this.firestore, 'comments');
+    const q = query(
+      commentsRef,
+      where('issueId', '==', issueId),
+      orderBy('createdAt', 'asc')
+    );
+
+    return new Observable<Comment[]>(subscriber => {
+      const unsubscribe = onSnapshot(q, snapshot => {
+        const comments = snapshot.docs.map(doc => {
+          const data = doc.data();
+          return {
+            id: doc.id,
+            issueId: data['issueId'],
+            content: data['content'],
+            authorId: data['authorId'],
+            createdAt: data['createdAt']?.toDate(),
+            mentions: data['mentions'] || []
+          } as Comment;
+        });
+        subscriber.next(comments);
+      });
+
+      return () => unsubscribe();
+    });
   }
 
   // メンション通知を送信（非推奨 - NotificationServiceを使用してください）

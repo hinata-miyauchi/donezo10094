@@ -4,13 +4,14 @@ import { RouterModule, Router } from '@angular/router';
 import { AuthService } from '../../services/auth.service';
 import { User } from '../../models/user.model';
 import { Subject, takeUntil } from 'rxjs';
+import { NotificationComponent } from '../notification/notification.component';
 
 @Component({
   selector: 'app-header',
   templateUrl: './header.component.html',
   styleUrls: ['./header.component.scss'],
   standalone: true,
-  imports: [CommonModule, RouterModule]
+  imports: [CommonModule, RouterModule, NotificationComponent]
 })
 export class HeaderComponent implements OnInit, OnDestroy {
   @ViewChild('userMenuContainer') userMenuContainer!: ElementRef;

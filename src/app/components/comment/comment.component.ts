@@ -7,6 +7,7 @@ import { IssueService } from '../../services/issue.service';
 import { CommonModule, DatePipe } from '@angular/common';
 import { AuthService } from '../../services/auth.service';
 import { User } from '../../models/user.model';
+import { NotificationService } from '../../services/notification.service';
 
 interface CommentWithAuthor extends Comment {
   author?: {
@@ -25,6 +26,7 @@ interface CommentWithAuthor extends Comment {
 export class CommentComponent implements OnInit {
   @Input() issueId!: string;
   @Input() issueTitle!: string;
+  @Input() teamId!: string;
   @ViewChild('commentTextarea') commentTextarea!: ElementRef;
   
   comments: CommentWithAuthor[] = [];
@@ -45,7 +47,8 @@ export class CommentComponent implements OnInit {
     private teamService: TeamService,
     private issueService: IssueService,
     private authService: AuthService,
-    private datePipe: DatePipe
+    private datePipe: DatePipe,
+    private notificationService: NotificationService
   ) {
     // 現在のユーザー情報を取得
     this.authService.user$.subscribe(user => {
@@ -280,8 +283,23 @@ export class CommentComponent implements OnInit {
 
     try {
       const mentionedUsers = this.extractMentionedUsers(content);
-      const mentions = mentionedUsers.map(user => user.id);
-      await this.saveComment(content, mentions);
+      const comment = await this.issueService.addComment({
+        issueId: this.issueId,
+        content: content,
+        authorId: this.currentUser.uid,
+        mentions: mentionedUsers.map(user => user.id)
+      });
+      
+      // メンション通知を送信
+      for (const user of mentionedUsers) {
+        await this.notificationService.createMentionNotification(
+          user.id,
+          this.issueId,
+          comment.id,
+          this.teamId,
+          `${this.currentUser.displayName}さんがあなたをメンションしました: ${content}`
+        );
+      }
       
       // コメント送信後にフォームをクリアし、コメントを再読み込み
       this.commentControl.setValue('');
@@ -292,16 +310,13 @@ export class CommentComponent implements OnInit {
     }
   }
 
-  private async saveComment(content: string, mentions: string[]) {
-    if (!this.currentUser) {
-      throw new Error('ユーザーがログインしていません');
-    }
-
-    await this.issueService.addComment({
-      issueId: this.issueId,
-      content: content,
-      mentions: mentions,
-      authorId: this.currentUser.uid
+  getCommentDate(date: Date): string {
+    return new Date(date).toLocaleString('ja-JP', {
+      year: 'numeric',
+      month: '2-digit',
+      day: '2-digit',
+      hour: '2-digit',
+      minute: '2-digit'
     });
   }
 } 
