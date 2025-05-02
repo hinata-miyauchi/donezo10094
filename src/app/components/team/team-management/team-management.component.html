@@ -19,7 +19,6 @@
                 <p class="font-medium text-gray-900">{{ invitation.teamName }}</p>
                 <p class="text-sm text-gray-500">
                   招待日: {{ invitation.createdAt | date:'yyyy/MM/dd' }}
-                  (期限: {{ invitation.expiresAt | date:'yyyy/MM/dd' }})
                 </p>
               </div>
               <div class="flex space-x-4">
@@ -107,13 +106,24 @@
               </div>
               <p class="text-gray-600 mt-1">{{ selectedTeam.description }}</p>
             </div>
-            <button
-              *ngIf="isTeamCreator(selectedTeam)"
-              (click)="deleteTeam(selectedTeam.id)"
-              class="px-4 py-2 text-sm font-medium text-red-600 hover:text-red-800 focus:outline-none focus:ring-2 focus:ring-red-500"
-            >
-              プロジェクトを削除
-            </button>
+            <div class="flex gap-4">
+              <!-- 作成者でない場合は退出ボタンを表示 -->
+              <button
+                *ngIf="!isTeamCreator(selectedTeam)"
+                (click)="leaveTeam(selectedTeam.id)"
+                class="px-4 py-2 text-sm font-medium text-gray-600 hover:text-gray-800 focus:outline-none focus:ring-2 focus:ring-gray-500"
+              >
+                退出する
+              </button>
+              <!-- 作成者の場合は削除ボタンを表示 -->
+              <button
+                *ngIf="isTeamCreator(selectedTeam)"
+                (click)="deleteTeam(selectedTeam.id)"
+                class="px-4 py-2 text-sm font-medium text-red-600 hover:text-red-800 focus:outline-none focus:ring-2 focus:ring-red-500"
+              >
+                プロジェクトを削除
+              </button>
+            </div>
           </div>
 
           <!-- メンバー招待フォーム -->
@@ -172,8 +182,6 @@
                   <p class="text-base font-medium text-gray-900">{{ invitation.invitedUserEmail }}</p>
                   <p class="text-sm text-gray-500">
                     招待日: {{ invitation.createdAt | date:'yyyy/MM/dd' }}
-                    <span class="mx-2">·</span>
-                    期限: {{ invitation.expiresAt | date:'yyyy/MM/dd' }}
                   </p>
                 </div>
                 <div class="flex items-center">

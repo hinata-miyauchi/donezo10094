@@ -505,4 +505,8 @@ export class IssueListComponent implements OnInit, OnDestroy {
       }
     }
   }
+
+  getTeamName(teamId: string): string | undefined {
+    return this.teams.find(team => team.id === teamId)?.name;
+  }
 }

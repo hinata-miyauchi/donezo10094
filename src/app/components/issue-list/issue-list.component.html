@@ -116,25 +116,33 @@
                   <div class="flex items-center justify-between">
                     <div class="flex-1 min-w-0">
                       <p class="text-sm font-medium text-red-600 truncate">{{ issue.title }}</p>
-                      <p class="mt-1 text-sm text-gray-500">担当: {{ issue.assignee?.displayName || '未割り当て' }}</p>
-                    </div>
-                    <div class="flex items-center space-x-4">
-                      <span [class]="'px-2 inline-flex text-xs leading-5 font-semibold rounded-full ' + 
-                        (issue.priority === '高' ? 'bg-red-100 text-red-800' :
-                        issue.priority === '中' ? 'bg-yellow-100 text-yellow-800' :
-                        'bg-blue-100 text-blue-800')">
-                        {{ issue.priority }}
-                      </span>
-                      <p class="text-sm text-gray-500">期限: {{ issue.dueDate | date:'yyyy/MM/dd' }}</p>
+                      <div class="mt-1 text-sm text-gray-500 flex items-center">
+                        <span class="flex-shrink-0">担当: {{ issue.assignee?.displayName || '未割り当て' }}</span>
+                        <span class="mx-2">|</span>
+                        <span class="flex-shrink-0">プロジェクト: {{ issue.teamId ? (getTeamName(issue.teamId) || '不明') : '個人の課題' }}</span>
+                      </div>
                     </div>
                   </div>
-                  <div class="mt-2">
-                    <div class="flex items-center">
-                      <div class="w-1/3 bg-gray-200 rounded-full h-2.5">
-                        <div class="bg-red-600 h-2.5 rounded-full" [style.width]="issue.progress + '%'"></div>
+                  <div class="mt-2 flex items-center space-x-4">
+                    <div class="flex items-center space-x-2 w-1/3">
+                      <div class="w-full bg-gray-200 rounded-full h-2">
+                        <div class="bg-red-600 h-2 rounded-full" [style.width]="issue.progress + '%'"></div>
                       </div>
-                      <span class="ml-2 text-sm text-gray-500">{{ issue.progress }}%</span>
+                      <span class="text-sm text-gray-500 w-12">{{ issue.progress }}%</span>
                     </div>
+                    <span [class]="'px-2 inline-flex text-xs leading-5 font-semibold rounded-full ' + 
+                      (issue.priority === '高' ? 'bg-red-100 text-red-800' :
+                      issue.priority === '中' ? 'bg-yellow-100 text-yellow-800' :
+                      'bg-blue-100 text-blue-800')">
+                      {{ issue.priority }}
+                    </span>
+                    <span [class]="'px-2 inline-flex text-xs leading-5 font-semibold rounded-full ' + 
+                      (issue.status === '完了' ? 'bg-green-100 text-green-800' :
+                      issue.status === '進行中' ? 'bg-yellow-100 text-yellow-800' :
+                      'bg-gray-100 text-gray-800')">
+                      {{ issue.status }}
+                    </span>
+                    <span class="text-sm text-gray-500">期限: {{ issue.dueDate | date:'yyyy/MM/dd' }}</span>
                   </div>
                 </div>
                 <div *ngIf="(overdueIssues$ | async)?.length === 0" class="text-center py-4">
@@ -159,25 +167,33 @@
                   <div class="flex items-center justify-between">
                     <div class="flex-1 min-w-0">
                       <p class="text-sm font-medium text-yellow-600 truncate">{{ issue.title }}</p>
-                      <p class="mt-1 text-sm text-gray-500">担当: {{ issue.assignee?.displayName || '未割り当て' }}</p>
-                    </div>
-                    <div class="flex items-center space-x-4">
-                      <span [class]="'px-2 inline-flex text-xs leading-5 font-semibold rounded-full ' + 
-                        (issue.priority === '高' ? 'bg-red-100 text-red-800' :
-                        issue.priority === '中' ? 'bg-yellow-100 text-yellow-800' :
-                        'bg-blue-100 text-blue-800')">
-                        {{ issue.priority }}
-                      </span>
-                      <p class="text-sm text-gray-500">期限: {{ issue.dueDate | date:'yyyy/MM/dd' }}</p>
+                      <div class="mt-1 text-sm text-gray-500 flex items-center">
+                        <span class="flex-shrink-0">担当: {{ issue.assignee?.displayName || '未割り当て' }}</span>
+                        <span class="mx-2">|</span>
+                        <span class="flex-shrink-0">プロジェクト: {{ issue.teamId ? (getTeamName(issue.teamId) || '不明') : '個人の課題' }}</span>
+                      </div>
                     </div>
                   </div>
-                  <div class="mt-2">
-                    <div class="flex items-center">
-                      <div class="w-1/3 bg-gray-200 rounded-full h-2.5">
-                        <div class="bg-yellow-600 h-2.5 rounded-full" [style.width]="issue.progress + '%'"></div>
+                  <div class="mt-2 flex items-center space-x-4">
+                    <div class="flex items-center space-x-2 w-1/3">
+                      <div class="w-full bg-gray-200 rounded-full h-2">
+                        <div class="bg-yellow-600 h-2 rounded-full" [style.width]="issue.progress + '%'"></div>
                       </div>
-                      <span class="ml-2 text-sm text-gray-500">{{ issue.progress }}%</span>
+                      <span class="text-sm text-gray-500 w-12">{{ issue.progress }}%</span>
                     </div>
+                    <span [class]="'px-2 inline-flex text-xs leading-5 font-semibold rounded-full ' + 
+                      (issue.priority === '高' ? 'bg-red-100 text-red-800' :
+                      issue.priority === '中' ? 'bg-yellow-100 text-yellow-800' :
+                      'bg-blue-100 text-blue-800')">
+                      {{ issue.priority }}
+                    </span>
+                    <span [class]="'px-2 inline-flex text-xs leading-5 font-semibold rounded-full ' + 
+                      (issue.status === '完了' ? 'bg-green-100 text-green-800' :
+                      issue.status === '進行中' ? 'bg-yellow-100 text-yellow-800' :
+                      'bg-gray-100 text-gray-800')">
+                      {{ issue.status }}
+                    </span>
+                    <span class="text-sm text-gray-500">期限: {{ issue.dueDate | date:'yyyy/MM/dd' }}</span>
                   </div>
                 </div>
                 <div *ngIf="(issueSummary$ | async)?.upcomingDeadlines?.length === 0" class="text-center py-4">
@@ -393,31 +409,33 @@
                   <div class="flex items-center justify-between">
                     <div class="flex-1 min-w-0">
                       <p class="text-sm font-medium text-indigo-600 truncate">{{ issue.title }}</p>
-                      <p class="mt-1 text-sm text-gray-500">担当: {{ issue.assignee?.displayName || '未割り当て' }}</p>
-                    </div>
-                    <div class="flex items-center space-x-4">
-                      <span [class]="'px-2 inline-flex text-xs leading-5 font-semibold rounded-full ' + 
-                        (issue.priority === '高' ? 'bg-red-100 text-red-800' :
-                        issue.priority === '中' ? 'bg-yellow-100 text-yellow-800' :
-                        'bg-blue-100 text-blue-800')">
-                        {{ issue.priority }}
-                      </span>
-                      <span [class]="'px-2 inline-flex text-xs leading-5 font-semibold rounded-full ' + 
-                        (issue.status === '完了' ? 'bg-green-100 text-green-800' :
-                        issue.status === '進行中' ? 'bg-yellow-100 text-yellow-800' :
-                        'bg-gray-100 text-gray-800')">
-                        {{ issue.status }}
-                      </span>
-                      <p class="text-sm text-gray-500">期限: {{ issue.dueDate | date:'yyyy/MM/dd' }}</p>
+                      <div class="mt-1 text-sm text-gray-500 flex items-center">
+                        <span class="flex-shrink-0">担当: {{ issue.assignee?.displayName || '未割り当て' }}</span>
+                        <span class="mx-2">|</span>
+                        <span class="flex-shrink-0">プロジェクト: {{ issue.teamId ? (getTeamName(issue.teamId) || '不明') : '個人の課題' }}</span>
+                      </div>
                     </div>
                   </div>
-                  <div class="mt-2">
-                    <div class="flex items-center">
-                      <div class="w-1/3 bg-gray-200 rounded-full h-2.5">
-                        <div class="bg-blue-600 h-2.5 rounded-full" [style.width]="issue.progress + '%'"></div>
+                  <div class="mt-2 flex items-center space-x-4">
+                    <div class="flex items-center space-x-2 w-1/3">
+                      <div class="w-full bg-gray-200 rounded-full h-2">
+                        <div class="bg-blue-600 h-2 rounded-full" [style.width]="issue.progress + '%'"></div>
                       </div>
-                      <span class="ml-2 text-sm text-gray-500">{{ issue.progress }}%</span>
+                      <span class="text-sm text-gray-500 w-12">{{ issue.progress }}%</span>
                     </div>
+                    <span [class]="'px-2 inline-flex text-xs leading-5 font-semibold rounded-full ' + 
+                      (issue.priority === '高' ? 'bg-red-100 text-red-800' :
+                      issue.priority === '中' ? 'bg-yellow-100 text-yellow-800' :
+                      'bg-blue-100 text-blue-800')">
+                      {{ issue.priority }}
+                    </span>
+                    <span [class]="'px-2 inline-flex text-xs leading-5 font-semibold rounded-full ' + 
+                      (issue.status === '完了' ? 'bg-green-100 text-green-800' :
+                      issue.status === '進行中' ? 'bg-yellow-100 text-yellow-800' :
+                      'bg-gray-100 text-gray-800')">
+                      {{ issue.status }}
+                    </span>
+                    <span class="text-sm text-gray-500">期限: {{ issue.dueDate | date:'yyyy/MM/dd' }}</span>
                   </div>
                 </div>
               </li>
@@ -449,23 +467,21 @@
                           完了
                         </span>
                       </div>
-                      <div class="mt-1 text-sm text-gray-500 line-clamp-2">{{ issue.description || '説明なし' }}</div>
-                      <div class="mt-2 flex items-center text-sm text-gray-500 space-x-4">
-                        <span>担当: {{ issue.assignee?.displayName || '未割り当て' }}</span>
-                        <span>完了日: {{ issue.updatedAt | date:'yyyy/MM/dd' }}</span>
+                      <div class="mt-1 text-sm text-gray-500 flex items-center">
+                        <span class="flex-shrink-0">担当: {{ issue.assignee?.displayName || '未割り当て' }}</span>
+                        <span class="mx-2">|</span>
+                        <span class="flex-shrink-0">プロジェクト: {{ issue.teamId ? (getTeamName(issue.teamId) || '不明') : '個人の課題' }}</span>
                       </div>
                     </div>
-                    <div class="flex-shrink-0 ml-4 space-x-2">
-                      <!-- 削除ボタン -->
-                      <button type="button" 
-                              (click)="$event.stopPropagation(); deleteIssue(issue)"
-                              class="inline-flex items-center px-3 py-1.5 border border-transparent text-xs font-medium rounded-md text-white bg-red-600 hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500">
-                        <svg class="h-4 w-4 mr-1" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                        </svg>
-                        削除
-                      </button>
+                  </div>
+                  <div class="mt-2 flex items-center space-x-4">
+                    <div class="flex items-center space-x-2 w-1/3">
+                      <div class="w-full bg-gray-200 rounded-full h-2">
+                        <div class="bg-green-600 h-2 rounded-full" [style.width]="issue.progress + '%'"></div>
+                      </div>
+                      <span class="text-sm text-gray-500 w-12">{{ issue.progress }}%</span>
                     </div>
+                    <span class="text-sm text-gray-500">完了日: {{ issue.updatedAt | date:'yyyy/MM/dd' }}</span>
                   </div>
                 </div>
               </li>
@@ -476,4 +492,5 @@
     </div>
   </div>
 </div>
+  
   

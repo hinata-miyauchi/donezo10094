@@ -259,16 +259,30 @@ export class TeamManagementComponent implements OnInit, OnDestroy {
   }
 
   async rejectInvitation(invitationId: string): Promise<void> {
-    if (!confirm('この招待を拒否してもよろしいですか？')) return;
-
     try {
-      this.isLoading = true;
       await this.teamService.rejectInvitation(invitationId);
       await this.loadReceivedInvitations();
+      this.messageService.showSuccess('招待を辞退しました');
     } catch (error) {
-      console.error('招待の拒否に失敗しました:', error);
-    } finally {
-      this.isLoading = false;
+      console.error('招待の辞退に失敗しました:', error);
+      this.messageService.showError('招待の辞退に失敗しました');
+    }
+  }
+
+  async leaveTeam(teamId: string): Promise<void> {
+    if (!confirm('このプロジェクトから退出してもよろしいですか？')) return;
+
+    try {
+      const currentUser = this.authService.currentUser;
+      if (!currentUser) throw new Error('認証が必要です');
+
+      await this.teamService.leaveTeam(teamId, currentUser.uid);
+      await this.loadTeams();
+      this.selectedTeam = null;
+      this.messageService.showSuccess('プロジェクトから退出しました');
+    } catch (error) {
+      console.error('プロジェクトからの退出に失敗しました:', error);
+      this.messageService.showError('プロジェクトからの退出に失敗しました');
     }
   }
 } 

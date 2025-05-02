@@ -139,7 +139,8 @@ export class NotificationComponent implements OnInit, OnDestroy {
         case 'teamInvite':
           console.log('チーム招待通知の遷移');
           navigationSuccessful = await this.router.navigate(['/teams'], {
-            replaceUrl: true
+            replaceUrl: true,
+            queryParamsHandling: 'preserve'
           });
           break;
 
@@ -160,6 +161,14 @@ export class NotificationComponent implements OnInit, OnDestroy {
       if (!navigationSuccessful) {
         console.error('遷移に失敗しました');
         // 必要に応じてユーザーにエラーを表示
+      } else {
+        // 遷移が成功したら通知を削除
+        await this.notificationService.deleteNotification(notification.id);
+        this.notifications = this.notifications.filter(n => n.id !== notification.id);
+        if (!notification.read) {
+          this.unreadCount = Math.max(0, this.unreadCount - 1);
+        }
+        this.cdr.detectChanges();
       }
 
     } catch (error) {

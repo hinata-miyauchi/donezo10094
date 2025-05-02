@@ -149,7 +149,7 @@ export class NotificationService {
       senderName: user.displayName || '名前なし',
       senderPhotoURL: user.photoURL || undefined,
       type: 'teamInvite' as const,
-      content: `${user.displayName || '名前なし'}さんから「${teamName}」チームへの招待が届いています`,
+      content: `${teamName}チームへの招待が届いています`,
       teamId,
       read: false,
       createdAt: serverTimestamp()
