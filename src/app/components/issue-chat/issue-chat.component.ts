@@ -22,7 +22,7 @@ import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
       <!-- メッセージ一覧 -->
       <div #messageContainer class="space-y-4 h-96 overflow-y-auto mb-4 p-4 bg-gray-50 rounded">
         <ng-container *ngIf="(messages$ | async) as messages">
-          <div *ngFor="let message of messages; trackBy: trackByFn" 
+          <div *ngFor="let message of $any(messages); trackBy: trackByFn" 
                class="flex flex-col space-y-1"
                [class.items-end]="message.senderId === currentUserId">
             <div class="flex items-center space-x-2"

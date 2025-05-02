@@ -2,7 +2,7 @@ import { Component, OnInit, OnDestroy } from '@angular/core';
 import { FormBuilder, FormGroup, ReactiveFormsModule } from '@angular/forms';
 import { IssueService } from '../../services/issue.service';
 import { Issue } from '../../models/issue.model';
-import { Subject, BehaviorSubject, takeUntil } from 'rxjs';
+import { Subject, BehaviorSubject, takeUntil, Observable } from 'rxjs';
 import { CommonModule, DatePipe, DecimalPipe } from '@angular/common';
 import { RouterModule, Router } from '@angular/router';
 import { FormsModule } from '@angular/forms';
@@ -45,8 +45,8 @@ export class IssueListComponent implements OnInit, OnDestroy {
   private dueSoonIssuesSubject = new BehaviorSubject<Issue[]>([]);
   private filteredIssuesSubject = new BehaviorSubject<Issue[]>([]);
 
-  issueSummary$ = this.issueSummarySubject.asObservable();
-  overdueIssues$ = this.overdueIssuesSubject.asObservable();
+  issueSummary$ = this.issueSummarySubject.asObservable() as Observable<IssueSummary>;
+  overdueIssues$ = this.overdueIssuesSubject.asObservable() as Observable<Issue[]>;
   dueSoonIssues$ = this.dueSoonIssuesSubject.asObservable();
   filteredIssues$ = this.filteredIssuesSubject.asObservable();
 

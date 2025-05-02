@@ -32,7 +32,7 @@
                 <dl>
                   <dt class="text-sm font-medium text-gray-500 truncate">全体の課題数</dt>
                   <dd class="flex items-baseline">
-                    <div class="text-2xl font-semibold text-gray-900">{{ summary.totalIssues }}</div>
+                    <div class="text-2xl font-semibold text-gray-900">{{ $any(summary).totalIssues }}</div>
                   </dd>
                 </dl>
               </div>
@@ -51,7 +51,7 @@
                 <dl>
                   <dt class="text-sm font-medium text-gray-500 truncate">完了した課題</dt>
                   <dd class="flex items-baseline">
-                    <div class="text-2xl font-semibold text-gray-900">{{ summary.completedIssues }}</div>
+                    <div class="text-2xl font-semibold text-gray-900">{{ $any(summary).completedIssues }}</div>
                   </dd>
                 </dl>
               </div>
@@ -70,7 +70,7 @@
                 <dl>
                   <dt class="text-sm font-medium text-gray-500 truncate">進行中の課題</dt>
                   <dd class="flex items-baseline">
-                    <div class="text-2xl font-semibold text-gray-900">{{ summary.inProgressIssues }}</div>
+                    <div class="text-2xl font-semibold text-gray-900">{{ $any(summary).inProgressIssues }}</div>
                   </dd>
                 </dl>
               </div>
@@ -89,7 +89,7 @@
                 <dl>
                   <dt class="text-sm font-medium text-gray-500 truncate">未着手の課題</dt>
                   <dd class="flex items-baseline">
-                    <div class="text-2xl font-semibold text-gray-900">{{ summary.notStartedIssues }}</div>
+                    <div class="text-2xl font-semibold text-gray-900">{{ $any(summary).notStartedIssues }}</div>
                   </dd>
                 </dl>
               </div>
@@ -145,7 +145,7 @@
                     <span class="text-sm text-gray-500">期限: {{ issue.dueDate | date:'yyyy/MM/dd' }}</span>
                   </div>
                 </div>
-                <div *ngIf="(overdueIssues$ | async)?.length === 0" class="text-center py-4">
+                <div *ngIf="$any(overdueIssues$ | async)?.length === 0" class="text-center py-4">
                   <p class="text-sm text-gray-500">期限切れの課題はありません</p>
                 </div>
               </div>
@@ -161,7 +161,7 @@
           <div class="border-t border-gray-200">
             <div class="divide-y divide-gray-200">
               <div class="max-h-[calc(3*6.5rem)] overflow-y-auto">
-                <div *ngFor="let issue of (issueSummary$ | async)?.upcomingDeadlines" 
+                <div *ngFor="let issue of $any(issueSummary$ | async)?.upcomingDeadlines" 
                      class="hover:bg-gray-50 cursor-pointer px-4 py-4" 
                      (click)="navigateToIssueDetail(issue.id)">
                   <div class="flex items-center justify-between">
@@ -196,7 +196,7 @@
                     <span class="text-sm text-gray-500">期限: {{ issue.dueDate | date:'yyyy/MM/dd' }}</span>
                   </div>
                 </div>
-                <div *ngIf="(issueSummary$ | async)?.upcomingDeadlines?.length === 0" class="text-center py-4">
+                <div *ngIf="$any(issueSummary$ | async)?.upcomingDeadlines?.length === 0" class="text-center py-4">
                   <p class="text-sm text-gray-500">期限が近い課題はありません</p>
                 </div>
               </div>
