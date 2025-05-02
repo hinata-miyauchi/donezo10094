@@ -1,4 +1,4 @@
-import { Component, Input, OnInit, ViewChild, ElementRef } from '@angular/core';
+import { Component, Input, OnInit, ViewChild, ElementRef, OnDestroy } from '@angular/core';
 import { FormControl, ReactiveFormsModule } from '@angular/forms';
 import { Comment, MentionUser } from '../../interfaces/comment.interface';
 import { debounceTime, distinctUntilChanged } from 'rxjs/operators';
@@ -8,6 +8,8 @@ import { CommonModule, DatePipe } from '@angular/common';
 import { AuthService } from '../../services/auth.service';
 import { User } from '../../models/user.model';
 import { NotificationService } from '../../services/notification.service';
+import { ActivatedRoute } from '@angular/router';
+import { ChangeDetectorRef } from '@angular/core';
 
 interface CommentWithAuthor extends Comment {
   author?: {
@@ -23,7 +25,7 @@ interface CommentWithAuthor extends Comment {
   imports: [ReactiveFormsModule, CommonModule],
   providers: [DatePipe]
 })
-export class CommentComponent implements OnInit {
+export class CommentComponent implements OnInit, OnDestroy {
   @Input() issueId!: string;
   @Input() issueTitle!: string;
   @Input() teamId!: string;
@@ -42,13 +44,16 @@ export class CommentComponent implements OnInit {
   currentUser: User | null = null;
   users: MentionUser[] = [];
   placeholderText = '@でメンション、Enterで送信、Shift+Enterで改行';
+  highlightedCommentId: string | null = null;
 
   constructor(
     private teamService: TeamService,
     private issueService: IssueService,
     private authService: AuthService,
     private datePipe: DatePipe,
-    private notificationService: NotificationService
+    private notificationService: NotificationService,
+    private route: ActivatedRoute,
+    private cdr: ChangeDetectorRef
   ) {
     // 現在のユーザー情報を取得
     this.authService.user$.subscribe(user => {
@@ -69,6 +74,18 @@ export class CommentComponent implements OnInit {
         };
       } else {
         this.currentUser = null;
+      }
+    });
+
+    // クエリパラメータの監視を追加
+    this.route.queryParams.subscribe(params => {
+      if (params['commentId']) {
+        this.highlightedCommentId = params['commentId'];
+        // 3秒後にハイライトを解除
+        setTimeout(() => {
+          this.highlightedCommentId = null;
+          this.cdr.detectChanges();
+        }, 3000);
       }
     });
   }
@@ -318,6 +335,10 @@ export class CommentComponent implements OnInit {
       hour: '2-digit',
       minute: '2-digit'
     });
+  }
+
+  ngOnDestroy() {
+    // Cleanup code if needed
   }
 } 
 

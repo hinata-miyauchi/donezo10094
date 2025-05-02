@@ -1,0 +1,16 @@
+.highlight-comment {
+  background-color: rgba(99, 102, 241, 0.1) !important;
+  border-left: 4px solid #6366f1 !important;
+  transform: translateX(4px);
+}
+
+@keyframes fadeOut {
+  from {
+    background-color: rgba(99, 102, 241, 0.1);
+    border-left-color: #6366f1;
+  }
+  to {
+    background-color: transparent;
+    border-left-color: transparent;
+  }
+} 

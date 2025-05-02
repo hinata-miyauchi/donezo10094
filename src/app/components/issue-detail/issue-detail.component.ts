@@ -65,6 +65,23 @@ export class IssueDetailComponent implements OnInit, OnDestroy {
     const issueId = this.route.snapshot.paramMap.get('id');
     if (issueId) {
       this.loadIssue(issueId);
+      
+      // コメントIDが指定されている場合の処理
+      const commentId = this.route.snapshot.queryParamMap.get('commentId');
+      if (commentId) {
+        // 少し遅延を入れてDOMの準備を待つ
+        setTimeout(() => {
+          const commentElement = document.getElementById(`comment-${commentId}`);
+          if (commentElement) {
+            commentElement.scrollIntoView({ behavior: 'smooth' });
+            commentElement.classList.add('highlight-comment');
+            // ハイライトを3秒後に消す
+            setTimeout(() => {
+              commentElement.classList.remove('highlight-comment');
+            }, 3000);
+          }
+        }, 500);
+      }
     }
   }
 

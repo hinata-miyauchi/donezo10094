@@ -1,6 +1,6 @@
 import { Component, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { Router } from '@angular/router';
+import { Router, ActivatedRoute } from '@angular/router';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators, FormsModule } from '@angular/forms';
 import { TeamService } from '../../../services/team.service';
 import { AuthService } from '../../../services/auth.service';
@@ -9,12 +9,19 @@ import { Subject } from 'rxjs';
 import { takeUntil } from 'rxjs/operators';
 import { User } from '../../../models/user.model';
 import { SortTeamsPipe } from '../../../pipes/sort-teams.pipe';
+import { TeamInvitationsComponent } from '../../../components/team/team-invitations/team-invitations.component';
 
 @Component({
   selector: 'app-user-settings',
   templateUrl: './user-settings.component.html',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, FormsModule, SortTeamsPipe]
+  imports: [
+    CommonModule,
+    ReactiveFormsModule,
+    FormsModule,
+    SortTeamsPipe,
+    TeamInvitationsComponent
+  ]
 })
 export class UserSettingsComponent implements OnInit, OnDestroy {
   user: User | null = null;
@@ -26,6 +33,7 @@ export class UserSettingsComponent implements OnInit, OnDestroy {
   teamForm: FormGroup;
   private destroy$ = new Subject<void>();
   showAvatarModal = false;
+  activeTab: 'profile' | 'teams' | 'invitations' = 'profile';
 
   // アバターイラストの配列
   readonly avatars = [
@@ -41,7 +49,8 @@ export class UserSettingsComponent implements OnInit, OnDestroy {
     private fb: FormBuilder,
     private teamService: TeamService,
     public authService: AuthService,
-    private router: Router
+    private router: Router,
+    private route: ActivatedRoute
   ) {
     this.teamForm = this.fb.group({
       name: ['', [Validators.required, Validators.minLength(2)]],
@@ -50,6 +59,16 @@ export class UserSettingsComponent implements OnInit, OnDestroy {
   }
 
   ngOnInit(): void {
+    // クエリパラメータの監視を追加
+    this.route.queryParams
+      .pipe(takeUntil(this.destroy$))
+      .subscribe(params => {
+        if (params['tab']) {
+          this.activeTab = params['tab'] as 'profile' | 'teams' | 'invitations';
+          console.log('Active tab set to:', this.activeTab); // デバッグ用
+        }
+      });
+
     this.loadUserData();
     this.loadTeams();
   }
@@ -219,5 +238,16 @@ export class UserSettingsComponent implements OnInit, OnDestroy {
     } catch (error) {
       console.error('プロフィールの更新に失敗しました:', error);
     }
+  }
+
+  // タブを切り替えるメソッド
+  setActiveTab(tab: 'profile' | 'teams' | 'invitations'): void {
+    this.activeTab = tab;
+    // URLのクエリパラメータを更新
+    this.router.navigate([], {
+      relativeTo: this.route,
+      queryParams: { tab },
+      queryParamsHandling: 'merge'
+    });
   }
 } 

@@ -134,6 +134,31 @@ export class NotificationService {
     await addDoc(notificationsRef, notification);
   }
 
+  // チーム招待通知の作成
+  async createTeamInviteNotification(
+    recipientId: string,
+    teamId: string,
+    teamName: string
+  ): Promise<void> {
+    const user = this.authService.currentUser;
+    if (!user) return;
+
+    const notification = {
+      recipientId,
+      senderId: user.uid,
+      senderName: user.displayName || '名前なし',
+      senderPhotoURL: user.photoURL || undefined,
+      type: 'teamInvite' as const,
+      content: `${user.displayName || '名前なし'}さんから「${teamName}」チームへの招待が届いています`,
+      teamId,
+      read: false,
+      createdAt: serverTimestamp()
+    };
+
+    const notificationsRef = collection(this.firestore, 'notifications');
+    await addDoc(notificationsRef, notification);
+  }
+
   // 通知を既読にする
   async markAsRead(notificationId: string): Promise<void> {
     const notificationRef = doc(this.firestore, 'notifications', notificationId);

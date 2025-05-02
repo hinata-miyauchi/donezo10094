@@ -16,6 +16,7 @@ import {
 } from '@angular/fire/firestore';
 import { Team, TeamMember, TeamRole } from '../models/team.model';
 import { AuthService } from './auth.service';
+import { NotificationService } from './notification.service';
 
 @Injectable({
   providedIn: 'root'
@@ -23,7 +24,8 @@ import { AuthService } from './auth.service';
 export class TeamService {
   constructor(
     private firestore: Firestore,
-    private authService: AuthService
+    private authService: AuthService,
+    private notificationService: NotificationService
   ) {}
 
   async getUserTeams(): Promise<Team[]> {
@@ -199,29 +201,58 @@ export class TeamService {
       if (isMember) {
         return {
           success: false,
-          message: 'このユーザーは既にメンバーです'
+          message: '既にチームのメンバーです'
         };
       }
 
-      const invitation = {
+      // 招待されるユーザーのUIDを取得
+      const usersSnapshot = await getDocs(
+        query(
+          collection(this.firestore, 'users'),
+          where('email', '==', userEmail)
+        )
+      );
+
+      if (usersSnapshot.empty) {
+        return {
+          success: false,
+          message: 'ユーザーが見つかりません'
+        };
+      }
+
+      const invitedUser = usersSnapshot.docs[0];
+      const invitedUserId = invitedUser.id;
+
+      // 招待を作成
+      const invitationRef = await addDoc(collection(this.firestore, 'teamInvitations'), {
         teamId,
         teamName: team.name,
-        invitedBy: user.uid,
+        invitedUserId,
         invitedUserEmail: userEmail,
+        invitedByUserId: user.uid,
+        invitedByUserName: user.displayName || '名前なし',
         status: 'pending',
-        createdAt: new Date(),
-        expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000) // 7日後
-      };
+        createdAt: new Date()
+      });
 
-      await addDoc(collection(this.firestore, 'teamInvitations'), invitation);
+      // 通知を作成
+      await this.notificationService.createTeamInviteNotification(
+        invitedUserId,
+        teamId,
+        team.name
+      );
 
       return {
         success: true,
-        message: '招待しました'
+        message: '招待を送信しました'
       };
+
     } catch (error) {
-      console.error('Error creating invitation:', error);
-      throw new Error('招待の作成に失敗しました');
+      console.error('Error creating team invitation:', error);
+      return {
+        success: false,
+        message: '招待の作成に失敗しました'
+      };
     }
   }
 

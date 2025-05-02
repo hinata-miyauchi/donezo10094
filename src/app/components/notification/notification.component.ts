@@ -1,4 +1,4 @@
-import { Component, OnInit, OnDestroy, ChangeDetectorRef } from '@angular/core';
+import { Component, OnInit, OnDestroy, ChangeDetectorRef, ElementRef, HostListener } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router } from '@angular/router';
 import { Subject, combineLatest } from 'rxjs';
@@ -25,7 +25,8 @@ export class NotificationComponent implements OnInit, OnDestroy {
     private notificationService: NotificationService,
     private authService: AuthService,
     private router: Router,
-    private cdr: ChangeDetectorRef
+    private cdr: ChangeDetectorRef,
+    private elementRef: ElementRef
   ) {}
 
   ngOnInit(): void {
@@ -64,7 +65,20 @@ export class NotificationComponent implements OnInit, OnDestroy {
     });
   }
 
-  toggleNotifications(): void {
+  // ドキュメント全体のクリックを監視
+  @HostListener('document:click', ['$event'])
+  onDocumentClick(event: MouseEvent) {
+    // クリックされた要素が通知コンポーネントの外部かどうかをチェック
+    if (!this.elementRef.nativeElement.contains(event.target)) {
+      this.showNotifications = false;
+      this.cdr.detectChanges();
+    }
+  }
+
+  toggleNotifications(event?: MouseEvent): void {
+    if (event) {
+      event.stopPropagation(); // イベントの伝播を停止
+    }
     this.showNotifications = !this.showNotifications;
   }
 
@@ -97,12 +111,65 @@ export class NotificationComponent implements OnInit, OnDestroy {
     this.cdr.detectChanges();
   }
 
-  navigateToNotification(notification: Notification): void {
-    this.markAsRead(notification);
-    if (notification.issueId) {
-      this.router.navigate(['/issues', notification.issueId]);
+  async navigateToNotification(notification: Notification): Promise<void> {
+    console.log('通知クリック:', notification); // デバッグ用
+
+    try {
+      // 先に通知を既読にする
+      await this.markAsRead(notification);
+
+      // 通知ドロップダウンを閉じる（遷移前に実行）
+      this.showNotifications = false;
+      this.cdr.detectChanges();
+
+      let navigationSuccessful = false;
+
+      switch (notification.type) {
+        case 'mention':
+          if (notification.issueId) {
+            console.log('メンション通知の遷移 - Issue ID:', notification.issueId, 'Comment ID:', notification.commentId);
+            navigationSuccessful = await this.router.navigate(['/issues', notification.issueId], {
+              queryParams: { commentId: notification.commentId }
+            });
+          } else {
+            console.error('メンション通知にissueIdが含まれていません');
+          }
+          break;
+
+        case 'teamInvite':
+          console.log('チーム招待通知の遷移');
+          navigationSuccessful = await this.router.navigate(['/teams'], {
+            replaceUrl: true
+          });
+          break;
+
+        case 'taskAssigned':
+          if (notification.issueId) {
+            console.log('タスク割り当て通知の遷移 - Issue ID:', notification.issueId);
+            navigationSuccessful = await this.router.navigate(['/issues', notification.issueId]);
+          } else {
+            console.error('タスク割り当て通知にissueIdが含まれていません');
+          }
+          break;
+
+        default:
+          console.error('未知の通知タイプ:', notification.type);
+          break;
+      }
+
+      if (!navigationSuccessful) {
+        console.error('遷移に失敗しました');
+        // 必要に応じてユーザーにエラーを表示
+      }
+
+    } catch (error) {
+      console.error('通知の遷移中にエラーが発生しました:', error);
     }
-    this.showNotifications = false;
+  }
+
+  // イベントの伝播を止めるためのユーティリティメソッド
+  stopPropagation(event: Event): void {
+    event.stopPropagation();
   }
 
   getNotificationTime(date: Date | Timestamp | FieldValue): string {
