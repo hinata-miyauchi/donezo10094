@@ -1,231 +1,162 @@
 <div class="container mx-auto px-4 py-8">
   <h1 class="text-2xl font-bold mb-8">プロフィール設定</h1>
 
-  <!-- タブナビゲーション -->
-  <div class="border-b border-gray-200">
-    <nav class="-mb-px flex space-x-8" aria-label="設定メニュー">
-      <button
-        (click)="setActiveTab('profile')"
-        class="py-4 px-1 border-b-2 font-medium text-sm"
-        [class.border-indigo-500]="activeTab === 'profile'"
-        [class.text-indigo-600]="activeTab === 'profile'"
-        [class.border-transparent]="activeTab !== 'profile'"
-        [class.text-gray-500]="activeTab !== 'profile'"
-        [class.hover:text-gray-700]="activeTab !== 'profile'"
-        [class.hover:border-gray-300]="activeTab !== 'profile'"
-        [attr.aria-current]="activeTab === 'profile' ? 'page' : undefined"
-      >
-        プロフィール
-      </button>
-      <button
-        (click)="setActiveTab('teams')"
-        class="py-4 px-1 border-b-2 font-medium text-sm"
-        [class.border-indigo-500]="activeTab === 'teams'"
-        [class.text-indigo-600]="activeTab === 'teams'"
-        [class.border-transparent]="activeTab !== 'teams'"
-        [class.text-gray-500]="activeTab !== 'teams'"
-        [class.hover:text-gray-700]="activeTab !== 'teams'"
-        [class.hover:border-gray-300]="activeTab !== 'teams'"
-        [attr.aria-current]="activeTab === 'teams' ? 'page' : undefined"
-      >
-        チーム
-      </button>
-      <button
-        (click)="setActiveTab('invitations')"
-        class="py-4 px-1 border-b-2 font-medium text-sm relative"
-        [class.border-indigo-500]="activeTab === 'invitations'"
-        [class.text-indigo-600]="activeTab === 'invitations'"
-        [class.border-transparent]="activeTab !== 'invitations'"
-        [class.text-gray-500]="activeTab !== 'invitations'"
-        [class.hover:text-gray-700]="activeTab !== 'invitations'"
-        [class.hover:border-gray-300]="activeTab !== 'invitations'"
-        [attr.aria-current]="activeTab === 'invitations' ? 'page' : undefined"
-      >
-        招待
-      </button>
-    </nav>
-  </div>
-
-  <!-- タブコンテンツ -->
-  <div class="mt-6">
-    <!-- プロフィールタブ -->
-    <div *ngIf="activeTab === 'profile'" class="space-y-6">
-      <!-- プロフィール情報セクション -->
-      <section class="bg-white rounded-lg shadow-md p-6 mb-8">
-        <h2 class="text-xl font-semibold mb-6">プロフィール情報</h2>
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <div class="space-y-4">
-            <!-- プロフィール画像 -->
-            <div class="flex items-center space-x-4">
-              <img
-                [src]="user?.photoURL || '/assets/default-avatar.svg'"
-                alt="プロフィール画像"
-                class="w-20 h-20 rounded-full"
-              >
-              <button
-                (click)="updateProfileImage()"
-                class="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-md"
-              >
-                画像を変更
-              </button>
-            </div>
-
-            <!-- 名前 -->
-            <div>
-              <label class="block text-sm font-medium text-gray-700 mb-1">名前</label>
-              <input
-                type="text"
-                [(ngModel)]="displayName"
-                (blur)="updateProfile()"
-                class="form-input w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
-              >
-            </div>
-
-            <!-- メールアドレス -->
-            <div>
-              <label class="block text-sm font-medium text-gray-700 mb-1">メールアドレス</label>
-              <input
-                type="email"
-                [value]="user?.email"
-                disabled
-                class="form-input w-full rounded-md border-gray-300 bg-gray-50 shadow-sm"
-              >
-              <p class="mt-1 text-sm text-gray-500">メールアドレスは変更できません</p>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      <!-- プロジェクト管理セクション -->
-      <section class="bg-white rounded-lg shadow-md p-6 mb-8">
-        <div class="flex justify-between items-center mb-6">
-          <h2 class="text-xl font-semibold">プロジェクト管理</h2>
-          <button
-            (click)="toggleTeamForm()"
-            class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded"
+  <!-- プロフィール情報セクション -->
+  <section class="bg-white rounded-lg shadow-md p-6 mb-8">
+    <h2 class="text-xl font-semibold mb-6">プロフィール情報</h2>
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+      <div class="space-y-4">
+        <!-- プロフィール画像 -->
+        <div class="flex items-center space-x-4">
+          <img
+            [src]="user?.photoURL || '/assets/default-avatar.svg'"
+            alt="プロフィール画像"
+            class="w-20 h-20 rounded-full"
           >
-            {{ showTeamForm ? 'キャンセル' : '新しいプロジェクトを作成' }}
+          <button
+            (click)="updateProfileImage()"
+            class="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-md"
+          >
+            画像を変更
           </button>
         </div>
 
-        <!-- プロジェクト作成フォーム -->
-        <div *ngIf="showTeamForm" class="mb-6 bg-gray-50 p-4 rounded-lg">
-          <form [formGroup]="teamForm" (ngSubmit)="onSubmitTeam()">
-            <div class="mb-4">
-              <label for="name" class="block text-gray-700 text-sm font-bold mb-2">
-                プロジェクト名
-              </label>
-              <input
-                id="name"
-                type="text"
-                formControlName="name"
-                class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
-                [class.border-red-500]="teamForm.get('name')?.invalid && teamForm.get('name')?.touched"
-              >
-              <p class="text-red-500 text-xs italic mt-1" *ngIf="teamForm.get('name')?.invalid && teamForm.get('name')?.touched">
-                {{ getErrorMessage('name') }}
-              </p>
-            </div>
-
-            <div class="mb-4">
-              <label for="description" class="block text-gray-700 text-sm font-bold mb-2">
-                説明
-              </label>
-              <textarea
-                id="description"
-                formControlName="description"
-                rows="3"
-                class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
-                [class.border-red-500]="teamForm.get('description')?.invalid && teamForm.get('description')?.touched"
-              ></textarea>
-              <p class="text-red-500 text-xs italic mt-1" *ngIf="teamForm.get('description')?.invalid && teamForm.get('description')?.touched">
-                {{ getErrorMessage('description') }}
-              </p>
-            </div>
-
-            <div class="flex justify-end">
-              <button
-                type="submit"
-                [disabled]="teamForm.invalid || isSubmitting"
-                class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline disabled:opacity-50"
-              >
-                {{ isSubmitting ? '作成中...' : 'プロジェクトを作成' }}
-              </button>
-            </div>
-          </form>
+        <!-- 名前 -->
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-1">名前</label>
+          <input
+            type="text"
+            [(ngModel)]="displayName"
+            (blur)="updateProfile()"
+            class="form-input w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+          >
         </div>
 
-        <!-- プロジェクトリスト -->
-        <div *ngIf="isLoading" class="text-center py-4">
-          <p>読み込み中...</p>
+        <!-- メールアドレス -->
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-1">メールアドレス</label>
+          <input
+            type="email"
+            [value]="user?.email"
+            disabled
+            class="form-input w-full rounded-md border-gray-300 bg-gray-50 shadow-sm"
+          >
+          <p class="mt-1 text-sm text-gray-500">メールアドレスは変更できません</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- プロジェクト管理セクション -->
+  <section class="bg-white rounded-lg shadow-md p-6 mb-8">
+    <div class="flex justify-between items-center mb-6">
+      <h2 class="text-xl font-semibold">プロジェクト管理</h2>
+      <button
+        (click)="toggleTeamForm()"
+        class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded"
+      >
+        {{ showTeamForm ? 'キャンセル' : '新しいプロジェクトを作成' }}
+      </button>
+    </div>
+
+    <!-- プロジェクト作成フォーム -->
+    <div *ngIf="showTeamForm" class="mb-6 bg-gray-50 p-4 rounded-lg">
+      <form [formGroup]="teamForm" (ngSubmit)="onSubmitTeam()">
+        <div class="mb-4">
+          <label for="name" class="block text-gray-700 text-sm font-bold mb-2">
+            プロジェクト名
+          </label>
+          <input
+            id="name"
+            type="text"
+            formControlName="name"
+            class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
+            [class.border-red-500]="teamForm.get('name')?.invalid && teamForm.get('name')?.touched"
+          >
+          <p class="text-red-500 text-xs italic mt-1" *ngIf="teamForm.get('name')?.invalid && teamForm.get('name')?.touched">
+            {{ getErrorMessage('name') }}
+          </p>
         </div>
 
-        <div *ngIf="!isLoading && userTeams.length === 0" class="text-center py-4 text-gray-600">
-          <p>所属しているプロジェクトはありません</p>
+        <div class="mb-4">
+          <label for="description" class="block text-gray-700 text-sm font-bold mb-2">
+            説明
+          </label>
+          <textarea
+            id="description"
+            formControlName="description"
+            rows="3"
+            class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
+            [class.border-red-500]="teamForm.get('description')?.invalid && teamForm.get('description')?.touched"
+          ></textarea>
+          <p class="text-red-500 text-xs italic mt-1" *ngIf="teamForm.get('description')?.invalid && teamForm.get('description')?.touched">
+            {{ getErrorMessage('description') }}
+          </p>
         </div>
 
-        <div *ngIf="!isLoading && userTeams.length > 0" class="space-y-4">
-          <div *ngFor="let team of userTeams | sortTeams:(authService.currentUser?.uid)" class="border rounded-lg p-4 hover:bg-gray-50">
-            <div class="flex justify-between items-center">
-              <div>
-                <div class="flex items-center gap-3">
-                  <h3 class="font-semibold text-lg">{{ team.name }}</h3>
-                  <span *ngIf="isTeamCreator(team)" class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-purple-100 text-purple-800">
-                    作成者
-                  </span>
-                  <span *ngIf="isTeamAdmin(team)" class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
-                    管理者
-                  </span>
-                </div>
-                <p class="text-gray-600">{{ team.description }}</p>
-              </div>
-              <div class="flex space-x-2">
-                <button
-                  *ngIf="isTeamAdmin(team)"
-                  (click)="navigateToTeamSettings(team.id)"
-                  class="bg-gray-100 hover:bg-gray-200 text-gray-800 font-bold py-2 px-4 rounded"
-                >
-                  設定
-                </button>
-                <button
-                  *ngIf="isTeamAdmin(team)"
-                  (click)="deleteTeam(team.id)"
-                  class="bg-red-600 hover:bg-red-700 text-white font-bold py-2 px-4 rounded"
-                >
-                  削除
-                </button>
-                <button
-                  *ngIf="!isTeamAdmin(team)"
-                  (click)="leaveTeam(team.id)"
-                  class="bg-red-100 hover:bg-red-200 text-red-800 font-bold py-2 px-4 rounded"
-                >
-                  退出
-                </button>
-              </div>
+        <div class="flex justify-end">
+          <button
+            type="submit"
+            [disabled]="teamForm.invalid || isSubmitting"
+            class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline disabled:opacity-50"
+          >
+            {{ isSubmitting ? '作成中...' : 'プロジェクトを作成' }}
+          </button>
+        </div>
+      </form>
+    </div>
+
+    <!-- プロジェクトリスト -->
+    <div *ngIf="isLoading" class="text-center py-4">
+      <p>読み込み中...</p>
+    </div>
+
+    <div *ngIf="!isLoading && userTeams.length === 0" class="text-center py-4 text-gray-600">
+      <p>所属しているプロジェクトはありません</p>
+    </div>
+
+    <div *ngIf="!isLoading && userTeams.length > 0" class="space-y-4">
+      <div *ngFor="let team of userTeams | sortTeams:(authService.currentUser?.uid)" class="border rounded-lg p-4 hover:bg-gray-50">
+        <div class="flex justify-between items-center">
+          <div>
+            <div class="flex items-center gap-3">
+              <h3 class="font-semibold text-lg">{{ team.name }}</h3>
+              <span *ngIf="isTeamCreator(team)" class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-purple-100 text-purple-800">
+                作成者
+              </span>
+              <span *ngIf="isTeamAdmin(team)" class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                管理者
+              </span>
             </div>
+            <p class="text-gray-600">{{ team.description }}</p>
           </div>
-        </div>
-      </section>
-    </div>
-
-    <!-- チームタブ -->
-    <div *ngIf="activeTab === 'teams'" class="space-y-6">
-      <!-- 既存のチーム設定コンテンツ -->
-    </div>
-
-    <!-- 招待タブ -->
-    <div *ngIf="activeTab === 'invitations'" class="space-y-6">
-      <div class="bg-white shadow sm:rounded-lg">
-        <div class="px-4 py-5 sm:p-6">
-          <h3 class="text-lg font-medium leading-6 text-gray-900">チーム招待</h3>
-          <div class="mt-4">
-            <!-- 招待一覧をここに表示 -->
-            <app-team-invitations></app-team-invitations>
+          <div class="flex space-x-2">
+            <button
+              *ngIf="isTeamAdmin(team)"
+              (click)="navigateToTeamSettings(team.id)"
+              class="bg-gray-100 hover:bg-gray-200 text-gray-800 font-bold py-2 px-4 rounded"
+            >
+              設定
+            </button>
+            <button
+              *ngIf="isTeamAdmin(team)"
+              (click)="deleteTeam(team.id)"
+              class="bg-red-600 hover:bg-red-700 text-white font-bold py-2 px-4 rounded"
+            >
+              削除
+            </button>
+            <button
+              *ngIf="!isTeamAdmin(team)"
+              (click)="leaveTeam(team.id)"
+              class="bg-red-100 hover:bg-red-200 text-red-800 font-bold py-2 px-4 rounded"
+            >
+              退出
+            </button>
           </div>
         </div>
       </div>
     </div>
-  </div>
+  </section>
 </div>
 
 <!-- アバター選択モーダル -->

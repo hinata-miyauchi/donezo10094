@@ -104,7 +104,11 @@ export class IssueService {
     if (teamId) {
       return query(issuesCollection, where('teamId', '==', teamId));
     } else {
-      return query(issuesCollection, where('userId', '==', currentUser.uid));
+      return query(
+        issuesCollection,
+        where('userId', '==', currentUser.uid),
+        where('teamId', '==', null)
+      );
     }
   }
 
@@ -141,6 +145,8 @@ export class IssueService {
         uid: currentUser.uid,
         displayName: currentUser.displayName || ''
       },
+      userId: currentUser.uid,
+      teamId: issue.teamId || null,
       createdAt: new Date(),
       updatedAt: new Date()
     } as Issue;

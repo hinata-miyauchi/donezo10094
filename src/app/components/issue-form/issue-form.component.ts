@@ -431,7 +431,7 @@ export class IssueFormComponent implements OnInit, OnDestroy {
 
     this.isSubmitting = true;
     try {
-      const formData = this.issueForm.value;
+      const formData = { ...this.issueForm.value };
       formData.isPrivate = !formData.teamId;
       
       // 進捗率に基づいてステータスを自動設定
@@ -443,6 +443,15 @@ export class IssueFormComponent implements OnInit, OnDestroy {
       } else {
         formData.status = '進行中';
       }
+
+      // 期限日と期限時刻を結合
+      if (formData.dueDate && formData.dueTime) {
+        const [hours, minutes] = formData.dueTime.split(':');
+        const dueDate = new Date(formData.dueDate);
+        dueDate.setHours(parseInt(hours, 10), parseInt(minutes, 10), 0);
+        formData.dueDate = dueDate;
+      }
+      delete formData.dueTime;  // 不要になった時刻フィールドを削除
 
       // 担当者情報を正しい形式に変換
       if (formData.assignee) {

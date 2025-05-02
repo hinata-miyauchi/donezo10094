@@ -27,7 +27,7 @@ import { AuthService } from '../../../services/auth.service';
           <form [formGroup]="registerForm" (ngSubmit)="onSubmit()" class="space-y-6">
             <div>
               <label for="displayName" class="block text-sm font-medium text-gray-700">
-                表示名
+                ユーザー名
               </label>
               <div class="mt-1">
                 <input id="displayName" type="text" formControlName="displayName" required
@@ -35,7 +35,7 @@ import { AuthService } from '../../../services/auth.service';
               </div>
               <p *ngIf="registerForm.get('displayName')?.errors?.['required'] && registerForm.get('displayName')?.touched"
                 class="mt-2 text-sm text-red-600">
-                表示名は必須です
+                ユーザー名は必須です
               </p>
             </div>
 
@@ -179,7 +179,7 @@ export class RegisterComponent {
         throw new Error('有効なメールアドレスを入力してください');
       }
       if (!displayName.trim()) {
-        throw new Error('表示名を入力してください');
+        throw new Error('ユーザー名を入力してください');
       }
 
       await this.authService.register(email, password, displayName);
