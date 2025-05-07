@@ -54,7 +54,7 @@ import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
           (input)="onInputChange($event)"
           placeholder="コメントを入力... (@でメンション、Enterで送信、Shift+Enterで改行)"
           rows="3"
-          class="flex-1 rounded border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 resize-none"
+          class="flex-1 rounded border-gray-300 bg-gray-50 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 resize-none"
         ></textarea>
         
         <!-- メンション候補リスト -->
@@ -179,12 +179,12 @@ export class IssueChatComponent implements OnInit, OnDestroy, AfterViewChecked {
       this.resetMentionState();
       
       // フォーカスを維持
-      setTimeout(() => {
-        const textarea = document.querySelector('textarea');
-        if (textarea) {
-          textarea.focus();
-        }
-      }, 0);
+      //setTimeout(() => {
+      //  const textarea = document.querySelector('textarea');
+      //  if (textarea) {
+      //    textarea.focus();
+      //  }
+      //}, 0);
     }
   }
 
