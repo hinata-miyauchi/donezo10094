@@ -53,7 +53,7 @@ import { AuthService } from '../../services/auth.service';
 
               <div>
                 <label for="title" class="block text-sm font-medium text-gray-700">
-                  タイトル<span class="text-red-500 ml-1">*</span>
+                  課題名<span class="text-red-500 ml-1">*</span>
                 </label>
                 <div class="mt-1">
                   <input
@@ -66,25 +66,6 @@ import { AuthService } from '../../services/auth.service';
                   />
                   <p *ngIf="isFieldInvalid('title')" class="mt-1 text-sm text-red-600">
                     {{ getErrorMessage('title') }}
-                  </p>
-                </div>
-              </div>
-
-              <div>
-                <label for="description" class="block text-sm font-medium text-gray-700">
-                  説明<span class="text-red-500 ml-1">*</span>
-                </label>
-                <div class="mt-1">
-                  <textarea
-                    id="description"
-                    formControlName="description"
-                    rows="3"
-                    placeholder="入力してください"
-                    class="bg-gray-50 shadow-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 block w-full sm:text-sm border-gray-300 rounded-md placeholder-gray-400"
-                    [class.border-red-500]="isFieldInvalid('description')"
-                  ></textarea>
-                  <p *ngIf="isFieldInvalid('description')" class="mt-1 text-sm text-red-600">
-                    {{ getErrorMessage('description') }}
                   </p>
                 </div>
               </div>
@@ -219,6 +200,25 @@ import { AuthService } from '../../services/auth.service';
                       プロジェクト所属メンバーのみ選択可
                     </p>
                   </div>
+                </div>
+              </div>
+
+              <div>
+                <label for="description" class="block text-sm font-medium text-gray-700">
+                  課題内容<span class="text-red-500 ml-1">*</span>
+                </label>
+                <div class="mt-1">
+                  <textarea
+                    id="description"
+                    formControlName="description"
+                    rows="3"
+                    placeholder="入力してください"
+                    class="bg-gray-50 shadow-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 block w-full sm:text-sm border-gray-300 rounded-md placeholder-gray-400"
+                    [class.border-red-500]="isFieldInvalid('description')"
+                  ></textarea>
+                  <p *ngIf="isFieldInvalid('description')" class="mt-1 text-sm text-red-600">
+                    {{ getErrorMessage('description') }}
+                  </p>
                 </div>
               </div>
 

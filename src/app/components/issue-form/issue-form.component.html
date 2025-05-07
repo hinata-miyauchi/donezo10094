@@ -29,9 +29,9 @@
     <section class="form-section">
       <h3 class="text-base font-semibold text-gray-700 mb-4">基本情報</h3>
       <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <!-- タイトル -->
+        <!-- 課題名 -->
         <div class="form-group">
-          <label for="title">タイトル<span class="text-red-500">*</span></label>
+          <label for="title">課題名<span class="text-red-500">*</span></label>
           <input id="title" type="text" formControlName="title"
             class="form-input"
             [class.border-red-500]="issueForm.get('title')?.invalid && issueForm.get('title')?.touched">
@@ -57,7 +57,7 @@
     <section class="form-section">
       <h3 class="text-base font-semibold text-gray-700 mb-4">課題の詳細</h3>
       <div class="form-group">
-        <label for="description">説明<span class="text-red-500">*</span></label>
+        <label for="description">課題内容<span class="text-red-500">*</span></label>
         <textarea id="description" formControlName="description" rows="4"
           class="form-textarea"
           [class.border-red-500]="issueForm.get('description')?.invalid && issueForm.get('description')?.touched"></textarea>

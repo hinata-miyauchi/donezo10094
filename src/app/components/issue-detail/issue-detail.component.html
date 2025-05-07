@@ -75,26 +75,35 @@
             <dd class="mt-1 text-sm text-gray-900 sm:mt-0 sm:col-span-2">{{ issue.issueNumber }}</dd>
           </div>
 
-          <!-- タイトル -->
-          <div class="bg-white px-4 py-5 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6">
-            <dt class="text-sm font-medium text-gray-500">タイトル</dt>
-            <dd class="mt-1 text-sm text-gray-900 sm:mt-0 sm:col-span-2">{{ issue.title }}</dd>
-          </div>
-
           <!-- プロジェクト -->
-          <div class="bg-gray-50 px-4 py-5 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6">
+          <div class="bg-white px-4 py-5 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6">
             <dt class="text-sm font-medium text-gray-500">プロジェクト</dt>
             <dd class="mt-1 text-sm text-gray-900 sm:mt-0 sm:col-span-2">
-              <span *ngIf="team">{{ team.name }}</span>
-              <span *ngIf="!team && !issue.teamId" class="text-gray-500">個人の課題</span>
-              <span *ngIf="!team && issue.teamId" class="text-gray-500">読み込み中...</span>
+            <span *ngIf="team">{{ team.name }}</span>
+            <span *ngIf="!team && !issue.teamId" class="text-gray-500">個人の課題</span>
+            <span *ngIf="!team && issue.teamId" class="text-gray-500">読み込み中...</span>
             </dd>
           </div>
 
-          <!-- 説明 -->
+          <!-- 課題名 -->
+          <div class="bg-gray-50 px-4 py-5 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6">
+            <dt class="text-sm font-medium text-gray-500">課題名</dt>
+            <dd class="mt-1 text-sm text-gray-900 sm:mt-0 sm:col-span-2">{{ issue.title }}</dd>
+          </div>
+
+          
+
+          <!-- 重要度 -->
           <div class="bg-white px-4 py-5 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6">
-            <dt class="text-sm font-medium text-gray-500">説明</dt>
-            <dd class="mt-1 text-sm text-gray-900 sm:mt-0 sm:col-span-2 whitespace-pre-line">{{ issue.description }}</dd>
+            <dt class="text-sm font-medium text-gray-500">重要度</dt>
+            <dd class="mt-1 text-sm text-gray-900 sm:mt-0 sm:col-span-2">
+              <span [class]="'px-2 inline-flex text-xs leading-5 font-semibold rounded-full ' + 
+                (issue.priority === '高' ? 'bg-red-100 text-red-800' :
+                issue.priority === '中' ? 'bg-yellow-100 text-yellow-800' :
+                'bg-blue-100 text-blue-800')">
+                {{ issue.priority }}
+              </span>
+            </dd>
           </div>
 
           <!-- ステータス -->
@@ -110,16 +119,14 @@
             </dd>
           </div>
 
-          <!-- 重要度 -->
+          <!-- 進捗 -->
           <div class="bg-white px-4 py-5 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6">
-            <dt class="text-sm font-medium text-gray-500">重要度</dt>
+            <dt class="text-sm font-medium text-gray-500">進捗率</dt>
             <dd class="mt-1 text-sm text-gray-900 sm:mt-0 sm:col-span-2">
-              <span [class]="'px-2 inline-flex text-xs leading-5 font-semibold rounded-full ' + 
-                (issue.priority === '高' ? 'bg-red-100 text-red-800' :
-                issue.priority === '中' ? 'bg-yellow-100 text-yellow-800' :
-                'bg-blue-100 text-blue-800')">
-                {{ issue.priority }}
-              </span>
+              <div class="w-full bg-gray-200 rounded-full h-2.5">
+                <div class="bg-blue-600 h-2.5 rounded-full" [style.width]="issue.progress + '%'"></div>
+              </div>
+              <span class="text-sm mt-1">{{ issue.progress }}%</span>
             </dd>
           </div>
 
@@ -127,6 +134,18 @@
           <div class="bg-gray-50 px-4 py-5 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6">
             <dt class="text-sm font-medium text-gray-500">対応期限</dt>
             <dd class="mt-1 text-sm text-gray-900 sm:mt-0 sm:col-span-2">{{ issue.dueDate | date:'yyyy/MM/dd HH:mm' }}</dd>
+          </div>
+          
+          <!-- 担当者 -->
+          <div class="bg-white px-4 py-5 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6">
+            <dt class="text-sm font-medium text-gray-500">担当者</dt>
+            <dd class="mt-1 text-sm text-gray-900 sm:mt-0 sm:col-span-2">{{ issue.assignee?.displayName || '未割り当て' }}</dd>
+          </div>
+
+          <!-- 説明 -->
+          <div class="bg-gray-50 px-4 py-5 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6">
+            <dt class="text-sm font-medium text-gray-500">課題内容</dt>
+            <dd class="mt-1 text-sm text-gray-900 sm:mt-0 sm:col-span-2 whitespace-pre-line">{{ issue.description }}</dd>
           </div>
 
           <!-- 完了条件 -->
@@ -139,23 +158,6 @@
           <div class="bg-gray-50 px-4 py-5 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6">
             <dt class="text-sm font-medium text-gray-500">対応・解決方法</dt>
             <dd class="mt-1 text-sm text-gray-900 sm:mt-0 sm:col-span-2 whitespace-pre-line">{{ issue.solution }}</dd>
-          </div>
-
-          <!-- 担当者 -->
-          <div class="bg-white px-4 py-5 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6">
-            <dt class="text-sm font-medium text-gray-500">担当者</dt>
-            <dd class="mt-1 text-sm text-gray-900 sm:mt-0 sm:col-span-2">{{ issue.assignee?.displayName || '未割り当て' }}</dd>
-          </div>
-
-          <!-- 進捗 -->
-          <div class="bg-gray-50 px-4 py-5 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6">
-            <dt class="text-sm font-medium text-gray-500">進捗</dt>
-            <dd class="mt-1 text-sm text-gray-900 sm:mt-0 sm:col-span-2">
-              <div class="w-full bg-gray-200 rounded-full h-2.5">
-                <div class="bg-blue-600 h-2.5 rounded-full" [style.width]="issue.progress + '%'"></div>
-              </div>
-              <span class="text-sm mt-1">{{ issue.progress }}%</span>
-            </dd>
           </div>
 
           <!-- 作成日時 -->
@@ -189,17 +191,17 @@
               </div>
             </div>
 
-            <!-- タイトル -->
+            <!-- 課題名 -->
             <div class="sm:col-span-6">
               <label for="title" class="block text-sm font-medium text-gray-700">
-                タイトル<span class="text-red-500 ml-1">*</span>
+                課題名<span class="text-red-500 ml-1">*</span>
               </label>
               <div class="mt-1">
                 <input type="text" id="title" formControlName="title"
                   class="shadow-sm focus:ring-indigo-500 focus:border-indigo-500 block w-full px-3 py-2 text-sm border-gray-300 rounded-md"
                   [class.border-red-500]="editForm.get('title')?.invalid && editForm.get('title')?.touched">
                 <p class="text-red-500 text-sm mt-1" *ngIf="editForm.get('title')?.invalid && editForm.get('title')?.touched">
-                  タイトルは必須項目です
+                  課題名は必須項目です
                 </p>
               </div>
             </div>
