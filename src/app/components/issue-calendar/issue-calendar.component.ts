@@ -15,42 +15,45 @@ import timeGridPlugin from '@fullcalendar/timegrid';
   selector: 'app-issue-calendar',
   template: `
     <div class="calendar-container">
-      <div class="legend-container mb-4">
-        <div class="legend-section">
-          <h4 class="text-sm font-medium text-gray-700 mb-2">重要度</h4>
-          <div class="flex gap-4">
-            <div class="flex items-center">
-              <span class="legend-box importance-高"></span>
-              <span class="text-sm ml-2">高</span>
-            </div>
-            <div class="flex items-center">
-              <span class="legend-box importance-中"></span>
-              <span class="text-sm ml-2">中</span>
-            </div>
-            <div class="flex items-center">
-              <span class="legend-box importance-低"></span>
-              <span class="text-sm ml-2">低</span>
-            </div>
-          </div>
-        </div>
-        <div class="legend-section mt-3">
-          <h4 class="text-sm font-medium text-gray-700 mb-2">ステータス</h4>
-          <div class="flex gap-4">
-            <div class="flex items-center">
-              <span class="legend-box status-未着手-sample"></span>
-              <span class="text-sm ml-2">未着手（点線）</span>
-            </div>
-            <div class="flex items-center">
-              <span class="legend-box status-対応中-sample"></span>
-              <span class="text-sm ml-2">対応中（実線）</span>
-            </div>
-            <div class="flex items-center">
-              <span class="legend-box status-完了-sample"></span>
-              <span class="text-sm ml-2">完了（グレー）</span>
-            </div>
-          </div>
-        </div>
+    <div class="legend-container flex gap-8 mb-8">
+  <!-- 重要度セクション -->
+  <div class="legend-section">
+    <h4 class="text-sm font-medium text-gray-700 mb-2">重要度</h4>
+    <div class="flex gap-4">
+      <div class="flex items-center">
+        <span class="legend-box importance-高"></span>
+        <span class="text-sm ml-2">高</span>
       </div>
+      <div class="flex items-center">
+        <span class="legend-box importance-中"></span>
+        <span class="text-sm ml-2">中</span>
+      </div>
+      <div class="flex items-center">
+        <span class="legend-box importance-低"></span>
+        <span class="text-sm ml-2">低</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- ステータスセクション -->
+  <div class="legend-section ml-12">
+    <h4 class="text-sm font-medium text-gray-700 mb-2">ステータス</h4>
+    <div class="flex gap-4">
+      <div class="flex items-center">
+        <span class="legend-box status-未着手-sample"></span>
+        <span class="text-sm ml-2">未着手（重要度色の点線）</span>
+      </div>
+      <div class="flex items-center">
+        <span class="legend-box status-対応中-sample"></span>
+        <span class="text-sm ml-2">対応中（重要度色の実線）</span>
+      </div>
+      <div class="flex items-center">
+        <span class="legend-box status-完了-sample"></span>
+        <span class="text-sm ml-2">完了（グレー）</span>
+      </div>
+    </div>
+  </div>
+</div>
       <full-calendar [options]="calendarOptions"></full-calendar>
     </div>
   `,
