@@ -19,7 +19,7 @@
       <!-- プロジェクト情報 -->
       <div class="bg-white shadow rounded-lg p-6">
         <h2 class="text-xl font-semibold mb-4">プロジェクト情報</h2>
-        <form [formGroup]="teamForm" class="space-y-4">
+        <form [formGroup]="teamForm" class="space-y-4" (ngSubmit)="onSubmit()">
           <div>
             <label for="name" class="block text-sm font-medium text-gray-700">プロジェクト名</label>
             <input
@@ -38,6 +38,7 @@
               class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
             ></textarea>
           </div>
+          <button type="submit" [disabled]="teamForm.invalid || isSubmitting" class="mt-4 px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 disabled:opacity-50">保存</button>
         </form>
       </div>
 

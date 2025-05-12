@@ -90,4 +90,22 @@ export class TeamSettingsComponent implements OnInit {
   navigateBack(): void {
     this.router.navigate(['/settings']);
   }
+
+  async onSubmit(): Promise<void> {
+    if (!this.team || this.teamForm.invalid || this.isSubmitting) return;
+    this.isSubmitting = true;
+    try {
+      await this.teamService.updateTeam(this.team.id, {
+        name: this.teamForm.value.name,
+        description: this.teamForm.value.description
+      });
+      await this.loadTeam();
+      alert('プロジェクト情報を保存しました');
+    } catch (error) {
+      console.error('プロジェクト情報の保存に失敗しました:', error);
+      alert('プロジェクト情報の保存に失敗しました。もう一度お試しください。');
+    } finally {
+      this.isSubmitting = false;
+    }
+  }
 } 
