@@ -489,4 +489,33 @@ export class TeamService {
       updatedAt: new Date()
     });
   }
+
+  /**
+   * 指定したユーザーIDのメンバー名（displayName）を全チームで一括更新する
+   */
+  async updateMemberDisplayNameForUser(uid: string, newDisplayName: string): Promise<void> {
+    const teamsRef = collection(this.firestore, 'teams');
+    const snapshot = await getDocs(teamsRef);
+    const batchPromises = snapshot.docs.map(async docSnap => {
+      const teamId = docSnap.id;
+      const data = docSnap.data();
+      if (Array.isArray(data['members'])) {
+        let updated = false;
+        const updatedMembers = data['members'].map((member: any) => {
+          if (member.uid === uid && member.displayName !== newDisplayName) {
+            updated = true;
+            return { ...member, displayName: newDisplayName };
+          }
+          return member;
+        });
+        if (updated) {
+          await updateDoc(doc(this.firestore, 'teams', teamId), {
+            members: updatedMembers,
+            updatedAt: new Date()
+          });
+        }
+      }
+    });
+    await Promise.all(batchPromises);
+  }
 } 

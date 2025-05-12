@@ -27,9 +27,15 @@
           <input
             type="text"
             [(ngModel)]="displayName"
-            (blur)="updateProfile()"
             class="form-input w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
           >
+          <button
+            class="mt-2 bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded"
+            (click)="updateProfile()"
+            [disabled]="isSubmitting"
+          >
+            保存
+          </button>
         </div>
 
         <!-- メールアドレス -->

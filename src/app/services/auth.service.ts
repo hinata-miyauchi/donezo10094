@@ -23,6 +23,7 @@ import { BehaviorSubject, Observable, from, of, firstValueFrom } from 'rxjs';
 import { map, switchMap, tap } from 'rxjs/operators';
 import { User } from '../models/user.model';
 import { TeamMembership } from '../models/team.model';
+import { IssueService } from './issue.service';
 
 interface UserProfile {
   uid: string;
@@ -221,6 +222,21 @@ export class AuthService {
 
     try {
       await updateProfile(user, profile);
+      // Firestoreのユーザードキュメントも更新
+      const userDocRef = doc(this.firestore, 'users', user.uid);
+      await updateDoc(userDocRef, {
+        displayName: profile.displayName,
+        updatedAt: new Date()
+      });
+      // 最新のユーザーデータを取得して反映
+      const userData = await getDoc(userDocRef);
+      if (userData.exists()) {
+        this.userSubject.next({
+          ...(userData.data() as any),
+          id: user.uid,
+          uid: user.uid
+        });
+      }
     } catch (error) {
       console.error('プロフィールの更新に失敗しました:', error);
       throw error;

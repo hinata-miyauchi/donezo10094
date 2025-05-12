@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { Router, ActivatedRoute } from '@angular/router';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators, FormsModule } from '@angular/forms';
 import { TeamService } from '../../../services/team.service';
+import { IssueService } from '../../../services/issue.service';
 import { AuthService } from '../../../services/auth.service';
 import { Team } from '../../../models/team.model';
 import { Subject } from 'rxjs';
@@ -48,6 +49,7 @@ export class UserSettingsComponent implements OnInit, OnDestroy {
   constructor(
     private fb: FormBuilder,
     private teamService: TeamService,
+    private issueService: IssueService,
     public authService: AuthService,
     private router: Router,
     private route: ActivatedRoute
@@ -235,6 +237,11 @@ export class UserSettingsComponent implements OnInit, OnDestroy {
       await this.authService.updateProfile({
         displayName: this.displayName
       });
+      // 課題の担当者名・チームメンバー名も一括更新
+      if (this.user && this.displayName) {
+        await this.teamService.updateMemberDisplayNameForUser(this.user.uid, this.displayName);
+        await this.issueService.updateAssigneeDisplayNameForUser(this.user.uid, this.displayName);
+      }
     } catch (error) {
       console.error('プロフィールの更新に失敗しました:', error);
     }

@@ -415,4 +415,25 @@ export class IssueService {
   private async sendMentionNotifications(userIds: string[], issueId: string, content: string) {
     console.warn('このメソッドは非推奨です。代わりにNotificationServiceを使用してください。');
   }
+
+  /**
+   * 指定したユーザーIDの担当者名（assignee.displayName）を一括で新しい名前に更新する
+   */
+  async updateAssigneeDisplayNameForUser(uid: string, newDisplayName: string): Promise<void> {
+    // 担当者がこのuidの課題をすべて取得
+    const q = query(this.issuesCollection, where('assignee.uid', '==', uid));
+    const snapshot = await getDocs(q);
+    const batchPromises = snapshot.docs.map(async docSnap => {
+      const issueId = docSnap.id;
+      const data = docSnap.data();
+      // assigneeが存在する場合のみ更新
+      if (data['assignee'] && data['assignee'].uid === uid) {
+        await updateDoc(doc(this.firestore, 'issues', issueId), {
+          'assignee.displayName': newDisplayName,
+          updatedAt: new Date()
+        });
+      }
+    });
+    await Promise.all(batchPromises);
+  }
 }
